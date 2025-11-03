@@ -1,0 +1,105 @@
+{
+  "menu": [
+    {
+      "menuHeader": "Role  & User Management"
+    },
+    {
+      "name": "Roles & Permissions",
+      "icon": "menu-icon tf-icons ti ti-settings",
+      "slug": "app-access",
+      "submenu": [
+        {
+          "url": "app/roles/list",
+          "name": "Roles",
+          "slug": "app-access-roles", "permission": [
+            "role-list",
+            "role-create"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "icon": "menu-icon tf-icons ti ti-users",
+      "slug": "app-user",
+      "submenu": [
+        {
+          "url": "app/users/list",
+          "name": "Users List",
+          "slug": "app-users-list"
+        },
+        {
+          "url": "app/site-users/list",
+          "name": "Customers",
+          "icon": "users",
+          "slug": "app-site-users-list",
+          "permission": [
+            "user-list",
+            "user-create"
+          ]
+        }
+      ]
+    },
+    {
+      "menuHeader": "Finance Management"
+    },
+    {
+      "name": "Payment Requests",
+      "icon": "menu-icon tf-icons ti ti-cash",
+      "slug": "app-payment-requests",
+      "submenu": [
+        {
+          "url": "app/payment/requests",
+          "name": "Requests List",
+          "slug": "app-payment-requests-list",
+          "permission": [
+            "request-list",
+            "request-create"
+          ]
+        },
+
+        {
+          "url": "app/payment/assigned-requests",
+          "name": "Assigned List",
+          "slug": "requests.assigned",
+          "permission": [
+            "request-list",
+            "request-create"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Bank Management",
+      "icon": "menu-icon tf-icons ti ti-building-bank",
+      "slug": "app-bank-management",
+      "submenu": [
+        {
+          "url": "app/bank-management",
+          "name": "Banks",
+          "slug": "app-bank-management-list",
+          "permission": [
+            "bank-list",
+            "bank-create"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Crypto Management",
+      "icon": "menu-icon tf-icons ti ti-currency-bitcoin",
+      "slug": "app-crypto-management",
+      "submenu": [
+        {
+          "url": "app/crypto-management",
+          "name": "Crypto Wallets",
+          "slug": "app-crypto-management-list",
+          "permission": [
+            "crypto-list",
+            "crypto-create"
+          ]
+        }
+      ]
+    }
+  ]
+}
