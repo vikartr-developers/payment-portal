@@ -1,13 +1,13 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'View Payment Request')
+@section('title', 'View Deposit Request')
 
 @section('content')
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Payment Request Details</h4>
+                    <h4 class="card-title">Deposit Request Details</h4>
                 </div>
                 <div class="card-body">
                     <dl class="row">

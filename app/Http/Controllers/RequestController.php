@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Request;
+use App\Models\User;
+use App\Models\BankManagement;
+use App\Models\CryptoManagement;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -38,50 +41,108 @@ class RequestController extends Controller
     return view('content.apps.requests.list');
   }
 
+  /**
+   * Server-side DataTable for payment requests
+   */
   public function dataTable(HttpRequest $request)
   {
-    $requests_data = Request::query();
+    $start = microtime(true);
     $current = Auth::user();
+    $requestsQuery = Request::query();
 
-    if ($current->hasRole('Approver')) {
-      $requests = $requests_data->whereNull('assign_to');
+    // Deleted filters
+    if ($request->get('only_trashed') === 'true') {
+      $requestsQuery = Request::onlyTrashed();
+    } elseif ($request->get('include_trashed') === 'true') {
+      $requestsQuery = Request::withTrashed();
     }
-    if ($current->hasRole('user')) {
-      $requests = $requests_data->where('created_by', $current->id);
+
+    // Role-based scope
+    if ($current && $current->hasRole('Approver')) {
+      $requestsQuery->whereNull('assign_to');
+    } elseif ($current && $current->hasRole('user')) {
+      $requestsQuery->where('created_by', $current->id);
     }
-    return DataTables::of($requests)
-      ->addColumn('action', function ($req) {
+
+    // Filters
+    if ($request->filled('mode') && $request->mode !== 'all') {
+      $requestsQuery->where('mode', $request->mode);
+    }
+    if ($request->filled('status') && $request->status !== 'all') {
+      $requestsQuery->where('status', $request->status);
+    }
+    if ($request->filled('start_date')) {
+      $requestsQuery->whereDate('created_at', '>=', $request->start_date);
+    }
+    if ($request->filled('end_date')) {
+      $requestsQuery->whereDate('created_at', '<=', $request->end_date);
+    }
+    if ($request->filled('search_term')) {
+      $term = $request->search_term;
+      $requestsQuery->where(function ($q) use ($term) {
+        $q->where('utr', 'like', "%$term%")
+          ->orWhere('id', 'like', "%$term%")
+          ->orWhere('payment_from', 'like', "%$term%")
+          ->orWhere('account_upi', 'like', "%$term%");
+      });
+    }
+
+    return DataTables::of($requestsQuery)
+      ->addColumn('trans_id', function ($req) {
+        return 'TXN-' . str_pad((string) $req->id, 6, '0', STR_PAD_LEFT);
+      })
+      ->addColumn('approver_name', function ($req) {
+        $userId = $req->accepted_by ?: $req->assign_to;
+        if (!$userId)
+          return '-';
+        $user = User::find($userId);
+        if (!$user)
+          return '-';
+        if (!empty($user->name))
+          return $user->name;
+        $first = $user->first_name ?? '';
+        $last = $user->last_name ?? '';
+        return trim($first . ' ' . $last) ?: '-';
+      })
+      ->addColumn('image', function ($req) {
+        if (!$req->image)
+          return '<span class="text-muted">-</span>';
+        $src = asset('storage/' . $req->image);
+        return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
+      })
+      ->editColumn('status', function ($req) {
+        if (!empty($req->deleted_at)) {
+          return '<span class="badge bg-label-danger">Deleted</span>';
+        }
+        return match ($req->status) {
+          'pending' => '<span class="badge bg-label-warning">Pending</span>',
+          'accepted' => '<span class="badge bg-label-success">Accepted</span>',
+          'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
+          default => e($req->status ?? '-')
+        };
+      })
+      ->addColumn('action', function ($req) use ($current) {
         $encryptedId = Crypt::encrypt($req->id);
         $actions = '';
-        if ($req->deleted_at) {
-          $actions .= '<button class="btn btn-sm btn-success restore-request" data-id="' . $encryptedId . '" title="Restore">'
+        if (!empty($req->deleted_at)) {
+          $actions .= '<button class="btn btn-sm btn-success restore-request me-1" data-id="' . $encryptedId . '" title="Restore">'
             . '<i class="ti ti-refresh"></i>'
-            . '</button> ';
+            . '</button>';
           $actions .= '<button class="btn btn-sm btn-danger force-delete-request" data-id="' . $encryptedId . '" title="Permanent Delete">'
             . '<i class="ti ti-trash-x"></i>'
             . '</button>';
         } else {
-          // Edit/Delete for owners/admins
-  
-          // $actions .= '<button class="btn btn-sm btn-danger delete-request" data-id="' . $encryptedId . '" title="Delete">'
-          //   . '<i class="ti ti-trash"></i>'
-          //   . '</button>';
-  
-          // If current user is an approver (role name 'Approver') or has permission to edit, show Approve/Reject for pending requests
-          $current = Auth::user();
-          $isApprover = $current && ($current->hasRole('Approver'));
-
+          $isApprover = $current && $current->hasRole('Approver');
           if ($isApprover && $req->assign_to === NULL) {
-            $actions .= ' <button class="btn btn-sm btn-success accept-request" data-id="' . $encryptedId . '" title="Accept"><i class="ti ti-check"></i></button>';
-            // $actions .= ' <button class="btn btn-sm btn-outline-danger reject-request" data-id="' . $encryptedId . '" title="Reject"><i class="ti ti-x"></i></button>';
+            $actions .= '<button class="btn btn-sm btn-success accept-request me-1" data-id="' . $encryptedId . '" title="Accept">'
+              . '<i class="ti ti-check"></i></button>';
           }
-          if ($current && ($current->hasRole('user'))) {
-            $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
-              . '<i class="ti ti-eye"></i>'
-              . '</a> ';
-            $actions .= '<a href="' . route('requests.edit', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="Edit">'
-              . '<i class="ti ti-edit"></i>'
-              . '</a> ';
+          // View for all; delete for owner role
+          $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
+            . '<i class="ti
+ti-eye"></i>'
+            . '</a>';
+          if ($current && $current->hasRole('user')) {
             $actions .= '<button class="btn btn-sm btn-danger delete-request" data-id="' . $encryptedId . '" title="Delete">'
               . '<i class="ti ti-trash"></i>'
               . '</button>';
@@ -89,22 +150,17 @@ class RequestController extends Controller
         }
         return $actions;
       })
-      ->editColumn('status', function ($req) {
-        if ($req->deleted_at) {
-          return '<span class="badge bg-label-danger">Deleted</span>';
-        }
-        return match ($req->status) {
-          'pending' => '<span class="badge bg-label-warning">Pending</span>',
-          'accepted' => '<span class="badge bg-label-success">Accepted</span>',
-          'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
-          default => $req->status,
-        };
-      })
-      ->rawColumns(['action', 'status'])
+      ->rawColumns(['status', 'image', 'action'])
+      ->with([
+        'cache_status' => 'DATABASE',
+        'load_time' => (int) ((microtime(true) - $start) * 1000)
+      ])
       ->make(true);
-  }  /**
-     * View a single payment request
-     */
+  }
+
+  /**
+   * View a single payment request
+   */
   public function view(string $id)
   {
     $id = Crypt::decrypt($id);
@@ -129,41 +185,93 @@ class RequestController extends Controller
    */
   public function assignedRequestsDataTable(HttpRequest $request)
   {
+    $start = microtime(true);
     $current = Auth::user();
     if (!$current || !$current->hasRole('Approver')) {
       abort(403);
     }
-    $requests = Request::where('assign_to', $current->id);
-    // ->where('status', 'pending');
-    return DataTables::of($requests)
-      ->addColumn('action', function ($req) {
-        $encryptedId = Crypt::encrypt($req->id);
-        $actions = '';
-        $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
-          . '<i class="ti ti-eye"></i>'
-          . '</a> ';
-        $actions .= ' <button class="btn btn-sm btn-success assigned-accept-request" data-id="' . $encryptedId . '"
-  title="Accept"><i class="ti ti-check"></i></button>';
-        $actions .= ' <button class="btn btn-sm btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '"
-  title="Reject"><i class="ti ti-x"></i></button>';
-        return $actions;
+    $requestsQuery = Request::where('assign_to', $current->id);
+
+    // Filters
+    if ($request->filled('mode') && $request->mode !== 'all') {
+      $requestsQuery->where('mode', $request->mode);
+    }
+    if ($request->filled('status') && $request->status !== 'all') {
+      $requestsQuery->where('status', $request->status);
+    }
+    if ($request->filled('start_date')) {
+      $requestsQuery->whereDate('created_at', '>=', $request->start_date);
+    }
+    if ($request->filled('end_date')) {
+      $requestsQuery->whereDate('created_at', '<=', $request->end_date);
+    }
+    if ($request->filled('search_term')) {
+      $term = $request->search_term;
+      $requestsQuery->where(function ($q) use ($term) {
+        $q->where('utr', 'like', "%$term%")
+          ->orWhere('id', 'like', "%$term%")
+          ->orWhere('payment_from', 'like', "%$term%")
+          ->orWhere('account_upi', 'like', "%$term%");
+      });
+    }
+
+    return DataTables::of($requestsQuery)
+      ->addColumn('trans_id', function ($req) {
+        return 'TXN-' . str_pad((string) $req->id, 6, '0', STR_PAD_LEFT);
+      })
+      ->addColumn('approver_name', function ($req) {
+        $userId = $req->accepted_by ?: $req->assign_to;
+        if (!$userId)
+          return '-';
+        $user = User::find($userId);
+        if (!$user)
+          return '-';
+        if (!empty($user->name))
+          return $user->name;
+        $first = $user->first_name ?? '';
+        $last = $user->last_name ?? '';
+        return trim($first . ' ' . $last) ?: '-';
+      })
+      ->addColumn('image', function ($req) {
+        if (!$req->image)
+          return '<span class="text-muted">-</span>';
+        $src = asset('storage/' . $req->image);
+        return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
       })
       ->editColumn('status', function ($req) {
         return match ($req->status) {
           'pending' => '<span class="badge bg-label-warning">Pending</span>',
           'accepted' => '<span class="badge bg-label-success">Accepted</span>',
           'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
-          default => $req->status,
+          default => e($req->status ?? '-')
         };
       })
-      ->rawColumns(['action', 'status'])
+      ->addColumn('action', function ($req) {
+        $encryptedId = Crypt::encrypt($req->id);
+        $actions = '';
+        $actions .= '<a href="' . route('requests.edit', $encryptedId) . '" class="btn btn-sm btn-warning me-1" title="Edit">'
+          . '<i class="ti ti-pencil"></i>'
+          . '</a>';
+        $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
+          . '<i class="ti ti-eye"></i>'
+          . '</a>';
+        if ($req->status === 'pending') {
+          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept"><i class="ti ti-check"></i></button>';
+          $actions .= '<button class="btn btn-sm btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject"><i class="ti ti-x"></i></button>';
+        }
+        return $actions;
+      })
+      ->rawColumns(['status', 'image', 'action'])
+      ->with([
+        'cache_status' => 'DATABASE',
+        'load_time' => (int) ((microtime(true) - $start) * 1000)
+      ])
       ->make(true);
   }
   public function create()
   {
     return view('content.apps.requests.add');
   }
-
   public function store(HttpRequest $request)
   {
     $validator = Validator::make($request->all(), [
@@ -206,33 +314,53 @@ class RequestController extends Controller
   {
     $id = Crypt::decrypt($id);
     $requestModel = Request::findOrFail($id);
+    $currentUser = Auth::user();
 
-    $validator = Validator::make($request->all(), [
-      'name' => 'required|string|max:255',
-      'mode' => 'required|string|max:100',
-      'amount' => 'required|numeric|min:0',
-      'payment_amount' => 'nullable|numeric|min:0',
-      'utr' => 'nullable|string|max:100',
-      'payment_from' => 'nullable|string|max:255',
-      'account_upi' => 'nullable|string|max:255',
-      'image' => 'nullable|image|max:2048',
-      'status' => 'nullable|in:pending,accepted,rejected',
-    ]);
+    // Role-based validation
+    if ($currentUser->hasRole('Approver')) {
+      // Approvers can only edit: payment_amount, payment_from, status
+      $validator = Validator::make($request->all(), [
+        'payment_amount' => 'nullable|numeric|min:0',
+        'payment_from' => 'nullable|string|max:255',
+        'status' => 'nullable|in:pending,accepted,rejected',
+      ]);
 
-    if ($request->utr && Request::where('utr', $request->utr)->where('id', '!=', $id)->exists()) {
-      return back()->withErrors(['utr' => 'This UTR already exists. Payment request auto-rejected.'])->withInput();
-    }
+      $data = [
+        'payment_amount' => $request->payment_amount,
+        'payment_from' => $request->payment_from,
+        'status' => $request->status,
+        'updated_by' => Auth::id(),
+      ];
+    } else {
+      // Regular users can edit all fields
+      $validator = Validator::make($request->all(), [
+        'name' => 'required|string|max:255',
+        'mode' => 'required|string|max:100',
+        'amount' => 'required|numeric|min:0',
+        'payment_amount' => 'nullable|numeric|min:0',
+        'utr' => 'nullable|string|max:100',
+        'payment_from' => 'nullable|string|max:255',
+        'account_upi' => 'nullable|string|max:255',
+        'image' => 'nullable|image|max:2048',
+        'status' => 'nullable|in:pending,accepted,rejected',
+      ]);
 
-    $data = $validator->validated();
-    $data['updated_by'] = Auth::id();
+      if ($request->utr && Request::where('utr', $request->utr)->where('id', '!=', $id)->exists()) {
+        return back()->withErrors(['utr' => 'This UTR already exists.'])->withInput();
+      }
 
-    if ($request->hasFile('image')) {
-      $data['image'] = $request->file('image')->store('payment_images', 'public');
+      $data = $validator->validated();
+      $data['updated_by'] = Auth::id();
+
+      if ($request->hasFile('image')) {
+        $data['image'] = $request->file('image')->store('payment_images', 'public');
+      }
     }
 
     $requestModel->update($data);
 
-    return redirect()->route('requests.list')->with('success', 'Payment request updated successfully.');
+    $redirectRoute = $currentUser->hasRole('Approver') ? 'requests.assigned' : 'requests.list';
+    return redirect()->route($redirectRoute)->with('success', 'Payment request updated successfully.');
   }
 
   public function softDelete(string $id)
@@ -335,5 +463,43 @@ class RequestController extends Controller
     $requestModel->save();
 
     return response()->json(['success' => true, 'message' => 'Request rejected']);
+  }
+
+  /**
+   * Get default bank account for the current user
+   */
+  public function getDefaultBankAccount(HttpRequest $request)
+  {
+    $type = $request->get('type'); // 'bank' or 'upi'
+    $userId = Auth::id();
+
+    $account = BankManagement::where('created_by', $userId)
+      ->where('type', $type)
+      ->orderBy('created_at', 'desc')
+      ->first();
+
+    if ($account) {
+      return response()->json(['success' => true, 'account' => $account]);
+    }
+
+    return response()->json(['success' => false, 'message' => 'No default account found']);
+  }
+
+  /**
+   * Get default crypto account for the current user
+   */
+  public function getDefaultCryptoAccount()
+  {
+    $userId = Auth::id();
+
+    $account = CryptoManagement::where('created_by', $userId)
+      ->orderBy('created_at', 'desc')
+      ->first();
+
+    if ($account) {
+      return response()->json(['success' => true, 'account' => $account]);
+    }
+
+    return response()->json(['success' => false, 'message' => 'No default crypto account found']);
   }
 }

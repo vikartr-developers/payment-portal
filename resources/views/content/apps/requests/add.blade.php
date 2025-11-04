@@ -2,6 +2,8 @@
 
 @section('title', 'Add Payment Request')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 @section('vendor-style')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
@@ -15,7 +17,62 @@
         $(document).ready(function() {
             $('#mode, #status').select2();
 
-            // Add more JS if you need conditional fields or Ajax loading
+            // Load default account based on mode selection
+            $('#mode').on('change', function() {
+                var mode = $(this).val();
+                var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+                if (mode === 'bank' || mode === 'upi') {
+                    $.ajax({
+                        url: '/app/get-default-bank-account',
+                        type: 'GET',
+                        data: {
+                            type: mode,
+                            _token: csrfToken
+                        },
+                        success: function(response) {
+                            if (response.success && response.account) {
+                                if (mode === 'bank') {
+                                    $('#account_upi').val(response.account.account_number +
+                                        ' (IFSC: ' +
+                                        response.account.ifsc_code + ')');
+                                } else if (mode === 'upi') {
+                                    $('#account_upi').val(response.account.upi_id || response
+                                        .account
+                                        .upi_number);
+                                }
+                            } else {
+                                $('#account_upi').val('');
+                            }
+                        },
+                        error: function() {
+                            $('#account_upi').val('');
+                        }
+                    });
+                } else if (mode === 'crypto') {
+                    $.ajax({
+                        url: '/app/get-default-crypto-account',
+                        type: 'GET',
+                        data: {
+                            _token: csrfToken
+                        },
+                        success: function(response) {
+                            if (response.success && response.account) {
+                                $('#account_upi').val(response.account.wallet_address + ' (' +
+                                    response
+                                    .account.network + ')');
+                            } else {
+                                $('#account_upi').val('');
+                            }
+                        },
+                        error: function() {
+                            $('#account_upi').val('');
+                        }
+                    });
+                } else {
+                    $('#account_upi').val('');
+                }
+            });
         });
     </script>
 @endsection
@@ -125,7 +182,8 @@
                         @endphp
                         @if ($current->hasRole('Approver') || $current->hasRole('Admin'))
                             <div class="mb-3">
-                                <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                                <label for="status" class="form-label">Status <span
+                                        class="text-danger">*</span></label>
                                 <select id="status" name="status"
                                     class="form-select @error('status') is-invalid @enderror" required>
                                     <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>Pending

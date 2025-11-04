@@ -169,6 +169,7 @@ use App\Http\Controllers\CryptoManagementController;
 
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\ChargeBackController;
 
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -471,10 +472,23 @@ Route::middleware(['auth'])->group(function () {
   Route::post('2fa/disable', [TwoFactorController::class, 'disable'])->middleware('auth')->name('2fa.disable');
 });
 
+Route::middleware(['auth'])->prefix('app')->group(function () {
+  // Helper routes for getting default accounts
+  Route::get('get-default-bank-account', [RequestController::class, 'getDefaultBankAccount'])->name('get.default.bank');
+  Route::get('get-default-crypto-account', [RequestController::class, 'getDefaultCryptoAccount'])->name('get.default.crypto');
+});
+
 Route::middleware(['auth'])->prefix('app/payment')->group(function () {
   Route::get('requests', [RequestController::class, 'index'])->name('requests.list');
   Route::get('requests/create', [RequestController::class, 'create'])->name('requests.add');
   Route::post('requests', [RequestController::class, 'store'])->name('requests.store');
+
+  // Charge Back routes
+  Route::get('chargebacks', [ChargeBackController::class, 'index'])->name('chargebacks.list');
+  Route::get('chargebacks/create', [ChargeBackController::class, 'create'])->name('chargebacks.create');
+  Route::post('chargebacks', [ChargeBackController::class, 'store'])->name('chargebacks.store');
+  Route::get('/api/chargebacks', [ChargeBackController::class, 'dataTable'])->name('chargebacks.data');
+
   Route::get('requests/{id}/edit', [RequestController::class, 'edit'])->name('requests.edit');
   Route::put('requests/{id}', [RequestController::class, 'update'])->name('requests.update');
   Route::delete('requests/soft-delete/{id}', [RequestController::class, 'softDelete'])->name('requests.soft-delete');
@@ -489,6 +503,11 @@ Route::middleware(['auth'])->prefix('app/payment')->group(function () {
   Route::get('api/assigned-requests', [RequestController::class, 'assignedRequestsDataTable'])->name('requests.assigned.data');
   Route::get('/api/requests', [RequestController::class, 'dataTable'])->name('requests.data');
   Route::get('requests/view/{id}', [RequestController::class, 'view'])->name('requests.view');
+
+  // Charge Back routes
+  Route::get('chargebacks', [ChargeBackController::class, 'index'])->name('chargebacks.list');
+  Route::get('chargebacks/create', [ChargeBackController::class, 'create'])->name('chargebacks.create');
+  Route::post('chargebacks', [ChargeBackController::class, 'store'])->name('chargebacks.store');
 
 });
 

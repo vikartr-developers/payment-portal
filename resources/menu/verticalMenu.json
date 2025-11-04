@@ -26,7 +26,10 @@
         {
           "url": "app/users/list",
           "name": "Users List",
-          "slug": "app-users-list"
+          "slug": "app-users-list",   "permission": [
+            "user-list",
+            "user-create"
+          ]
         },
         {
           "url": "app/site-users/list",
@@ -46,12 +49,12 @@
     {
       "name": "Payment Requests",
       "icon": "menu-icon tf-icons ti ti-cash",
-      "slug": "app-payment-requests",
+      "slug": "requests",
       "submenu": [
         {
           "url": "app/payment/requests",
           "name": "Requests List",
-          "slug": "app-payment-requests-list",
+          "slug": "requests.list",
           "permission": [
             "request-list",
             "request-create"
@@ -65,6 +68,22 @@
           "permission": [
             "request-list",
             "request-create"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Charge Backs",
+      "icon": "menu-icon tf-icons ti ti-refresh-alert",
+      "slug": "chargebacks",
+      "submenu": [
+        {
+          "url": "app/payment/chargebacks",
+          "name": "Charge Backs List",
+          "slug": "chargebacks.list",
+          "permission": [
+            "chargeback-list",
+            "chargeback-create"
           ]
         }
       ]

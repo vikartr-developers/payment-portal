@@ -1,7 +1,7 @@
 {{-- resources/views/requests/list.blade.php --}}
 @extends('layouts/layoutMaster')
 
-@section('title', 'Payment Requests List')
+@section('title', 'Dosit Requests')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -79,19 +79,42 @@
     <section class="app-requests-list">
         <div class="card">
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                <h4 class="card-title">Payment Requests
+                <h4 class="card-title">Deposit Requests
                     <span class="cache-status-indicator ms-2" title="Cache status">
                         <span class="cache-dot cache-pending"></span>
                         <small class="cache-text">LOADING</small>
                         <small class="load-time ms-1"></small>
                     </span>
                 </h4>
-                <div>
-                    <select id="include_trashed" class="form-select me-2" style="width: auto; display: inline-block;">
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <select id="mode_filter" class="form-select" style="width: auto;">
+                        <option value="all">All Modes</option>
+                        <option value="bank">Bank</option>
+                        <option value="upi">UPI</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+                    <select id="status_filter" class="form-select" style="width: auto;">
+                        <option value="all">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <input type="date" id="start_date" class="form-control" style="width: auto;"
+                        placeholder="Start date" />
+                    <input type="date" id="end_date" class="form-control" style="width: auto;" placeholder="End date" />
+                    <input type="text" id="search_term" class="form-control" style="width: 200px;"
+                        placeholder="Search UTR/Trans ID" />
+                    <select id="auto_reload" class="form-select" style="width: auto;">
+                        <option value="0">Auto-reload: Off</option>
+                        <option value="15">15s</option>
+                        <option value="30">30s</option>
+                        <option value="60">60s</option>
+                    </select>
+                    <select id="include_trashed" class="form-select" style="width: auto;">
                         <option value="false">Active Requests Only</option>
                         <option value="true">Include Deleted</option>
                     </select>
-                    <select id="only_trashed" class="form-select me-2" style="width: auto; display: inline-block;">
+                    <select id="only_trashed" class="form-select" style="width: auto;">
                         <option value="false">Show All</option>
                         <option value="true">Deleted Only</option>
                     </select>
@@ -104,12 +127,17 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
+                                <th>Trans ID</th>
                                 <th>Name</th>
+                                <th>Approver</th>
                                 <th>Mode</th>
                                 <th>Amount</th>
                                 <th>UTR</th>
+                                <th>Payment From</th>
+                                <th>Account / UPI</th>
+                                <th>Image</th>
                                 <th>Status</th>
-                                <th>Created At</th>
+                                <th>Date/Time</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>

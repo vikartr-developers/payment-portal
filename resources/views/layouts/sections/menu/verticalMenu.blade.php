@@ -1,57 +1,15 @@
 @php
     $configData = Helper::appClasses();
-    $currentRouteName = Route::currentRouteName();
-
-    function isSubmenuActive($submenu, $currentRouteName)
-    {
-        foreach ($submenu as $item) {
-            if (isset($item->slug)) {
-                if (is_array($item->slug)) {
-                    foreach ($item->slug as $slug) {
-                        if (str_starts_with($currentRouteName, $slug)) {
-                            return true;
-                        }
-                    }
-                } else {
-                    if (str_starts_with($currentRouteName, $item->slug)) {
-                        return true;
-                    }
-                }
-            }
-            if (isset($item->submenu) && isSubmenuActive($item->submenu, $currentRouteName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-@endphp
-@php
-    // Helper function to check if any submenu is permitted and visible
-    function hasVisibleSubmenu($submenu)
-    {
-        foreach ($submenu as $sub) {
-            if (isset($sub->permission) && is_array($sub->permission)) {
-                foreach ($sub->permission as $perm) {
-                    if (auth()->user()->can($perm)) {
-                        return true;
-                    }
-                }
-            } else {
-                // No permission defined means visible by default
-                return true;
-            }
-        }
-        return false;
-    }
 @endphp
 
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+
+    {{-- App logo --}}
     @if (!isset($navbarFull))
         <div class="app-brand demo">
             <a href="{{ url('/') }}" class="app-brand-link">
                 <span class="app-brand-logo demo">
-                    {{-- Your logo here --}}
-                    <img src="{{ asset('home/images/favicon.png') }}" alt="Logo">
+                    @include('_partials.macros', ['height' => 20])
                 </span>
                 <span class="app-brand-text demo menu-text fw-bold">{{ config('variables.templateName') }}</span>
             </a>
@@ -66,108 +24,117 @@
 
     <ul class="menu-inner py-1">
         @foreach ($menuData[0]->menu as $menu)
-            @if (isset($menu->menuHeader))
+            @php
+                $showMenu = false;
+
+                // 1. Check top-level menu permissions
+                if (isset($menu->permission) && is_array($menu->permission)) {
+                    foreach ($menu->permission as $perm) {
+                        if (Auth::user()->can($perm)) {
+                            $showMenu = true;
+                            break;
+                        }
+                    }
+                }
+
+                // 2. If no top-level access, check any submenu permissions
+                if (!$showMenu && isset($menu->submenu)) {
+                    foreach ($menu->submenu as $submenu) {
+                        if (isset($submenu->permission) && is_array($submenu->permission)) {
+                            foreach ($submenu->permission as $perm) {
+                                if (Auth::user()->can($perm)) {
+                                    $showMenu = true;
+                                    break 2; // exit both loops
+                                }
+                            }
+                        } else {
+                            // No permission tag means show by default
+                            $showMenu = true;
+                            break;
+                        }
+                    }
+                }
+            @endphp
+
+            {{-- Menu headers --}}
+            @if (isset($menu->menuHeader) && $showMenu)
                 <li class="menu-header small text-uppercase">
                     <span class="menu-header-text">{{ __($menu->menuHeader) }}</span>
                 </li>
-            @else
+            @elseif($showMenu)
                 @php
-                    $hasPermission = false;
+                    $activeClass = null;
+                    $currentRouteName = Route::currentRouteName();
 
-                    if (isset($menu->permission) && is_array($menu->permission)) {
-                        foreach ($menu->permission as $permission) {
-                            if (auth()->user()->can($permission)) {
-                                $hasPermission = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        $hasPermission = true; // no permission array means public
-                    }
-
-                    $activeClass = '';
-                    if ($hasPermission) {
-                        if (isset($menu->slug)) {
-                            if (is_array($menu->slug)) {
-                                foreach ($menu->slug as $slug) {
-                                    if ($currentRouteName === $slug) {
-                                        $activeClass = 'active';
-                                        break;
-                                    }
-                                }
-                            } else {
-                                if ($currentRouteName === $menu->slug) {
-                                    $activeClass = 'active';
+                    if ($currentRouteName === $menu->slug) {
+                        $activeClass = 'active';
+                    } elseif (isset($menu->submenu)) {
+                        if (is_array($menu->slug)) {
+                            foreach ($menu->slug as $slug) {
+                                if (str_contains($currentRouteName, $slug) && strpos($currentRouteName, $slug) === 0) {
+                                    $activeClass = 'active open';
                                 }
                             }
-                        }
-
-                        if (
-                            !$activeClass &&
-                            isset($menu->submenu) &&
-                            isSubmenuActive($menu->submenu, $currentRouteName)
-                        ) {
-                            $activeClass = 'active open';
+                        } else {
+                            if (
+                                str_contains($currentRouteName, $menu->slug) &&
+                                strpos($currentRouteName, $menu->slug) === 0
+                            ) {
+                                $activeClass = 'active open';
+                            }
                         }
                     }
                 @endphp
 
-                @if ($hasPermission)
-                    <li class="menu-item {{ $activeClass }}">
-                        <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0);' }}"
-                            class="{{ isset($menu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
-                            @if (isset($menu->target) && !empty($menu->target)) target="_blank" @endif>
-                            @isset($menu->icon)
-                                <i class="{{ $menu->icon }}"></i>
-                            @endisset
-                            <div>{{ isset($menu->name) ? __($menu->name) : '' }}</div>
-                            @isset($menu->badge)
-                                <div class="badge bg-{{ $menu->badge[0] }} rounded-pill ms-auto">{{ $menu->badge[1] }}
-                                </div>
-                            @endisset
-                        </a>
-
-                        @isset($menu->submenu)
-                            <ul class="menu-sub">
-                                @foreach ($menu->submenu as $submenu)
-                                    @php
-                                        $subHasPermission = false;
-                                        if (isset($submenu->permission) && is_array($submenu->permission)) {
-                                            foreach ($submenu->permission as $permission) {
-                                                if (auth()->user()->can($permission)) {
-                                                    $subHasPermission = true;
-                                                    break;
-                                                }
-                                            }
-                                        } else {
-                                            $subHasPermission = true;
-                                        }
-
-                                        $subActiveClass = '';
-                                        if ($subHasPermission) {
-                                            if (
-                                                $currentRouteName === $submenu->slug ||
-                                                (isset($submenu->slug) &&
-                                                    str_starts_with($currentRouteName, $submenu->slug))
-                                            ) {
-                                                $subActiveClass = 'active';
-                                            }
-                                        }
-                                    @endphp
-
-                                    @if ($subHasPermission)
-                                        <li class="menu-item {{ $subActiveClass }}">
-                                            <a href="{{ url($submenu->url) }}" class="menu-link"
-                                                @if (isset($submenu->target) && !empty($submenu->target)) target="_blank" @endif>
-                                                {{ __($submenu->name) }}
-                                            </a>
-                                        </li>
-                                    @endif
-                                @endforeach
-                            </ul>
+                {{-- Main menu --}}
+                <li class="menu-item {{ $activeClass }}">
+                    <a href="{{ isset($menu->url) ? url($menu->url) : 'javascript:void(0);' }}"
+                        class="{{ isset($menu->submenu) ? 'menu-link menu-toggle' : 'menu-link' }}"
+                        @if (isset($menu->target) && !empty($menu->target)) target="_blank" @endif>
+                        @isset($menu->icon)
+                            <i class="{{ $menu->icon }}"></i>
                         @endisset
-                    </li>
-                @endif
+                        <div>{{ __($menu->name ?? '') }}</div>
+
+                        @isset($menu->badge)
+                            <div class="badge bg-{{ $menu->badge[0] }} rounded-pill ms-auto">{{ $menu->badge[1] }}</div>
+                        @endisset
+                    </a>
+
+                    {{-- Submenus (with permission check) --}}
+                    @isset($menu->submenu)
+                        <ul class="menu-sub">
+                            @foreach ($menu->submenu as $submenu)
+                                @php
+                                    $showSubmenu = false;
+                                    if (isset($submenu->permission) && is_array($submenu->permission)) {
+                                        foreach ($submenu->permission as $perm) {
+                                            if (Auth::user()->can($perm)) {
+                                                $showSubmenu = true;
+                                                break;
+                                            }
+                                        }
+                                    } else {
+                                        $showSubmenu = true; // if no permission defined
+                                    }
+                                @endphp
+
+                                @if ($showSubmenu)
+                                    <li
+                                        class="menu-item {{ Route::currentRouteName() === $submenu->slug ? 'active' : '' }}">
+                                        <a href="{{ isset($submenu->url) ? url($submenu->url) : 'javascript:void(0);' }}"
+                                            class="menu-link" @if (isset($submenu->target) && !empty($submenu->target)) target="_blank" @endif>
+                                            @isset($submenu->icon)
+                                                <i class="{{ $submenu->icon }}"></i>
+                                            @endisset
+                                            <div>{{ __($submenu->name ?? '') }}</div>
+                                        </a>
+                                    </li>
+                                @endif
+                            @endforeach
+                        </ul>
+                    @endisset
+                </li>
             @endif
         @endforeach
     </ul>

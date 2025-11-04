@@ -2,6 +2,8 @@
 
 @section('title', 'Edit Payment Request')
 
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 @section('vendor-style')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endsection
@@ -14,6 +16,63 @@
     <script>
         $(document).ready(function() {
             $('#mode, #status').select2();
+
+            // Load default account based on mode selection
+            $('#mode').on('change', function() {
+                var mode = $(this).val();
+                var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+                if (mode === 'bank' || mode === 'upi') {
+                    $.ajax({
+                        url: '/app/get-default-bank-account',
+                        type: 'GET',
+                        data: {
+                            type: mode,
+                            _token: csrfToken
+                        },
+                        success: function(response) {
+                            if (response.success && response.account) {
+                                if (mode === 'bank') {
+                                    $('#account_upi').val(response.account.account_number +
+                                        ' (IFSC: ' +
+                                        response.account.ifsc_code + ')');
+                                } else if (mode === 'upi') {
+                                    $('#account_upi').val(response.account.upi_id || response
+                                        .account
+                                        .upi_number);
+                                }
+                            } else {
+                                $('#account_upi').val('');
+                            }
+                        },
+                        error: function() {
+                            $('#account_upi').val('');
+                        }
+                    });
+                } else if (mode === 'crypto') {
+                    $.ajax({
+                        url: '/app/get-default-crypto-account',
+                        type: 'GET',
+                        data: {
+                            _token: csrfToken
+                        },
+                        success: function(response) {
+                            if (response.success && response.account) {
+                                $('#account_upi').val(response.account.wallet_address + ' (' +
+                                    response
+                                    .account.network + ')');
+                            } else {
+                                $('#account_upi').val('');
+                            }
+                        },
+                        error: function() {
+                            $('#account_upi').val('');
+                        }
+                    });
+                } else {
+                    $('#account_upi').val('');
+                }
+            });
         });
     </script>
 @endsection
@@ -24,9 +83,12 @@
             <div class="card">
                 <div class="card-header">
                     <h4 class="card-title">Edit Payment Request</h4>
+                    @if (Auth::user()->hasRole('Approver'))
+                        <p class="text-muted mb-0">As an approver, you can edit Payment Amount, Payment From, and Status</p>
+                    @endif
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('requests.update', $requestModel->id) }}" method="POST"
+                    <form action="{{ route('requests.update', Crypt::encrypt($requestModel->id)) }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
@@ -36,7 +98,8 @@
                                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                                 <input type="text" id="name" name="name"
                                     class="form-control @error('name') is-invalid @enderror"
-                                    value="{{ old('name', $requestModel->name) }}" required />
+                                    value="{{ old('name', $requestModel->name) }}"
+                                    {{ Auth::user()->hasRole('Approver') ? 'readonly' : '' }} required />
                                 @error('name')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -45,7 +108,8 @@
                             <div class="mb-3 col-md-6">
                                 <label for="mode" class="form-label">Mode <span class="text-danger">*</span></label>
                                 <select id="mode" name="mode"
-                                    class="form-select @error('mode') is-invalid @enderror" required>
+                                    class="form-select @error('mode') is-invalid @enderror"
+                                    {{ Auth::user()->hasRole('Approver') ? 'disabled' : '' }} required>
                                     <option value="">Select Mode</option>
                                     <option value="bank"
                                         {{ old('mode', $requestModel->mode) === 'bank' ? 'selected' : '' }}>Bank</option>
@@ -55,6 +119,9 @@
                                         {{ old('mode', $requestModel->mode) === 'crypto' ? 'selected' : '' }}>Crypto
                                     </option>
                                 </select>
+                                @if (Auth::user()->hasRole('Approver'))
+                                    <input type="hidden" name="mode" value="{{ $requestModel->mode }}" />
+                                @endif
                                 @error('mode')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -66,7 +133,8 @@
                                 <label for="amount" class="form-label">Amount <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" id="amount" name="amount"
                                     class="form-control @error('amount') is-invalid @enderror"
-                                    value="{{ old('amount', $requestModel->amount) }}" required />
+                                    value="{{ old('amount', $requestModel->amount) }}"
+                                    {{ Auth::user()->hasRole('Approver') ? 'readonly' : '' }} required />
                                 @error('amount')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -88,7 +156,8 @@
                                 <label for="utr" class="form-label">UTR</label>
                                 <input type="text" id="utr" name="utr"
                                     class="form-control @error('utr') is-invalid @enderror"
-                                    value="{{ old('utr', $requestModel->utr) }}" />
+                                    value="{{ old('utr', $requestModel->utr) }}"
+                                    {{ Auth::user()->hasRole('Approver') ? 'readonly' : '' }} />
                                 @error('utr')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -109,7 +178,8 @@
                             <label for="account_upi" class="form-label">Account/UPI</label>
                             <input type="text" id="account_upi" name="account_upi"
                                 class="form-control @error('account_upi') is-invalid @enderror"
-                                value="{{ old('account_upi', $requestModel->account_upi) }}" />
+                                value="{{ old('account_upi', $requestModel->account_upi) }}"
+                                {{ Auth::user()->hasRole('Approver') ? 'readonly' : '' }} />
                             @error('account_upi')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
