@@ -170,6 +170,7 @@ use App\Http\Controllers\CryptoManagementController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\ChargeBackController;
+use App\Http\Controllers\PaymentGatewayController;
 
 // Main Page Route
 // Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -207,6 +208,12 @@ Route::get('/front-pages/payment', [Payment::class, 'index'])->name('front-pages
 Route::get('/front-pages/checkout', [Checkout::class, 'index'])->name('front-pages-checkout');
 Route::get('/front-pages/help-center', [HelpCenter::class, 'index'])->name('front-pages-help-center');
 Route::get('/front-pages/help-center-article', [HelpCenterArticle::class, 'index'])->name('front-pages-help-center-article');
+
+// Payment Gateway (Frontend)
+Route::get('/payment-gateway', [PaymentGatewayController::class, 'index'])->name('payment.gateway');
+Route::post('/payment-gateway/select-method', [PaymentGatewayController::class, 'selectMethod'])->name('payment.select-method');
+Route::post('/payment-gateway/show-details', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
+Route::post('/payment-gateway/process', [PaymentGatewayController::class, 'processPayment'])->name('payment.process');
 
 // apps
 Route::get('/app/email', [Email::class, 'index'])->name('app-email');
