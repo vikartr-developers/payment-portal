@@ -101,6 +101,16 @@
                                 data-amount="3000">₹3000</button>
                         </div>
 
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input @error('consent') is-invalid @enderror" type="checkbox"
+                                id="consent" name="consent" value="1" {{ old('consent') ? 'checked' : '' }}
+                                required>
+                            <label class="form-check-label" for="consent">I give full consent for this payment</label>
+                            @error('consent')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="ti ti-arrow-right me-2"></i>Proceed to Payment

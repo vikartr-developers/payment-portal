@@ -115,16 +115,16 @@
                     </form>
 
                     <!-- Register -->
-                    @if (Route::has('register'))
+                    {{-- @if (Route::has('register'))
                         <p class="text-center mt-3">
                             <span>New on our platform?</span>
                             <a href="{{ route('register') }}">
                                 <span>Create an account</span>
                             </a>
                         </p>
-                    @endif
+                    @endif --}}
 
-                    <!-- Social Logins -->
+                    {{-- <!-- Social Logins -->
                     <div class="divider my-4">
                         <div class="divider-text">or</div>
                     </div>
@@ -139,7 +139,7 @@
                         <a href="#" class="btn btn-icon btn-label-twitter">
                             <i class="fa-brands fa-twitter fs-5"></i>
                         </a>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
             <!-- /Login Form -->

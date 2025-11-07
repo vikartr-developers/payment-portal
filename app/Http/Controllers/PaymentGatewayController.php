@@ -26,11 +26,13 @@ class PaymentGatewayController extends Controller
     $request->validate([
       'username' => 'required|string|max:255',
       'mobile' => 'nullable|string|max:10|regex:/^[0-9]{10}$/',
+      'consent' => 'accepted',
       'amount' => 'required|numeric|min:100',
     ]);
 
     Session::put('payment_username', $request->username);
     Session::put('payment_mobile', $request->mobile);
+    Session::put('payment_consent', $request->consent);
     Session::put('payment_amount', $request->amount);
     $pageConfigs = ['myLayout' => 'front'];
 
@@ -61,15 +63,23 @@ class PaymentGatewayController extends Controller
     }
 
     // Fetch random UPI and Bank accounts from bank_managements
-    $upiAccount = BankManagement::where('type', 'upi')
-      ->whereNull('deleted_at')
-      ->inRandomOrder()
-      ->first();
+    // Use count + random offset to reliably pick a random row without ORDER BY RAND()
+    $upiAccount = null;
+    $upiCount = BankManagement::where('type', 'upi')->whereNull('deleted_at')->count();
+    if ($upiCount > 0) {
+      $upiOffset = random_int(0, max(0, $upiCount - 1));
+      $upiAccount = BankManagement::where('type', 'upi')->whereNull('deleted_at')->skip($upiOffset)->first();
+    }
 
-    $bankAccount = BankManagement::where('type', 'bank')
-      ->whereNull('deleted_at')
-      ->inRandomOrder()
-      ->first();
+    $bankAccount = null;
+    $bankCount = BankManagement::where('type', 'bank')->whereNull('deleted_at')->count();
+    if ($bankCount > 0) {
+      $bankOffset = random_int(0, max(0, $bankCount - 1));
+      $bankAccount = BankManagement::where('type', 'bank')->whereNull('deleted_at')->skip($bankOffset)->first();
+    }
+
+
+
 
     return view('content.front-pages.payment-gateway.step3-regular', compact('username', 'amount', 'upiAccount', 'bankAccount', 'pageConfigs'));
   }
