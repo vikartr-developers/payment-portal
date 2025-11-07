@@ -94,7 +94,7 @@ class TwoFactorController extends Controller
     if ($google2fa->verifyKey($user->google2fa_secret, $code)) {
       Auth::loginUsingId($user->id);
       $request->session()->forget('2fa:user:id');
-      return redirect()->intended('/app/home');
+      return redirect()->intended('app/payment/requests');
     }
     return redirect()->back()->withErrors(['code' => 'The provided 2FA code is invalid.']);
   }

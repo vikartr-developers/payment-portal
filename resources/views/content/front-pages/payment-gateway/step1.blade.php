@@ -8,6 +8,28 @@
 
 @section('page-style')
     <style>
+        .upi-app-logos {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        .upi-app-logos img {
+            width: 48px;
+            height: auto;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .upi-app-logos img:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        }
+
         .amount-btn {
             font-size: 1.2rem;
             padding: 15px 30px;
@@ -105,7 +127,8 @@
                             <input class="form-check-input @error('consent') is-invalid @enderror" type="checkbox"
                                 id="consent" name="consent" value="1" {{ old('consent') ? 'checked' : '' }}
                                 required>
-                            <label class="form-check-label" for="consent">I give full consent for this payment</label>
+                            <label class="form-check-label" for="consent"> I agree and provide my legal consent for the
+                                bank payment deposit.</label>
                             @error('consent')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
@@ -117,6 +140,56 @@
                             </button>
                         </div>
                     </form>
+
+                    <div class="upi-app-logos" aria-hidden="false">
+                        <img class="upi-app-logo"
+                            src="https://img.icons8.com/?size=100&id=am4ltuIYDpQ5&format=png&color=000000" alt="Google Pay"
+                            title="Copy UPI ID to clipboard">
+                        <img class="upi-app-logo"
+                            src="https://img.icons8.com/?size=100&id=OYtBxIlJwMGA&format=png&color=000000" alt="PhonePe"
+                            title="Copy UPI ID to clipboard">
+                        <img class="upi-app-logo" src="https://img.icons8.com/?size=100&id=68067&format=png&color=000000"
+                            alt="Paytm" title="Copy UPI ID to clipboard">
+                        <img class="upi-app-logo"
+                            src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000" alt="BHIM"
+                            title="Copy UPI ID to clipboard">
+                        {{-- <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
+                                            alt="BHIM" title="Copy UPI ID to clipboard"> --}}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security / Trust Section -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center">
+                        <div class="row g-3 w-100" style="max-width:980px;">
+                            <div class="col-12 col-md-4">
+                                <div class="p-3 h-100 text-center border rounded bg-light">
+                                    <div class="mb-2"><i class="ti ti-lock" style="font-size:1.6rem;color:#7367f0"></i>
+                                    </div>
+                                    <h6 class="mb-1">Payment information is encrypted and secure</h6>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="p-3 h-100 text-center border rounded bg-light">
+                                    <div class="mb-2"><i class="ti ti-shield-check"
+                                            style="font-size:1.6rem;color:#7367f0"></i></div>
+                                    <h6 class="mb-1">PCI Compliant</h6>
+                                    <p class="mb-0 text-muted small">We follow industry security standards</p>
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-4">
+                                <div class="p-3 h-100 text-center border rounded bg-light">
+                                    <div class="mb-2"><i class="ti ti-user-check"
+                                            style="font-size:1.6rem;color:#7367f0"></i></div>
+                                    <h6 class="mb-1">Data Protection</h6>
+                                    <p class="mb-0 text-muted small">Your personal data is protected at all times</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

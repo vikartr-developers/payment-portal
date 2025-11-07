@@ -47,7 +47,7 @@
       "menuHeader": "Finance Management"
     },
     {
-      "name": "Payment Requests",
+      "name": "Deposit Requests",
       "icon": "menu-icon tf-icons ti ti-cash",
       "slug": "requests",
       "submenu": [

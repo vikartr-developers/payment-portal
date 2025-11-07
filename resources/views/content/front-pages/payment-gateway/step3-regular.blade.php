@@ -63,6 +63,28 @@
         #bankPaymentSection {
             display: none;
         }
+
+        .upi-app-logos {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 12px;
+            align-items: center;
+        }
+
+        .upi-app-logos img {
+            width: 48px;
+            height: auto;
+            cursor: pointer;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .upi-app-logos img:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+        }
     </style>
 @endsection
 
@@ -119,6 +141,25 @@
                                         $upiPaymentUrl = "upi://pay?pa={$upiId}&pn={$merchantName}&am={$amount}&cu=INR&tn=Payment";
                                     @endphp
                                     <div id="qrcode" class="mb-3"></div>
+                                    <!-- UPI app logos (click to copy UPI ID) -->
+                                    <div class="upi-app-logos" aria-hidden="false">
+                                        <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=am4ltuIYDpQ5&format=png&color=000000"
+                                            alt="Google Pay" title="Copy UPI ID to clipboard"
+                                            data-upi="{{ $upiId }}">
+                                        <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=OYtBxIlJwMGA&format=png&color=000000"
+                                            alt="PhonePe" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
+                                        <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=68067&format=png&color=000000"
+                                            alt="Paytm" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
+                                        <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
+                                            alt="BHIM" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
+                                        {{-- <img class="upi-app-logo"
+                                            src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
+                                            alt="BHIM" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}"> --}}
+                                    </div>
                                     <div class="upi-details mt-3">
                                         @if ($upiAccount->upi_id)
                                             <p class="mb-1"><strong>UPI ID:</strong> {{ $upiAccount->upi_id }}</p>
@@ -148,9 +189,24 @@
                             @if ($bankAccount)
                                 <div class="alert alert-warning">
                                     <h6 class="alert-heading">Bank Transfer Details</h6>
-                                    <p class="mb-1"><strong>Account Number:</strong> {{ $bankAccount->account_number }}
+                                    <p class="mb-1">
+                                        <strong>Account Number:</strong>
+                                        <span id="accountNumber">{{ $bankAccount->account_number }}</span>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                            data-copy="{{ $bankAccount->account_number }}" title="Copy account number"
+                                            aria-label="Copy account number">
+                                            <i class="ti ti-files"></i>
+                                        </button>
                                     </p>
-                                    <p class="mb-1"><strong>IFSC Code:</strong> {{ $bankAccount->ifsc_code }}</p>
+                                    <p class="mb-1">
+                                        <strong>IFSC Code:</strong>
+                                        <span id="ifscCode">{{ $bankAccount->ifsc_code }}</span>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                            data-copy="{{ $bankAccount->ifsc_code }}" title="Copy IFSC code"
+                                            aria-label="Copy IFSC code">
+                                            <i class="ti ti-files"></i>
+                                        </button>
+                                    </p>
                                     <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}</p>
                                     @if ($bankAccount->deposit_limit)
                                         <p class="mb-0 text-muted"><small>Deposit Limit:
@@ -230,6 +286,57 @@
                     $('#qrcode').html(qrImage);
                 }
             }
+
+            // Click on UPI app logo to copy UPI ID to clipboard
+            $(document).on('click', '.upi-app-logo', function() {
+                var upi = $(this).data('upi') || $('#upiPaymentUrl').val();
+                if (!upi) {
+                    alert('No UPI ID available to copy.');
+                    return;
+                }
+
+                // If the data-upi contains full UPI ID or URL, normalize to UPI ID
+                // If it's a URL like upi://pay?pa=xxx..., try to extract pa=
+                var upiId = upi;
+                var match = String(upi).match(/pa=([^&]+)/);
+                if (match) {
+                    upiId = decodeURIComponent(match[1]);
+                }
+
+                // Try clipboard API, fallback to prompt
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(upiId).then(function() {
+                        // show small feedback
+                        var originalTitle = document.title;
+                        // simple feedback via alert for now
+                        alert('UPI ID copied: ' + upiId);
+                    }).catch(function() {
+                        prompt('Copy UPI ID', upiId);
+                    });
+                } else {
+                    prompt('Copy UPI ID', upiId);
+                }
+            });
+
+            // Click on copy buttons to copy text to clipboard (account number / IFSC)
+            $(document).on('click', '.copy-btn', function(e) {
+                e.preventDefault();
+                var text = $(this).data('copy');
+                if (!text) {
+                    alert('Nothing to copy.');
+                    return;
+                }
+
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function() {
+                        alert('Copied: ' + text);
+                    }).catch(function() {
+                        prompt('Copy to clipboard', text);
+                    });
+                } else {
+                    prompt('Copy to clipboard', text);
+                }
+            });
 
             // Handle payment method selection
             $('.payment-method-option').on('click', function() {
