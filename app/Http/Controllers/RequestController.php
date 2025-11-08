@@ -173,10 +173,10 @@ ti-eye"></i>'
    */
   public function assignedRequests()
   {
-    // Only for approvers
-    if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
-      abort(403);
-    }
+    // // Only for approvers
+    // if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
+    //   abort(403);
+    // }
     return view('content.apps.requests.assigned');
   }
 
@@ -187,9 +187,9 @@ ti-eye"></i>'
   {
     $start = microtime(true);
     $current = Auth::user();
-    if (!$current || !$current->hasRole('Approver')) {
-      abort(403);
-    }
+    // if (!$current || !$current->hasRole('Approver')) {
+    //   abort(403);
+    // }
     $requestsQuery = Request::where('assign_to', $current->id);
 
     // Filters

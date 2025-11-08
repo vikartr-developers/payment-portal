@@ -17,12 +17,12 @@
     <style>
         .btn-primary {
             color: #fff;
-            background-color: #7367F0;
-            border-color: #7367F0;
+            background-color: #A3E94B;
+            border-color: #A3E94B;
         }
 
         :root {
-            --bs-primary: #7367F0 !important;
+            --bs-primary: #A3E94B !important;
         }
     </style>
     <!--/ Content -->

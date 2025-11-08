@@ -38,9 +38,9 @@
         }
 
         .amount-btn.active {
-            background-color: #7367f0;
+            background-color: #A3E94B;
             color: white;
-            border-color: #7367f0;
+            border-color: #A3E94B;
         }
 
         .payment-card {
@@ -167,7 +167,7 @@
                         <div class="row g-3 w-100" style="max-width:980px;">
                             <div class="col-12 col-md-4">
                                 <div class="p-3 h-100 text-center border rounded bg-light">
-                                    <div class="mb-2"><i class="ti ti-lock" style="font-size:1.6rem;color:#7367f0"></i>
+                                    <div class="mb-2"><i class="ti ti-lock" style="font-size:1.6rem;color:#A3E94B"></i>
                                     </div>
                                     <h6 class="mb-1">Payment information is encrypted and secure</h6>
                                 </div>
@@ -175,7 +175,7 @@
                             <div class="col-12 col-md-4">
                                 <div class="p-3 h-100 text-center border rounded bg-light">
                                     <div class="mb-2"><i class="ti ti-shield-check"
-                                            style="font-size:1.6rem;color:#7367f0"></i></div>
+                                            style="font-size:1.6rem;color:#A3E94B"></i></div>
                                     <h6 class="mb-1">PCI Compliant</h6>
                                     <p class="mb-0 text-muted small">We follow industry security standards</p>
                                 </div>
@@ -183,7 +183,7 @@
                             <div class="col-12 col-md-4">
                                 <div class="p-3 h-100 text-center border rounded bg-light">
                                     <div class="mb-2"><i class="ti ti-user-check"
-                                            style="font-size:1.6rem;color:#7367f0"></i></div>
+                                            style="font-size:1.6rem;color:#A3E94B"></i></div>
                                     <h6 class="mb-1">Data Protection</h6>
                                     <p class="mb-0 text-muted small">Your personal data is protected at all times</p>
                                 </div>

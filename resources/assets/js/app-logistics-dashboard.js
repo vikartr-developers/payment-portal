@@ -26,7 +26,7 @@
     line: {
       series1: config.colors.warning,
       series2: config.colors.primary,
-      series3: '#7367F029'
+      series3: '#A3E94B29'
     }
   };
 

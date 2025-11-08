@@ -4,7 +4,18 @@
 @section('title', 'Dosit Requests')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
+@section('vendor-style')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+@endsection
 
+@section('vendor-script')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+@endsection
+
+{{--
 @section('vendor-style')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}">
@@ -54,8 +65,24 @@
                 opacity: 1;
             }
         }
+
+        /* Make datatables rows single-line and allow horizontal scrolling */
+        /* .table-responsive-horizontal {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .table-responsive-horizontal .table {
+                    min-width: 1100px;
+                    /* ensure horizontal scrollbar appears when needed
+                }
+
+                .datatables-requests th,
+                .datatables-requests td {
+                    white-space: nowrap;
+                } */
     </style>
-@endsection
+@endsection --}}
 
 @section('vendor-script')
     <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>

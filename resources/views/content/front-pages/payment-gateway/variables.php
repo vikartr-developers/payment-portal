@@ -3,7 +3,7 @@
 return [
   "creatorName" => "",
   "creatorUrl" => "",
-  "templateName" => "777 Gateway",
+  "templateName" => "777 Pay ",
   "templateSuffix" => "System",
   "templateVersion" => "1.0.0",
   "templateFree" => false,
@@ -18,7 +18,7 @@ return [
   "generator" => "",
   "changelog" => "",
   "repository" => "",
-  "gitRepo" => "",
+  "gitRepo" => "pixinvent",
   "gitRepoAccess" => "",
   "githubFreeUrl" => "",
   "facebookUrl" => "",

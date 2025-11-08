@@ -23,11 +23,11 @@
         }
 
         .payment-method-option:hover {
-            border-color: #7367f0;
+            border-color: #A3E94B;
         }
 
         .payment-method-option.selected {
-            border-color: #7367f0;
+            border-color: #A3E94B;
             background-color: #f8f7ff;
         }
 
@@ -109,7 +109,7 @@
                         <label class="payment-method-option" for="upi">
                             <input type="radio" name="payment_method" id="upi" value="upi" required>
                             <div class="d-flex align-items-center">
-                                <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #7367f0;"></i>
+                                <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #A3E94B;"></i>
                                 <div>
                                     <h5 class="mb-1">UPI Payment</h5>
                                     <p class="text-muted mb-0">Pay using any UPI app</p>
@@ -120,7 +120,7 @@
                         <label class="payment-method-option" for="bank">
                             <input type="radio" name="payment_method" id="bank" value="bank" required>
                             <div class="d-flex align-items-center">
-                                <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #7367f0;"></i>
+                                <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #A3E94B;"></i>
                                 <div>
                                     <h5 class="mb-1">Bank Transfer</h5>
                                     <p class="text-muted mb-0">IMPS and RTGS only</p>
