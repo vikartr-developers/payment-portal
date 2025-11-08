@@ -37,6 +37,8 @@ class Kernel extends HttpKernel
       \App\Http\Middleware\VerifyCsrfToken::class,
       \Illuminate\Routing\Middleware\SubstituteBindings::class,
       \App\Http\Middleware\LocaleMiddleware::class,
+      // Enforce 2FA enabled for authenticated users (redirect to 2fa.setup when missing)
+      \App\Http\Middleware\EnsureTwoFactorEnabled::class,
     ],
 
     'api' => [
@@ -66,6 +68,7 @@ class Kernel extends HttpKernel
     'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
     'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+    'ensure2fa' => \App\Http\Middleware\EnsureTwoFactorEnabled::class,
 
   ];
 }
