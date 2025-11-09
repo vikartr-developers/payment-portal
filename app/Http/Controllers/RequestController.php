@@ -293,6 +293,21 @@ ti-eye"></i>'
     $data = $validator->validated();
     $data['created_by'] = Auth::id();
 
+    // Auto-assign to a random approver (if available)
+    $assignTo = null;
+    try {
+      $approverCount = User::role('Approver')->count();
+      if ($approverCount > 0) {
+        $offset = random_int(0, max(0, $approverCount - 1));
+        $approver = User::role('Approver')->skip($offset)->first();
+        if ($approver)
+          $assignTo = $approver->id;
+      }
+    } catch (\Exception $e) {
+      $assignTo = null;
+    }
+    $data['assign_to'] = $assignTo;
+
     if ($request->hasFile('image')) {
       $data['image'] = $request->file('image')->store('payment_images', 'public');
     }

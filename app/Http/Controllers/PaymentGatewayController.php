@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BankManagement;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 
@@ -108,6 +109,21 @@ class PaymentGatewayController extends Controller
     $screenshotPath = $request->file('screenshot')->store('payment_screenshots', 'public');
 
     // Create payment request record
+    // Try to assign this new request to a random approver (if any)
+    $assignTo = null;
+    try {
+      $approverCount = User::role('Approver')->count();
+      if ($approverCount > 0) {
+        $offset = random_int(0, max(0, $approverCount - 1));
+        $approver = User::role('Approver')->skip($offset)->first();
+        if ($approver)
+          $assignTo = $approver->id;
+      }
+    } catch (\Exception $e) {
+      // If role query fails, silently continue without assign
+      $assignTo = null;
+    }
+
     \App\Models\Request::create([
       'name' => $username,
       'mode' => $request->payment_method,
@@ -118,6 +134,7 @@ class PaymentGatewayController extends Controller
       'image' => $screenshotPath,
       'status' => 'pending',
       'created_by' => null, // Frontend submission
+      'assign_to' => $assignTo,
     ]);
 
     // Clear session

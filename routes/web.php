@@ -447,6 +447,7 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
 
   Route::resource('bank-management', BankManagementController::class);
   Route::post('/bank-management/{id}/set-default', [BankManagementController::class, 'setDefault'])->name('bank-management.set-default');
+  Route::post('/bank-management/{id}/toggle-status', [BankManagementController::class, 'toggleStatus'])->name('bank-management.toggle-status');
 
   Route::resource('crypto-management', CryptoManagementController::class);
   Route::post('crypto-management/{id}/set-default', [CryptoManagementController::class, 'setDefault'])->name('crypto-management.set-default');
@@ -509,6 +510,12 @@ Route::middleware(['auth'])->prefix('app/payment')->group(function () {
   Route::get('assigned-requests', [RequestController::class, 'assignedRequests'])->name('requests.assigned');
   Route::get('api/assigned-requests', [RequestController::class, 'assignedRequestsDataTable'])->name('requests.assigned.data');
   Route::get('/api/requests', [RequestController::class, 'dataTable'])->name('requests.data');
+
+  // Withdrawal Requests module
+  Route::resource('withdrawals', \App\Http\Controllers\WithdrawalRequestController::class);
+  // API endpoint for DataTables
+  Route::get('api/withdrawals', [\App\Http\Controllers\WithdrawalRequestController::class, 'dataTable'])->name('withdrawals.data');
+  Route::patch('withdrawals/restore/{id}', [\App\Http\Controllers\WithdrawalRequestController::class, 'restore'])->name('withdrawals.restore');
   Route::get('requests/view/{id}', [RequestController::class, 'view'])->name('requests.view');
 
   // Charge Back routes

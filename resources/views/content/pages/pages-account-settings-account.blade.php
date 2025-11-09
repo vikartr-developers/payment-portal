@@ -34,12 +34,12 @@
                             class="ti-xs ti ti-users me-1"></i> Account</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url('pages/account-settings-security') }}"><i
                             class="ti-xs ti ti-lock me-1"></i> Security</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ url('pages/account-settings-billing') }}"><i
+                {{-- <li class="nav-item"><a class="nav-link" href="{{ url('pages/account-settings-billing') }}"><i
                             class="ti-xs ti ti-file-description me-1"></i> Billing & Plans</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url('pages/account-settings-notifications') }}"><i
                             class="ti-xs ti ti-bell me-1"></i> Notifications</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ url('pages/account-settings-connections') }}"><i
-                            class="ti-xs ti ti-link me-1"></i> Connections</a></li>
+                            class="ti-xs ti ti-link me-1"></i> Connections</a></li> --}}
             </ul>
             <div class="card mb-4">
                 <h5 class="card-header">Profile Details</h5>

@@ -233,6 +233,7 @@
                                     class="form-control @error('screenshot') is-invalid @enderror" accept="image/*"
                                     required>
                                 <small class="text-muted">Upload screenshot of successful payment (auto-detect UTR)</small>
+                                <div id="screenshotFeedback" class="form-text text-muted mt-1"></div>
                                 @error('screenshot')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -268,6 +269,8 @@
 
 @section('vendor-script')
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <!-- Tesseract.js for client-side OCR to auto-detect UTR from screenshots -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 @endsection
 
 @section('page-script')
@@ -369,12 +372,126 @@
                 this.value = this.value.replace(/[^0-9]/g, '');
             });
 
-            // Optional: Auto-detect UTR from screenshot (placeholder for OCR)
-            $('#screenshot').on('change', function() {
-                // Here you could integrate OCR to auto-detect UTR from screenshot
-                // For now, just show a message
-                if (this.files && this.files[0]) {
-                    console.log('Screenshot uploaded. OCR detection can be implemented here.');
+            // Helper: compute SHA-256 hex of a File (returns Promise<string>)
+            async function fileSha256Hex(file) {
+                const arrayBuffer = await file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            // Manage recent uploaded hashes in sessionStorage to detect immediate duplicates
+            function getRecentScreenshotHashes() {
+                try {
+                    const raw = sessionStorage.getItem('uploaded_screenshot_hashes') || '[]';
+                    return JSON.parse(raw);
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function pushScreenshotHash(hash) {
+                const arr = getRecentScreenshotHashes();
+                arr.push({
+                    h: hash,
+                    t: Date.now()
+                });
+                // Keep recent 50 entries max
+                while (arr.length > 50) arr.shift();
+                sessionStorage.setItem('uploaded_screenshot_hashes', JSON.stringify(arr));
+            }
+
+            // Clean old entries (older than 24 hours)
+            function cleanupScreenshotHashes() {
+                const DAY = 24 * 60 * 60 * 1000;
+                const arr = getRecentScreenshotHashes().filter(x => (Date.now() - x.t) < DAY);
+                sessionStorage.setItem('uploaded_screenshot_hashes', JSON.stringify(arr));
+            }
+
+            // Try to OCR the image and return extracted text (or empty)
+            async function ocrImage(file) {
+                try {
+                    const {
+                        data: {
+                            text
+                        }
+                    } = await Tesseract.recognize(file, 'eng', {
+                        logger: m => console.log('Tesseract', m)
+                    });
+                    return text || '';
+                } catch (e) {
+                    console.warn('OCR failed', e);
+                    return '';
+                }
+            }
+
+            // When screenshot changes: detect duplicate quickly and run OCR to extract 12-digit UTR
+            $('#screenshot').on('change', async function() {
+                const file = this.files && this.files[0];
+                const feedback = $('#screenshotFeedback');
+                $('#utr').val('');
+                feedback.removeClass('text-danger text-success').addClass('text-muted').text('');
+                $('#submitBtn').prop('disabled', true);
+                if (!file) return;
+
+                cleanupScreenshotHashes();
+
+                // Compute hash
+                let hash = null;
+                try {
+                    feedback.text('Processing image...');
+                    hash = await fileSha256Hex(file);
+                } catch (e) {
+                    console.error('Hash failed', e);
+                }
+
+                if (hash) {
+                    const recent = getRecentScreenshotHashes();
+                    // If same hash exists within last 60s, block as duplicate
+                    const DUP_WINDOW = 60 * 1000; // 60 seconds
+                    const found = recent.find(x => x.h === hash && (Date.now() - x.t) < DUP_WINDOW);
+                    if (found) {
+                        feedback.addClass('text-danger').text(
+                            'This screenshot was just uploaded — duplicates are not allowed right now.'
+                            );
+                        // clear input
+                        $(this).val('');
+                        return;
+                    }
+                    // remember hash
+                    pushScreenshotHash(hash);
+                }
+
+                // Run OCR to extract UTR (12-digit number)
+                feedback.text('Running OCR to detect UTR — this may take a few seconds...');
+                const text = await ocrImage(file);
+                // Look for 12-digit UTR pattern
+                const match = String(text).match(/\b(\d{12})\b/);
+                if (match) {
+                    const utr = match[1];
+                    $('#utr').val(utr);
+                    feedback.removeClass('text-muted').addClass('text-success').text(
+                        'UTR detected and filled automatically. Please verify and submit.');
+                    $('#submitBtn').prop('disabled', false);
+                } else {
+                    feedback.removeClass('text-muted').addClass('text-danger').text(
+                        'No UTR found automatically — please enter it manually in the UTR field.');
+                    // Allow manual entry: enable submit only once UTR input has 12 digits
+                    $('#utr').focus();
+                    // Enable submit only when UTR is valid
+                    $('#utr').off('input.utrCheck').on('input.utrCheck', function() {
+                        const val = $(this).val().replace(/[^0-9]/g, '');
+                        $(this).val(val);
+                        if (/^\d{12}$/.test(val)) {
+                            $('#submitBtn').prop('disabled', false);
+                            feedback.removeClass('text-danger').addClass('text-success').text(
+                                'UTR looks valid. You may submit.');
+                        } else {
+                            $('#submitBtn').prop('disabled', true);
+                            feedback.removeClass('text-success').addClass('text-danger').text(
+                                'Please enter a 12-digit UTR to enable submission.');
+                        }
+                    });
                 }
             });
         });

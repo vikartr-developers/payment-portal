@@ -133,7 +133,10 @@
                         placeholder="Search UTR/Trans ID" />
                     <select id="auto_reload" class="form-select" style="width: auto;">
                         <option value="0">Auto-reload: Off</option>
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
                         <option value="15">15s</option>
+                        <option value="20">20s</option>
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>

@@ -10,10 +10,13 @@ class BankManagement extends Model
 
   protected $fillable = [
     'type',
+    'bank_name',
+    'branch_name',
     'account_number',
     'ifsc_code',
     'upi_id',
     'upi_number',
+    'status',
     'created_by',
     'deposit_limit',
     // 'is_default',

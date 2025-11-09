@@ -73,6 +73,22 @@
       ]
     },
     {
+      "name": "Withdrawals",
+      "icon": "menu-icon tf-icons ti ti-wallet",
+      "slug": "withdrawals",
+      "submenu": [
+        {
+          "url": "app/payment/withdrawals",
+          "name": "Withdrawals",
+          "slug": "withdrawals.list",
+          "permission": [
+            "withdrawal-list",
+            "withdrawal-create"
+          ]
+        }
+      ]
+    },
+    {
       "name": "Charge Backs",
       "icon": "menu-icon tf-icons ti ti-refresh-alert",
       "slug": "chargebacks",

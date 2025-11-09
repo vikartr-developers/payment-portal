@@ -69,6 +69,58 @@
             var csrfToken = $('meta[name="csrf-token"]').attr('content');
             var dt_assigned_requests;
             var autoReloadTimer = null;
+            var assignedLastMaxId = 0;
+
+            function playNotificationSound() {
+                try {
+                    const audioEl = document.getElementById('notif-sound');
+                    if (audioEl) {
+                        audioEl.currentTime = 0;
+                        audioEl.volume = 0.25;
+                        const p = audioEl.play();
+                        if (p && p.catch) {
+                            p.catch(function() {
+                                try {
+                                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                                    const ctx = new AudioContext();
+                                    const o = ctx.createOscillator();
+                                    const g = ctx.createGain();
+                                    o.type = 'sine';
+                                    o.frequency.value = 880;
+                                    g.gain.value = 0.05;
+                                    o.connect(g);
+                                    g.connect(ctx.destination);
+                                    o.start(0);
+                                    setTimeout(function() {
+                                        o.stop();
+                                        ctx.close();
+                                    }, 180);
+                                } catch (e) {
+                                    console.warn('Audio notification unavailable', e);
+                                }
+                            });
+                        }
+                        return;
+                    }
+
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    const ctx = new AudioContext();
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.type = 'sine';
+                    o.frequency.value = 880;
+                    g.gain.value = 0.05;
+                    o.connect(g);
+                    g.connect(ctx.destination);
+                    o.start(0);
+                    setTimeout(function() {
+                        o.stop();
+                        ctx.close();
+                    }, 180);
+                } catch (e) {
+                    console.warn('Audio notification unavailable', e);
+                }
+            }
 
             // Cache status indicator update
             function updateCacheStatus(status, loadTime) {
@@ -117,6 +169,20 @@
                         },
                         dataSrc: function(json) {
                             updateCacheStatus(json.cache_status, json.load_time);
+                            try {
+                                const arr = Array.isArray(json.data) ? json.data : [];
+                                if (arr.length) {
+                                    const maxId = Math.max.apply(null, arr.map(function(r) {
+                                        return r.id || 0;
+                                    }));
+                                    if (assignedLastMaxId > 0 && maxId > assignedLastMaxId) {
+                                        playNotificationSound();
+                                    }
+                                    assignedLastMaxId = Math.max(assignedLastMaxId, maxId);
+                                }
+                            } catch (e) {
+                                console.warn('Error checking new assigned requests', e);
+                            }
                             return json.data;
                         }
                     },
@@ -359,7 +425,10 @@
                         placeholder="Search UTR/Trans ID" />
                     <select id="auto_reload" class="form-select" style="width: auto;">
                         <option value="0">Auto-reload: Off</option>
+                        <option value="5">5s</option>
+                        <option value="10">10s</option>
                         <option value="15">15s</option>
+                        <option value="20">20s</option>
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>

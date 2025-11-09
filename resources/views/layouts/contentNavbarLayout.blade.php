@@ -37,7 +37,78 @@
 @section('layoutContent')
     <div class="layout-wrapper layout-content-navbar {{ $isMenu ? '' : 'layout-without-menu' }}">
         <div class="layout-container">
+            <!-- put in layouts/layoutMaster.blade.php (near footer) -->
+            <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
+            <script>
+                // Attempt to unlock audio and WebAudio on first user interaction (some browsers block autoplay)
+                (function() {
+                    const audio = document.getElementById('notif-sound');
+                    if (!audio) return;
 
+                    // expose a manual tester on window for debugging
+                    window.testNotifSound = function() {
+                        try {
+                            audio.currentTime = 0;
+                            audio.volume = 0.25;
+                            const p = audio.play();
+                            if (p && p.catch) p.catch(() => {});
+                        } catch (e) {
+                            console.warn('Test play failed', e);
+                        }
+                    };
+
+                    function unlock() {
+                        // Try to play & immediately pause to unlock HTMLAudioElement
+                        audio.play().then(function() {
+                            audio.pause();
+                            audio.currentTime = 0;
+                        }).catch(function() {
+                            // ignore
+                        });
+
+                        // Also create & resume a global AudioContext to unlock WebAudio
+                        try {
+                            const AudioContext = window.AudioContext || window.webkitAudioContext;
+                            if (AudioContext) {
+                                if (!window._notifAudioContext) {
+                                    window._notifAudioContext = new AudioContext();
+                                }
+                                // resume if suspended
+                                if (window._notifAudioContext.state === 'suspended') {
+                                    window._notifAudioContext.resume().catch(() => {});
+                                }
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+
+                        // Play a short test sound (best-effort)
+                        try {
+                            audio.currentTime = 0;
+                            audio.volume = 0.25;
+                            const p2 = audio.play();
+                            if (p2 && p2.then) {
+                                p2.then(function() {
+                                    audio.pause();
+                                    audio.currentTime = 0;
+                                }).catch(() => {});
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+
+                        window.removeEventListener('click', unlock);
+                        window.removeEventListener('touchstart', unlock);
+                    }
+
+                    window.addEventListener('click', unlock, {
+                        passive: true
+                    });
+                    window.addEventListener('touchstart', unlock, {
+                        passive: true
+                    });
+                })();
+            </script>
             @if ($isMenu)
                 @include('layouts/sections/menu/verticalMenu')
             @endif

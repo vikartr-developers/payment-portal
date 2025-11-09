@@ -60,6 +60,10 @@
                         name: 'deposit_limit'
                     },
                     {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
                         data: 'default',
                         name: 'default',
                         orderable: false,
@@ -70,8 +74,36 @@
                         name: 'action',
                         orderable: false,
                         searchable: false
-                    },
-                ]
+                    }
+                ],
+                drawCallback: function(settings) {
+                    // wire toggle-status button click handler
+                    $('#bankManagementTable').off('click', '.toggle-status').on('click',
+                        '.toggle-status',
+                        function(e) {
+                            e.preventDefault();
+                            var url = $(this).data('url');
+                            if (!url) return;
+                            if (!confirm('Are you sure you want to toggle this account status?'))
+                                return;
+                            var token = $('meta[name="csrf-token"]').attr('content');
+                            $.post(url, {
+                                _token: token
+                            }, function(resp) {
+                                if (resp && resp.success) {
+                                    if (window.toastr) toastr.success(resp.message ||
+                                        'Status updated');
+                                    $('#bankManagementTable').DataTable().ajax.reload(null,
+                                        false);
+                                } else {
+                                    if (window.toastr) toastr.error(resp.message ||
+                                        'Unable to update status');
+                                }
+                            }).fail(function() {
+                                if (window.toastr) toastr.error('Request failed');
+                            });
+                        });
+                }
             });
         });
     </script>
@@ -91,6 +123,7 @@
                         <th>Account / UPI ID</th>
                         <th>IFSC / Number</th>
                         <th>Deposit Limit</th>
+                        <th>Status</th>
                         <th>Default</th>
                         <th>Actions</th>
                     </tr>
