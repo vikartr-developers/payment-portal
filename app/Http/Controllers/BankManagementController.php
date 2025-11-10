@@ -9,11 +9,14 @@ use Yajra\DataTables\DataTables;
 
 class BankManagementController extends Controller
 {
+  public function show(Request $request)
+  {
+  }
   public function index(Request $request)
   {
     if ($request->ajax()) {
       // If current user is an Approver, show all accounts; otherwise only user's accounts
-      if (auth()->user() && auth()->user()->hasRole('Approver')) {
+      if (auth()->user() && auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('SubApprover')) {
         $data = BankManagement::query();
         // Enforce daily deposit limits: deactivate accounts which exceeded today's approved total
         $this->enforceDailyLimits();
@@ -30,9 +33,9 @@ class BankManagementController extends Controller
         ->addColumn('code_or_number', function ($row) {
           return $row->type == 'bank' ? $row->ifsc_code : $row->upi_number;
         })
-        ->addColumn('default', function ($row) {
-          return $row->is_default ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-secondary">No</span>';
-        })
+        // ->addColumn('default', function ($row) {
+        //   return $row->is_default ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-secondary">No</span>';
+        // })
         ->addColumn('action', function ($row) {
           $edit = route('bank-management.edit', $row->id);
           $delete = route('bank-management.destroy', $row->id);
@@ -51,6 +54,40 @@ class BankManagementController extends Controller
         ->make(true);
     }
     return view('content.apps.bank_management.list');
+  }
+
+  /**
+   * Return all bank accounts as JSON for client-side DataTables (used by advanced client filters/exports).
+   */
+  public function all(Request $request)
+  {
+    $accounts = BankManagement::query()->get();
+
+    $rows = $accounts->map(function ($row) {
+      $account_info = $row->type == 'bank' ? $row->account_number : $row->upi_id;
+      $code_or_number = $row->type == 'bank' ? $row->ifsc_code : $row->upi_number;
+      $edit = route('bank-management.edit', $row->id);
+      $delete = route('bank-management.destroy', $row->id);
+      $statusToggle = route('bank-management.toggle-status', $row->id);
+      $btn = "<a href='$edit' class='btn btn-sm btn-warning me-1'>Edit</a>";
+      $btn .= "<form method='POST' action='$delete' style='display:inline-block;'>" . csrf_field() . method_field('DELETE') .
+        "<button class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure?\")'>Delete</button></form>";
+      if (auth()->user() && auth()->user()->hasRole('Approver')) {
+        $toggleText = $row->status === 'active' ? 'Deactivate' : 'Activate';
+        $btn .= " <button class='btn btn-sm btn-secondary toggle-status' data-id='" . $row->id . "' data-url='" . $statusToggle . "'>" . $toggleText . "</button>";
+      }
+      return [
+        'id' => $row->id,
+        'type' => $row->type,
+        'account_info' => $account_info,
+        'code_or_number' => $code_or_number,
+        'deposit_limit' => $row->deposit_limit,
+        'status' => ucfirst($row->status ?? 'inactive'),
+        'action' => $btn
+      ];
+    });
+
+    return response()->json(['data' => $rows]);
   }
 
   /**

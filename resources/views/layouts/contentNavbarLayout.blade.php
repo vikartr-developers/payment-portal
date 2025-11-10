@@ -39,7 +39,27 @@
         <div class="layout-container">
             <!-- put in layouts/layoutMaster.blade.php (near footer) -->
             <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
-            <script>
+            <style>
+                /* Make DataTables font very small as requested */
+                table.dataTable,
+                table.dataTable th,
+                table.dataTable td,
+                .dataTables_wrapper {
+                    font-size: 12px !important;
+                }
+
+                .table> :not(caption)>*>* {
+                    padding: 0.3rem 0.5rem;
+                }
+
+                /* Also target any table with class 'table' used by DataTables instances */
+                table.table.dataTable,
+                table.table td,
+                table.table th {
+                    font-size: 12px !important;
+                }
+            </style>
+            {{-- <script>
                 // Attempt to unlock audio and WebAudio on first user interaction (some browsers block autoplay)
                 (function() {
                     const audio = document.getElementById('notif-sound');
@@ -108,7 +128,7 @@
                         passive: true
                     });
                 })();
-            </script>
+            </script> --}}
             @if ($isMenu)
                 @include('layouts/sections/menu/verticalMenu')
             @endif

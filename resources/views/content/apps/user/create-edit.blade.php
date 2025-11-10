@@ -70,7 +70,7 @@
                                     @enderror
                                 </span>
                             </div>
-                            <div class="col-md-6 col-sm-12 mb-1">
+                            {{-- <div class="col-md-6 col-sm-12 mb-1">
                                 <label class="form-label" for="phone_no">
                                     Phone No</label>
                                 <input type="text" id="phone_no" class="form-control" placeholder="Phone No"
@@ -80,7 +80,7 @@
                                         {{ $message }}
                                     @enderror
                                 </span>
-                            </div>
+                            </div> --}}
                             <div class="col-md-6 col-sm-12 mb-1">
                                 <label class="form-label" for="email">
                                     Email</label>
@@ -155,7 +155,7 @@
                                     @enderror
                                 </span>
                             </div> --}}
-                            <div class="col-md-6 col-sm-12 mb-1">
+                            {{-- <div class="col-md-6 col-sm-12 mb-1">
                                 <label class="form-label" for="address_line_1">
                                     Address Line 1</label>
                                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" name="address_line_1"
@@ -199,26 +199,8 @@
                                         {{ $message }}
                                     @enderror
                                 </span>
-                            </div>
-                            <div class="col-md-6 col-sm-12 mb-1">
-                                <label class="form-label" for="role">
-                                    Select Role</label>
-                                <select class="select2 form-select" name="role" id="role">
-                                    <option value="" selected disabled>Select Role</option>
-                                    @forelse($roles as $role)
-                                        <option value="{{ $role->id }}"
-                                            {{ $user != '' ? ($role->display_name == $user->role ? 'selected' : '') : '' }}>
-                                            {{ $role->display_name }}</option>
-                                    @empty
-                                        <option value="" selected disabled>No Roles Found</option>
-                                    @endforelse
-                                </select>
-                                <span class="text-danger">
-                                    @error('role')
-                                        {{ $message }}
-                                    @enderror
-                                </span>
-                            </div>
+                            </div> --}}
+
                             <div class="col-md-6 col-sm-6">
                                 <div class="row align-items-md-end">
                                     <div class="col-md-9 col-sm-12">
@@ -235,7 +217,7 @@
                                                             <span class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
                                                         </div> --}}
                                         <input type="text" id="password" class="form-control"
-                                            placeholder="{{ $user ? ($user->password ? 'Enter or Click Generate to Change Password' : 'Password') : '' }}"
+                                            placeholder="{{ optional($user)->password ? 'Enter or Click Generate to Change Password' : 'Password' }}"
                                             name="password" value="{{ old('password') ?? old('password') }}">
                                         <span class="text-danger">
                                             @error('password')
@@ -250,90 +232,69 @@
                                     </div>
                                 </div>
                             </div>
-                            {{-- <div class="col-md-6 col-sm-12 mb-4">
-                                <div class="row">
-                                    <div class="col-md-4 col-sm-4 mt-2">
-                                        <label class="form-label" for="can_export_excel">
-                                            Can Export Excel</label>
-                                        <div class="form-check form-check-success form-switch">
-                                            <input type="checkbox" name="can_export_excel"
-                                                {{ $user != '' && $user->can_export_excel == true ? 'checked' : '' }}
-                                                class="form-check-input" id="customSwitch4" />
-                                        </div>
-                                        <span class="text-danger">
-                                            @error('can_export_excel')
-                                                {{ $message }}
-                                            @enderror
-                                        </span>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 mt-2">
-                                        <label class="form-label" for="can_print_report">
-                                            Can Print Report </label>
-                                        <div class="form-check form-check-success form-switch">
-                                            <input type="checkbox" name="can_print_reports"
-                                                {{ $user != '' && $user->can_print_reports == true ? 'checked' : '' }}
-                                                class="form-check-input" id="can_print_report" />
-                                        </div>
-                                        <span class="text-danger">
-                                            @error('can_print_report')
-                                                {{ $message }}
-                                            @enderror
-                                        </span>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 mt-2">
-                                        <label class="form-label" for="can_remove_tax">
-                                            Can Remove TAX</label>
-                                        <div class="form-check form-check-success form-switch">
-                                            <input type="checkbox" name="can_remove_tax"
-                                                {{ $user != '' && $user->can_remove_tax == true ? 'checked' : '' }}
-                                                class="form-check-input" id="can_remove_tax" />
-                                        </div>
-                                        <span class="text-danger">
-                                            @error('can_remove_tax')
-                                                {{ $message }}
-                                            @enderror
-                                        </span>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 mt-2">
-                                        <label class="form-label" for="can_delete_package">
-                                            Can Delete Package</label>
-                                        <div class="form-check form-check-success form-switch">
-                                            <input type="checkbox" name="can_delete_package"
-                                                {{ $user != '' && $user->can_delete_package == true ? 'checked' : '' }}
-                                                class="form-check-input" id="can_delete_package" />
-                                        </div>
-                                        <span class="text-danger">
-                                            @error('can_delete_package')
-                                                {{ $message }}
-                                            @enderror
-                                        </span>
-                                    </div>
-                                    <div class="col-md-4 col-sm-4 mt-2">
-                                        <label class="form-label" for="active">
-                                            Status</label>
-                                        <div class="form-check form-check-success form-switch">
-                                            <input type="checkbox" name="status"
-                                                {{ $user != '' && $user->status == true ? 'checked' : '' }}
-                                                class="form-check-input" id="active" />
-                                        </div>
-                                        <span class="text-danger">
-                                            @error('active')
-                                                {{ $message }}
-                                            @enderror
-                                        </span>
-                                    </div>
-                                </div>
-                            </div> --}}
-                        </div>
+                            {{-- Only Admin / Super Admin can choose role and set status. Non-admin creators will create SubApprover users by default. --}}
+                            @php
+                                $isAdmin =
+                                    auth()->user() &&
+                                    (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'));
+                            @endphp
 
-                        <div class="col-12">
-                            <button type="submit" name="submit" value="submit" class="btn btn-primary me-1">Submit
-                            </button>
-                            <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                            @if ($isAdmin)
+                                <div class="col-md-6 col-sm-12 mb-1">
+                                    <label class="form-label" for="role">Select Role</label>
+                                    <select class="select2 form-select" name="role" id="role">
+                                        <option value="" selected disabled>Select Role</option>
+                                        @forelse($roles as $role)
+                                            <option value="{{ $role->id }}"
+                                                {{ optional($user)->role && $role->display_name == optional($user)->role ? 'selected' : '' }}>
+                                                {{ $role->display_name }}</option>
+                                        @empty
+                                            <option value="" selected disabled>No Roles Found</option>
+                                        @endforelse
+                                    </select>
+                                    <span class="text-danger">
+                                        @error('role')
+                                            {{ $message }}
+                                        @enderror
+                                    </span>
+                                </div>
+
+                                <div class="col-md-4 col-sm-4 mt-2">
+                                    <label class="form-label" for="active">Status</label>
+                                    <div class="form-check form-check-success form-switch">
+                                        <input type="checkbox" name="status"
+                                            {{ optional($user)->status ? 'checked' : '' }} class="form-check-input"
+                                            id="active" />
+                                    </div>
+                                    <span class="text-danger">
+                                        @error('active')
+                                            {{ $message }}
+                                        @enderror
+                                    </span>
+                                </div>
+                            @else
+                                {{-- Non-admin: ensure a hidden role input defaults to SubApprover when creating a user --}}
+                                @php
+                                    $subRole =
+                                        $roles->firstWhere('name', 'SubApprover') ??
+                                        $roles->firstWhere('display_name', 'SubApprover');
+                                @endphp
+                                @if ($subRole)
+                                    <input type="hidden" name="role" value="{{ $subRole->id }}" />
+                                @endif
+                            @endif
                         </div>
                     </div>
                 </div>
+
+                <div class="col-12">
+                    <button type="submit" name="submit" value="submit" class="btn btn-primary me-1">Submit
+                    </button>
+                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                </div>
             </div>
+        </div>
+        </div>
         </div>
     </section>
     </form>

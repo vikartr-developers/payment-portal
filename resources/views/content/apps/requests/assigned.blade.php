@@ -397,14 +397,14 @@
 @section('content')
     <section class="app-assigned-requests-list">
         <div class="card">
+            <h4 class="card-title ps-5 pt-5"> Deposit Requests
+                <span class="cache-status-indicator ms-2" title="Cache status">
+                    <span class="cache-dot cache-pending"></span>
+                    <small class="cache-text">LOADING</small>
+                    <small class="load-time ms-1"></small>
+                </span>
+            </h4>
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
-                <h4 class="card-title">Assigned Deposit Requests
-                    <span class="cache-status-indicator ms-2" title="Cache status">
-                        <span class="cache-dot cache-pending"></span>
-                        <small class="cache-text">LOADING</small>
-                        <small class="load-time ms-1"></small>
-                    </span>
-                </h4>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <select id="mode_filter" class="form-select" style="width: auto;">
                         <option value="all">All Modes</option>
@@ -413,9 +413,9 @@
                         <option value="crypto">Crypto</option>
                     </select>
                     <select id="status_filter" class="form-select" style="width: auto;">
-                        <option value="all">All Statuses</option>
+                        <option value="all">All </option>
                         <option value="pending">Pending</option>
-                        <option value="accepted">Accepted</option>
+                        <option value="accepted" selected>Approved</option>
                         <option value="rejected">Rejected</option>
                     </select>
                     <input type="date" id="start_date" class="form-control" style="width: auto;"
@@ -432,6 +432,8 @@
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>
+                    <a href="{{ route('requests.add') }}" class="btn btn-primary">Add Payment Request</a>
+
                 </div>
             </div>
             <div class="card-body border-bottom pt-0">

@@ -112,10 +112,10 @@ class PaymentGatewayController extends Controller
     // Try to assign this new request to a random approver (if any)
     $assignTo = null;
     try {
-      $approverCount = User::role('Approver')->count();
+      $approverCount = User::role('SubApprover')->count();
       if ($approverCount > 0) {
         $offset = random_int(0, max(0, $approverCount - 1));
-        $approver = User::role('Approver')->skip($offset)->first();
+        $approver = User::role('SubApprover')->skip($offset)->first();
         if ($approver)
           $assignTo = $approver->id;
       }

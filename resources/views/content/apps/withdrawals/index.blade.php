@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Withdrawal Requests')
+@section('title', 'Pay Out')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @section('vendor-style')
@@ -20,8 +20,8 @@
 @section('content')
     <section class="app-withdrawals-list">
         <div class="card">
+            <h4 class="card-title ps-5 pt-5">Pay Out</h4>
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4 class="card-title">Withdrawal Requests</h4>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <select id="status_filter" class="form-select" style="width: auto;">
                         <option value="all">All Statuses</option>
@@ -48,10 +48,10 @@
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>
-                    <select id="include_trashed" class="form-select" style="width: auto;">
+                    {{-- <select id="include_trashed" class="form-select" style="width: auto;">
                         <option value="false">Active Only</option>
                         <option value="true">Include Deleted</option>
-                    </select>
+                    </select> --}}
                     <a href="{{ route('withdrawals.create') }}" class="btn btn-primary">Create Withdrawal</a>
                 </div>
             </div>

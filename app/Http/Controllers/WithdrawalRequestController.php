@@ -92,7 +92,7 @@ class WithdrawalRequestController extends Controller
           $actions .= '<button class="btn btn-sm btn-secondary restore-withdrawal me-1" data-id="' . $row->id . '">Restore</button>';
         } else {
           $actions .= '<a href="' . route('withdrawals.edit', $row->id) . '" class="btn btn-sm btn-warning me-1">Edit</a>';
-          $actions .= '<button class="btn btn-sm btn-danger delete-withdrawal" data-id="' . $row->id . '">Delete</button>';
+          // $actions .= '<button class="btn btn-sm btn-danger delete-withdrawal" data-id="' . $row->id . '">Delete</button>';
         }
         return $actions;
       })
@@ -109,7 +109,7 @@ class WithdrawalRequestController extends Controller
   {
     // Only Approver may add
     if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
-      abort(403, 'Only approvers can create withdrawal requests.');
+      abort(403, 'Only approvers can create Pay Out .');
     }
     return view('content.apps.withdrawals.form');
   }
@@ -118,7 +118,7 @@ class WithdrawalRequestController extends Controller
   public function store(Request $request)
   {
     if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
-      abort(403, 'Only approvers can create withdrawal requests.');
+      abort(403, 'Only approvers can create Pay Out.');
     }
 
     $validated = $request->validate([

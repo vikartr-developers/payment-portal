@@ -74,8 +74,8 @@ class UsersController extends Controller
     // $data['total_user'] = User::where('status', true)->count();
     // $data['customers'] = User::role('User')->count();
     // $data['customers'] = 10;
-    $data['customers'] = User::role('User')->count();
-
+    $data['customers'] = User::role('SubApprover')->count();
+    // dd(auth()->user()->getRoleNames());
     // $data['admin_count'] = User::leftJoin('model_has_roles', 'users.id', '=', 'model_has_roles.model_id')
     //     ->leftJoin('roles', 'roles.id', '=', 'model_has_roles.role_id')->where('roles.display_name', 'Admin')->count();
     // $data['admin_count'] = User::role('Super Admin')->count();
@@ -104,9 +104,9 @@ class UsersController extends Controller
       // Delete Button
       // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
 
-      $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
+      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
 
-      return $updateButton . " " . $deleteButton;
+      return $updateButton;
     })->rawColumns(['actions'])->make(true);
   }
 
@@ -145,14 +145,26 @@ class UsersController extends Controller
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       $userData['password'] = Hash::make($request->get('password'));
-      // $userData['dob'] = $request->get('dob');
-      $userData['address'] = $request->get('address');
-      // $userData['report_to'] = $request->get('report_to');
-      $userData['status'] = $request->get('status') == 'on' ? true : false;
-      $user = $this->userService->create($userData);
-      $role = Role::find($request->get('role'));
 
-      $user->assignRole($role);
+      $userData['address'] = $request->get('address');
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        $userData['status'] = $request->get('status') == 'on' ? true : false;
+      } else {
+        $userData['status'] = true;
+      }
+      $user = $this->userService->create($userData);
+
+      // Determine role assignment: only Admin/Super Admin can set arbitrary role.
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        $role = Role::find($request->get('role'));
+      } else {
+        // default to SubApprover
+        $role = Role::where('name', 'SubApprover')->first();
+      }
+
+      if ($role) {
+        $user->assignRole($role);
+      }
 
       if (!empty($user)) {
         return redirect()->route("app-users-list")->with('success', 'User Added Successfully');
@@ -202,11 +214,10 @@ class UsersController extends Controller
       $userslist = $this->userService->getAllUser();
       $roles = $this->roleService->getAllRoles();
       $user->role = $user->getRoleNames()[0];
-      // dd($$user->role);
+
       $data['reports_to'] = User::all();
       return view('/content/apps/user/create-edit', compact('page_data', 'user', 'data', 'roles', 'userslist'));
     } catch (\Exception $error) {
-      // dd($error->getMessage());
       return redirect()->route("app-users-list")->with('error', 'Error while editing User');
     }
   }
@@ -227,6 +238,7 @@ class UsersController extends Controller
       // $userData['username'] = $request->get('username');
       $userData['first_name'] = $request->get('first_name');
       $userData['last_name'] = $request->get('last_name');
+      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name');
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       $user = User::where('id', $id)->first();
@@ -253,9 +265,11 @@ class UsersController extends Controller
       $userData['last_name'] = $request->get('last_name');
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
-      $userData['address_line_1'] = $request->get('address_line_1');
+      // $userData['address_line_1'] = $request->get('address_line_1');
       $userData['address_line_2'] = $request->get('address_line_2');
       // $userData['city'] = $request->get('city');
+      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name');
+
       $userData['state_name'] = $request->get('state_name');
       $userData['zip_code'] = $request->get('zip_code');
       if ($request->get('password') != null && $request->get('password') != '') {
@@ -264,12 +278,24 @@ class UsersController extends Controller
       // $userData['dob'] = $request->get('dob');
       // $userData['address'] = $request->get('address');
       // $userData['report_to'] = $request->get('report_to');
-      $userData['status'] = $request->get('status') == 'on' ? true : false;
+      // Only Admin or Super Admin can update the status flag
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        $userData['status'] = $request->get('status') == 'on' ? true : false;
+      }
       $updated = $this->userService->updateUser($id, $userData);
       $user = User::where('id', $id)->first();
-      $role = Role::find($request->get('role'));
-      $user->removeRole($user->getRoleNames()[0]);
-      $user->assignRole($role);
+      // Only Admin/Super Admin can change user role
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        $role = Role::find($request->get('role'));
+        if ($role) {
+          // remove current role and assign the new one
+          $currentRoles = $user->getRoleNames();
+          if (!empty($currentRoles)) {
+            $user->removeRole($currentRoles[0]);
+          }
+          $user->assignRole($role);
+        }
+      }
       if (!empty($updated)) {
         return redirect()->route("app-users-list")->with('success', 'User Updated Successfully');
       } else {

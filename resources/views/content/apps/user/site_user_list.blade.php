@@ -45,7 +45,7 @@
 
                         <div>
                             <h3 class="fw-bolder mb-75">{{ $data['customers'] }}</h3>
-                            <span>Total Users</span>
+                            <span>Total Sub Approvers</span>
                         </div>
                         <div class="avatar bg-light-danger p-50">
                             <span class="avatar-content">
@@ -89,8 +89,8 @@
         <!-- list and filter start -->
         <div class="card mt-5">
             <div class="card-header ">
-                <h4 class="card-title">Users list</h4>
-                <a href="{{ route('app-users-add') }}" class="col-md-2 btn btn-primary">Add Users
+                <h4 class="card-title">Sub Approvers list</h4>
+                <a href="{{ route('app-users-add') }}" class="col-md-2 btn btn-primary">Add Sub Approvers
                 </a>
             </div>
             <div class="card-body border-bottom ">

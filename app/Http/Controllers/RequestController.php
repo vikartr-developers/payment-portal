@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Request;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\BankManagement;
 use App\Models\CryptoManagement;
 use Illuminate\Http\Request as HttpRequest;
@@ -22,6 +23,17 @@ class RequestController extends Controller
 
     foreach ($permissions as $permission) {
       Permission::firstOrCreate(['name' => $permission]);
+    }
+
+    // Ensure SubApprover role exists and Approver role can create users
+    try {
+      $sub = Role::firstOrCreate(['name' => 'SubApprover'], ['guard_name' => 'web']);
+      $approverRole = Role::firstOrCreate(['name' => 'Approver'], ['guard_name' => 'web']);
+      // Give Approver the ability to create users (used by menu visibility and permission checks)
+      Permission::firstOrCreate(['name' => 'user-create']);
+      $approverRole->givePermissionTo('user-create');
+    } catch (\Exception $e) {
+      // ignore if roles cannot be created in some contexts
     }
 
     $this->middleware('permission:request-list|request-create|request-edit|request-delete', ['only' => ['index', 'show', 'dataTable']]);
@@ -116,7 +128,7 @@ class RequestController extends Controller
         }
         return match ($req->status) {
           'pending' => '<span class="badge bg-label-warning">Pending</span>',
-          'accepted' => '<span class="badge bg-label-success">Accepted</span>',
+          'accepted' => '<span class="badge bg-label-success">Approved</span>',
           'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
           default => e($req->status ?? '-')
         };
@@ -190,7 +202,15 @@ ti-eye"></i>'
     // if (!$current || !$current->hasRole('Approver')) {
     //   abort(403);
     // }
-    $requestsQuery = Request::where('assign_to', $current->id);
+    // If current user is an Approver, they should see requests assigned to themselves
+    // plus requests assigned to any users they created (subordinates)
+    if ($current && $current->hasRole('Approver')) {
+      $createdIds = User::where('created_by', $current->id)->pluck('id')->toArray();
+      $allowed = array_merge([$current->id], $createdIds);
+      $requestsQuery = Request::whereIn('assign_to', $allowed);
+    } else {
+      $requestsQuery = Request::where('assign_to', $current->id);
+    }
 
     // Filters
     if ($request->filled('mode') && $request->mode !== 'all') {
@@ -241,7 +261,7 @@ ti-eye"></i>'
       ->editColumn('status', function ($req) {
         return match ($req->status) {
           'pending' => '<span class="badge bg-label-warning">Pending</span>',
-          'accepted' => '<span class="badge bg-label-success">Accepted</span>',
+          'accepted' => '<span class="badge bg-label-success">Approved</span>',
           'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
           default => e($req->status ?? '-')
         };
@@ -249,14 +269,14 @@ ti-eye"></i>'
       ->addColumn('action', function ($req) {
         $encryptedId = Crypt::encrypt($req->id);
         $actions = '';
-        $actions .= '<a href="' . route('requests.edit', $encryptedId) . '" class="btn btn-sm btn-warning me-1" title="Edit">'
-          . '<i class="ti ti-pencil"></i>'
+        $actions .= '<a href="' . route('requests.edit', $encryptedId) . '" class="text-warning me-1" title="Edit">'
+          . 'Edit'
           . '</a>';
-        $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
-          . '<i class="ti ti-eye"></i>'
-          . '</a>';
+        // $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
+        //   . '<i class="ti ti-eye"></i>'
+        //   . '</a>';
         if ($req->status === 'pending') {
-          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept"><i class="ti ti-check"></i></button>';
+          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">Approved</button>';
           $actions .= '<button class="btn btn-sm btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject"><i class="ti ti-x"></i></button>';
         }
         return $actions;
@@ -293,15 +313,23 @@ ti-eye"></i>'
     $data = $validator->validated();
     $data['created_by'] = Auth::id();
 
-    // Auto-assign to a random approver (if available)
+    // Auto-assign to a random SubApprover if available, otherwise an Approver
     $assignTo = null;
     try {
-      $approverCount = User::role('Approver')->count();
-      if ($approverCount > 0) {
-        $offset = random_int(0, max(0, $approverCount - 1));
-        $approver = User::role('Approver')->skip($offset)->first();
-        if ($approver)
-          $assignTo = $approver->id;
+      $subCount = User::role('SubApprover')->count();
+      if ($subCount > 0) {
+        $offset = random_int(0, max(0, $subCount - 1));
+        $sub = User::role('SubApprover')->skip($offset)->first();
+        if ($sub)
+          $assignTo = $sub->id;
+      } else {
+        $approverCount = User::role('Approver')->count();
+        if ($approverCount > 0) {
+          $offset = random_int(0, max(0, $approverCount - 1));
+          $approver = User::role('Approver')->skip($offset)->first();
+          if ($approver)
+            $assignTo = $approver->id;
+        }
       }
     } catch (\Exception $e) {
       $assignTo = null;

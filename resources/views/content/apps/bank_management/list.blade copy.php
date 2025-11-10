@@ -2,54 +2,27 @@
 
 @section('title', 'Bank & UPI Management')
 
+
 @section('vendor-style')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
-    <style>
-        /* Bank table visual tweaks */
-        #bankManagementTable {
-            font-size: 14px;
-        }
-
-        #bankManagementTable thead th {
-            background: #f8f9fb;
-            color: #333;
-            border-bottom: 2px solid #e9ecef;
-            font-weight: 600;
-        }
-
-        #bankManagementTable tbody tr td {
-            vertical-align: middle;
-        }
-
-        .dt-buttons .btn {
-            margin-right: .35rem;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 @endsection
-
-{{-- @section('vendor-script') --}}
-{{-- <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/jquery/jquery.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
-
-    <script src="{{ asset('assets/vendor/libs/datatables/datatables.js') }}"></script>
-    <script src="{{ asset('assets/vendor/libs/datatables-bs4/datatables.bootstrap4.js') }}"></script> --}}
-{{-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
-
-@endsection --}}
-
-
 
 @section('vendor-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
-    <script src="https://unpkg.com/feather-icons"></script>
-    @yield('links')
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
 @endsection
 
 
@@ -58,9 +31,9 @@
 
     <script>
         $(function() {
-            var table = $('#bankManagementTable').DataTable({
+            $('#bankManagementTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: false, // client-side advanced features (export/date filters)
                 ajax: {
                     url: '{{ route('bank-management.index') }}',
                     dataSrc: 'data'
@@ -71,11 +44,15 @@
                     },
                     {
                         data: 'account_info',
-                        name: 'account_info'
+                        name: 'account_info',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'code_or_number',
-                        name: 'code_or_number'
+                        name: 'code_or_number',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'deposit_limit',
@@ -85,6 +62,12 @@
                         data: 'status',
                         name: 'status'
                     },
+                    // {
+                    //     data: 'default',
+                    //     name: 'default',
+                    //     orderable: false,
+                    //     searchable: false
+                    // },
                     {
                         data: 'action',
                         name: 'action',
@@ -92,36 +75,8 @@
                         searchable: false
                     }
                 ],
-                dom: '<"d-flex justify-content-between mb-2"<"dt-buttons btn-group">><"table-responsive"t>ip',
-                buttons: [{
-                        extend: 'excelHtml5',
-                        text: '<i class="ti ti-file-spreadsheet me-1"></i>Excel',
-                        className: 'btn btn-outline-primary',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: '<i class="ti ti-file-text me-1"></i>CSV',
-                        className: 'btn btn-outline-secondary',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4]
-                        }
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="ti ti-printer me-1"></i>Print',
-                        className: 'btn btn-outline-info',
-                        exportOptions: {
-                            columns: [0, 1, 2, 3, 4]
-                        }
-                    }
-                ],
-                createdRow: function(row, data) {
-                    $('td', row).last().html(data.action);
-                },
-                drawCallback: function() {
+                drawCallback: function(settings) {
+                    // wire toggle-status button click handler
                     $('#bankManagementTable').off('click', '.toggle-status').on('click',
                         '.toggle-status',
                         function(e) {
@@ -137,7 +92,8 @@
                                 if (resp && resp.success) {
                                     if (window.toastr) toastr.success(resp.message ||
                                         'Status updated');
-                                    table.ajax.reload(null, false);
+                                    $('#bankManagementTable').DataTable().ajax.reload(null,
+                                        false);
                                 } else {
                                     if (window.toastr) toastr.error(resp.message ||
                                         'Unable to update status');
@@ -148,8 +104,6 @@
                         });
                 }
             });
-
-            table.buttons().container().appendTo($('.dt-buttons'));
         });
     </script>
 @endsection
@@ -160,8 +114,10 @@
             <h3>Bank & UPI Accounts</h3>
             <a href="{{ route('bank-management.create') }}" class="btn btn-primary float-end">Add New</a>
         </div>
-        <div class="card-body">
-            <table id="bankManagementTable" class="table table-bordered table-striped">
+        <div class="card-datatable table-responsive">
+            <table id="bankManagementTable" class="dt-responsive table">
+                {{-- <div class="card-body">
+                <table id="bankManagementTable" class="table table-bordered table-striped"> --}}
                 <thead>
                     <tr>
                         <th>Type</th>

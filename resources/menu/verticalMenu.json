@@ -4,122 +4,71 @@
       "menuHeader": "Role  & User Management"
     },
     {
-      "name": "Roles & Permissions",
+      "url": "app/roles/list",
+      "name": "Roles",
+      "slug": "app-roles-list",
       "icon": "menu-icon tf-icons ti ti-settings",
-      "slug": "app-access",
-      "submenu": [
-        {
-          "url": "app/roles/list",
-          "name": "Roles",
-          "slug": "app-access-roles", "permission": [
-            "role-list",
-            "role-create"
-          ]
-        }
-      ]
+      "permission": ["role-list", "role-create"]
+    },
+    {
+      "url": "app/home",
+      "name": "Dashboard",
+      "icon": "menu-icon tf-icons ti ti-home",
+      "slug": "home",
+      "permission": ["request-list", "request-create"]
+    },  {
+      "url": "app/bank-management",
+      "name": "Accounts",
+      "icon": "menu-icon tf-icons ti ti-building-bank",
+
+      "slug": "bank-management.index",
+      "permission": ["request-list", "request-create"]
+    },
+    {
+      "url": "app/site-users/list",
+      "name": "Sub Approvers",
+      "icon": "menu-icon tf-icons ti ti-users",
+
+      "slug": "app-site-users-list",
+      "permission": ["user-list", "user-create"]
     },
     {
       "name": "Users",
       "icon": "menu-icon tf-icons ti ti-users",
-      "slug": "app-user",
-      "submenu": [
-        {
-          "url": "app/users/list",
-          "name": "Users List",
-          "slug": "app-users-list",   "permission": [
-            "user-list",
-            "user-create"
-          ]
-        },
-        {
-          "url": "app/site-users/list",
-          "name": "Customers",
-          "icon": "users",
-          "slug": "app-site-users-list",
-          "permission": [
-            "user-list",
-            "user-create"
-          ]
-        }
-      ]
+
+      "url": "app/users/list",
+      "slug": "app-users-list",
+      "permission": ["user-list", "user-create"]
     },
     {
       "menuHeader": "Finance Management"
     },
     {
+      "url": "app/payment/assigned-requests",
       "name": "Deposit Requests",
-      "icon": "menu-icon tf-icons ti ti-cash",
-      "slug": "requests",
-      "submenu": [
-        {
-          "url": "app/payment/requests",
-          "name": "Requests List",
-          "slug": "requests.list",
-          "permission": [
-            "request-list",
-            "request-create"
-          ]
-        },
+      "icon": "menu-icon tf-icons ti ti-users",
 
-        {
-          "url": "app/payment/assigned-requests",
-          "name": "Assigned List",
-          "slug": "requests.assigned",
-          "permission": [
-            "request-list",
-            "request-create"
-          ]
-        }
-      ]
+      "slug": "requests.assigned",
+      "permission": ["request-list", "request-create"]
     },
-    {
-      "name": "Withdrawals",
-      "icon": "menu-icon tf-icons ti ti-wallet",
-      "slug": "withdrawals",
-      "submenu": [
-        {
-          "url": "app/payment/withdrawals",
-          "name": "Withdrawals",
-          "slug": "withdrawals.list",
-          "permission": [
-            "withdrawal-list",
-            "withdrawal-create"
-          ]
-        }
-      ]
-    },
+
     {
       "name": "Charge Backs",
       "icon": "menu-icon tf-icons ti ti-refresh-alert",
-      "slug": "chargebacks",
-      "submenu": [
-        {
-          "url": "app/payment/chargebacks",
-          "name": "Charge Backs List",
-          "slug": "chargebacks.list",
-          "permission": [
-            "chargeback-list",
-            "chargeback-create"
-          ]
-        }
-      ]
+      "url": "app/payment/chargebacks",
+      "slug": "chargebacks.list",
+      "permission": ["chargeback-list", "chargeback-create"]
     },
     {
-      "name": "Bank Management",
-      "icon": "menu-icon tf-icons ti ti-building-bank",
-      "slug": "app-bank-management",
-      "submenu": [
-        {
-          "url": "app/bank-management",
-          "name": "Banks",
-          "slug": "app-bank-management-list",
-          "permission": [
-            "bank-list",
-            "bank-create"
-          ]
-        }
-      ]
+      "name": "Payment Reports",
+      "icon": "menu-icon tf-icons ti ti-file-text",
+
+      "url": "app/reports/payments",
+      "slug": "reports.payments",
+      "permission": ["request-list", "request-create"]
     },
+
+
     {
       "name": "Crypto Management",
       "icon": "menu-icon tf-icons ti ti-currency-bitcoin",
@@ -128,13 +77,18 @@
         {
           "url": "app/crypto-management",
           "name": "Crypto Wallets",
+          "icon": "menu-icon tf-icons ti ti-currency-bitcoin",
           "slug": "app-crypto-management-list",
-          "permission": [
-            "crypto-list",
-            "crypto-create"
-          ]
+          "permission": ["crypto-list", "crypto-create"]
         }
       ]
+    }, {
+      "url": "app/payment/withdrawals",
+      "icon": "menu-icon tf-icons ti ti-wallet",
+      "name": "Pay Out",
+      "slug": "withdrawals.index",
+      "permission": ["withdrawal-list", "withdrawal-create"]
     }
+
   ]
 }

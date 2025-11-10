@@ -409,6 +409,7 @@ Route::post('2fa/verify', [TwoFactorController::class, 'verify'])->name('2fa.ver
 // Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::middleware(['auth'])->prefix('app')->group(function () {
   Route::get('/home', [Analytics::class, 'index'])->name('home');
+  Route::get('/home/stats', [Analytics::class, 'stats'])->name('home.stats');
 
 
 
@@ -446,11 +447,16 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
   // Route::get('/users/list', [UserList::class, 'getList'])->name('users.list');
 
   Route::resource('bank-management', BankManagementController::class);
+  Route::get('bank-management/all', [BankManagementController::class, 'all'])->name('bank-management.all');
   Route::post('/bank-management/{id}/set-default', [BankManagementController::class, 'setDefault'])->name('bank-management.set-default');
   Route::post('/bank-management/{id}/toggle-status', [BankManagementController::class, 'toggleStatus'])->name('bank-management.toggle-status');
 
   Route::resource('crypto-management', CryptoManagementController::class);
   Route::post('crypto-management/{id}/set-default', [CryptoManagementController::class, 'setDefault'])->name('crypto-management.set-default');
+
+  // Payment Reports (DataTable + Excel export)
+  Route::get('reports/payments', [\App\Http\Controllers\Reports\PaymentReportController::class, 'index'])->name('reports.payments');
+  Route::get('reports/payments/data', [\App\Http\Controllers\Reports\PaymentReportController::class, 'data'])->name('reports.payments.data');
 
 
 });
