@@ -294,6 +294,87 @@ ti-eye"></i>'
       ])
       ->make(true);
   }
+
+  /**
+   * Export assigned requests (full dataset respecting current filters) as CSV
+   */
+  public function assignedExport(HttpRequest $request)
+  {
+    $current = Auth::user();
+
+    if ($current && $current->hasRole('Approver')) {
+      $createdIds = User::where('created_by', $current->id)->pluck('id')->toArray();
+      $allowed = array_merge([$current->id], $createdIds);
+      $requestsQuery = Request::whereIn('assign_to', $allowed);
+    } else {
+      $requestsQuery = Request::where('assign_to', $current->id);
+    }
+
+    // Apply same filters as DataTable
+    if ($request->filled('mode') && $request->mode !== 'all') {
+      $requestsQuery->where('mode', $request->mode);
+    }
+    if ($request->filled('status') && $request->status !== 'all') {
+      $requestsQuery->where('status', $request->status);
+    }
+    if ($request->filled('start_date')) {
+      $requestsQuery->whereDate('created_at', '>=', $request->start_date);
+    }
+    if ($request->filled('end_date')) {
+      $requestsQuery->whereDate('created_at', '<=', $request->end_date);
+    }
+    if ($request->filled('search_term')) {
+      $term = $request->search_term;
+      $requestsQuery->where(function ($q) use ($term) {
+        $q->where('utr', 'like', "%$term%")
+          ->orWhere('id', 'like', "%$term%")
+          ->orWhere('payment_from', 'like', "%$term%")
+          ->orWhere('account_upi', 'like', "%$term%");
+      });
+    }
+
+    $rows = $requestsQuery->orderBy('id', 'desc')->get();
+
+    $fileName = 'assigned-requests-' . now()->format('Ymd-His') . '.csv';
+
+    $headers = [
+      'Content-Type' => 'text/csv',
+      'Content-Disposition' => "attachment; filename=\"$fileName\"",
+    ];
+
+    $callback = function () use ($rows) {
+      $out = fopen('php://output', 'w');
+      // BOM for Excel compatibility with UTF-8
+      fprintf($out, "%s", chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+      // Header row
+      fputcsv($out, ['Trans ID', 'Name', 'Amount', 'Payment Amount', 'Mode', 'UTR', 'Payment From', 'Account/UPI', 'Status', 'Assigned To', 'Created At']);
+
+      foreach ($rows as $req) {
+        $trans = 'TXN-' . str_pad((string) $req->id, 6, '0', STR_PAD_LEFT);
+        $name = $req->name ?? '-';
+        $amount = $req->amount;
+        $payment_amount = $req->payment_amount;
+        $mode = $req->mode;
+        $utr = $req->utr ?? '';
+        $payment_from = $req->payment_from ?? '';
+        $account_upi = $req->account_upi ?? '';
+        $status = $req->status ?? '';
+        $assignedTo = '-';
+        if ($req->assign_to) {
+          $user = User::find($req->assign_to);
+          $assignedTo = $user ? ($user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''))) : $req->assign_to;
+        }
+        $createdAt = $req->created_at ? $req->created_at->toDateTimeString() : '';
+
+        fputcsv($out, [$trans, $name, $amount, $payment_amount, $mode, $utr, $payment_from, $account_upi, $status, $assignedTo, $createdAt]);
+      }
+
+      fclose($out);
+    };
+
+    return response()->stream($callback, 200, $headers);
+  }
   public function create()
   {
     return view('content.apps.requests.add');

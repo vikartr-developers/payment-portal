@@ -20,10 +20,8 @@
         <div class="card-header d-flex align-items-center justify-content-between">
             <div>
                 <h5 class="card-title">Payment Reports</h5>
-                <p class="card-text text-muted">Export to Excel and view individual payments.</p>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('home') }}" class="btn btn-outline-secondary">View Dashboard</a>
                 <a id="exportExcelBtn" class="btn btn-primary">Export Excel</a>
             </div>
         </div>
@@ -116,18 +114,8 @@
                             searchable: false
                         }
                     ],
-                    dom: 'Bfrtip',
-                    buttons: [{
-                        extend: 'excelHtml5',
-                        text: 'Export Excel',
-                        titleAttr: 'Export to Excel',
-                        exportOptions: {
-                            columns: ':not(:last-child)'
-                        }
-                    }],
-                    order: [
-                        [5, 'desc']
-                    ],
+                    // dom: 'Bfrtip',
+
                     responsive: true
                 });
             }
@@ -150,6 +138,19 @@
                 $('#clearBtn').on('click', function() {
                     setDefaults();
                     table.ajax.reload();
+                });
+                // Export full dataset (server-side) using current filters
+                $('#exportExcelBtn').on('click', function(e) {
+                    e.preventDefault();
+                    var start = $('#start_date').val();
+                    var end = $('#end_date').val();
+                    var url = '{{ route('reports.payments.export') }}';
+                    var params = [];
+                    if (start) params.push('start_date=' + encodeURIComponent(start));
+                    if (end) params.push('end_date=' + encodeURIComponent(end));
+                    if (params.length) url += '?' + params.join('&');
+                    // trigger download
+                    window.location = url;
                 });
             });
         })();

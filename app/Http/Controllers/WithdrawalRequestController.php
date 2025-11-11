@@ -194,4 +194,91 @@ class WithdrawalRequestController extends Controller
 
     return redirect()->route('withdrawals.index')->with('success', 'Withdrawal request restored.');
   }
+
+  /**
+   * Export withdrawal requests (full dataset respecting current filters) as CSV
+   */
+  public function show(HttpRequest $request)
+  {
+    // dd('ll');
+    return view('content.apps.withdrawals.index');
+
+  }
+  public function export(HttpRequest $request)
+  {
+    // dd('ll');
+    $start = microtime(true);
+    $query = WithdrawalRequest::query();
+
+    // Trashed filters
+    if ($request->get('only_trashed') === 'true') {
+      $query = WithdrawalRequest::onlyTrashed();
+    } elseif ($request->get('include_trashed') === 'true') {
+      $query = WithdrawalRequest::withTrashed();
+    }
+
+    // Filters
+    if ($request->filled('status') && $request->status !== 'all') {
+      $query->where('status', $request->status);
+    }
+    if ($request->filled('approver_status') && $request->approver_status !== 'all') {
+      $query->where('approver_status', $request->approver_status);
+    }
+    if ($request->filled('start_date')) {
+      $query->whereDate('created_at', '>=', $request->start_date);
+    }
+    if ($request->filled('end_date')) {
+      $query->whereDate('created_at', '<=', $request->end_date);
+    }
+    if ($request->filled('search_term')) {
+      $term = $request->search_term;
+      $query->where(function ($q) use ($term) {
+        $q->where('trans_id', 'like', "%$term%")
+          ->orWhere('account_holder_name', 'like', "%$term%")
+          ->orWhere('account_number', 'like', "%$term%")
+          ->orWhere('ifsc_code', 'like', "%$term%");
+      });
+    }
+
+    $rows = $query->orderBy('id', 'desc')->get();
+
+    $fileName = 'withdrawals-' . now()->format('Ymd-His') . '.csv';
+    $headers = [
+      'Content-Type' => 'text/csv',
+      'Content-Disposition' => "attachment; filename=\"$fileName\"",
+    ];
+
+    $callback = function () use ($rows) {
+      $out = fopen('php://output', 'w');
+      // BOM for Excel compatibility with UTF-8
+      fprintf($out, "%s", chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+      // Header
+      fputcsv($out, ['Request ID', 'Date', 'Account Holder', 'Account Number', 'Branch', 'IFSC', 'Amount', 'Status', 'Approver Status', 'Created By', 'Created At']);
+
+      foreach ($rows as $row) {
+        $trans = $row->trans_id ?? ('WD' . $row->id);
+        $date = $row->created_at ? $row->created_at->toDateTimeString() : '';
+        $holder = $row->account_holder_name ?? '';
+        $acct = $row->account_number ?? '';
+        $branch = $row->branch_name ?? '';
+        $ifsc = $row->ifsc_code ?? '';
+        $amount = $row->amount;
+        $status = $row->status ?? '';
+        $approver_status = $row->approver_status ?? '';
+        $creator = '-';
+        if ($row->created_by) {
+          $u = User::find($row->created_by);
+          $creator = $u ? ($u->name ?? trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? ''))) : $row->created_by;
+        }
+
+        fputcsv($out, [$trans, $date, $holder, $acct, $branch, $ifsc, $amount, $status, $approver_status, $creator, $date]);
+      }
+
+      fclose($out);
+    };
+    // dd('kkk');
+
+    return response()->stream($callback, 200, $headers);
+  }
 }

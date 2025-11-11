@@ -51,7 +51,7 @@
                     <!-- Logo -->
                     <div class="app-brand mb-4 text-center">
                         <a href="{{ url('/') }}" class="app-brand-link mx-auto">
-                            <img class="logo m-auto" src="{{ asset('assets/img/logo/logo.jpg') }}" width="100"
+                            <img class="logo m-auto" src="{{ asset('assets/img/logo/logo.jpg') }}" width="400"
                                 alt="">
 
                             {{-- <span class="app-brand-logo demo">

@@ -51,10 +51,21 @@
 
                     <div class="row mb-3">
                         <div class="col-md-3">
+                            <label for="date_range" class="form-label">Date Range</label>
+                            <select id="date_range" class="form-select">
+                                <option value="all">All</option>
+                                <option value="today">Today</option>
+                                <option value="yesterday">Yesterday</option>
+                                <option value="last_month">Last Month</option>
+                                <option value="last_year">Last Year</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3" id="start_date_wrapper" style="display: none;">
                             <label for="start_date" class="form-label">Start date</label>
                             <input type="date" id="start_date" class="form-control" />
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3" id="end_date_wrapper" style="display: none;">
                             <label for="end_date" class="form-label">End date</label>
                             <input type="date" id="end_date" class="form-control" />
                         </div>
@@ -255,13 +266,72 @@
                                 start.setDate(end.getDate() - 6);
                                 document.getElementById('start_date').value = start.toISOString().slice(0, 10);
                                 document.getElementById('end_date').value = end.toISOString().slice(0, 10);
+                                document.getElementById('date_range').value = 'all';
+                                toggleCustomDateInputs();
+                            }
+
+                            function toggleCustomDateInputs() {
+                                const range = document.getElementById('date_range').value;
+                                const startWrapper = document.getElementById('start_date_wrapper');
+                                const endWrapper = document.getElementById('end_date_wrapper');
+
+                                if (range === 'custom') {
+                                    startWrapper.style.display = 'block';
+                                    endWrapper.style.display = 'block';
+                                } else {
+                                    startWrapper.style.display = 'none';
+                                    endWrapper.style.display = 'none';
+                                }
+                            }
+
+                            function getDateRange() {
+                                const range = document.getElementById('date_range').value;
+                                const today = new Date();
+                                let start, end;
+
+                                switch (range) {
+                                    case 'today':
+                                        start = end = today.toISOString().slice(0, 10);
+                                        break;
+                                    case 'yesterday':
+                                        const yesterday = new Date(today);
+                                        yesterday.setDate(today.getDate() - 1);
+                                        start = end = yesterday.toISOString().slice(0, 10);
+                                        break;
+                                    case 'last_month':
+                                        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                                        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+                                        start = lastMonth.toISOString().slice(0, 10);
+                                        end = lastMonthEnd.toISOString().slice(0, 10);
+                                        break;
+                                    case 'last_year':
+                                        const lastYear = new Date(today.getFullYear() - 1, 0, 1);
+                                        const lastYearEnd = new Date(today.getFullYear() - 1, 11, 31);
+                                        start = lastYear.toISOString().slice(0, 10);
+                                        end = lastYearEnd.toISOString().slice(0, 10);
+                                        break;
+                                    case 'custom':
+                                        start = document.getElementById('start_date').value;
+                                        end = document.getElementById('end_date').value;
+                                        break;
+                                    default: // 'all'
+                                        start = end = '';
+                                }
+
+                                return {
+                                    start,
+                                    end
+                                };
                             }
 
                             async function fetchStats() {
-                                const start = document.getElementById('start_date').value;
-                                const end = document.getElementById('end_date').value;
-                                const url =
-                                    `{{ route('home.stats') }}?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`;
+                                const {
+                                    start,
+                                    end
+                                } = getDateRange();
+                                const url = start && end ?
+                                    `{{ route('home.stats') }}?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}` :
+                                    `{{ route('home.stats') }}`;
                                 try {
                                     const res = await fetch(url, {
                                         credentials: 'same-origin'
@@ -334,6 +404,15 @@
                             document.addEventListener('DOMContentLoaded', function() {
                                 setDefaults();
                                 fetchStats();
+
+                                // Event listeners
+                                document.getElementById('date_range').addEventListener('change', function() {
+                                    toggleCustomDateInputs();
+                                    if (this.value !== 'custom') {
+                                        fetchStats(); // Auto-fetch when selecting preset ranges
+                                    }
+                                });
+
                                 document.getElementById('filterBtn').addEventListener('click', fetchStats);
                                 document.getElementById('clearBtn').addEventListener('click', function() {
                                     setDefaults();

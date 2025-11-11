@@ -80,4 +80,66 @@ class PaymentReportController extends Controller
       ->rawColumns(['action'])
       ->make(true);
   }
+
+  /**
+   * Export filtered payment reports as CSV (Excel-friendly)
+   */
+  public function export(HttpRequest $request)
+  {
+    $start = $request->query('start_date');
+    $end = $request->query('end_date');
+
+    $query = PaymentRequest::leftJoin('users', 'users.id', '=', 'requests.assign_to')
+      ->select([
+        'requests.id',
+        'requests.account_upi',
+        'requests.payment_amount',
+        'requests.amount',
+        'requests.mode',
+        'requests.assign_to',
+        'users.name as approver_name',
+        'requests.created_at',
+      ]);
+
+    if ($start) {
+      $query->whereDate('requests.created_at', '>=', $start);
+    }
+    if ($end) {
+      $query->whereDate('requests.created_at', '<=', $end);
+    }
+
+    $chargePercent = config('app.charge_percent', env('CHARGE_PERCENT', 4)) / 100.0;
+
+    $rows = $query->orderBy('requests.created_at', 'desc')->get();
+
+    $fileName = 'payment-reports-' . now()->format('Ymd-His') . '.csv';
+    $headers = [
+      'Content-Type' => 'text/csv',
+      'Content-Disposition' => "attachment; filename=\"$fileName\"",
+    ];
+
+    $callback = function () use ($rows, $chargePercent) {
+      $out = fopen('php://output', 'w');
+      // BOM for Excel
+      fprintf($out, "%s", chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+      // header
+      fputcsv($out, ['Account', 'Total Deposit', 'Charges (%)', 'Total Charge', 'Approver', 'Payment Date']);
+
+      foreach ($rows as $row) {
+        $account = $row->account_upi ?: '-';
+        $payment = is_null($row->payment_amount) ? ($row->amount ?? 0) : $row->payment_amount;
+        $chargesLabel = (floatval($chargePercent) > 0) ? (round($chargePercent * 100, 2) . '%') : 'N/A';
+        $totalCharge = number_format(($payment * $chargePercent), 2, '.', '');
+        $approver = $row->approver_name ?: '-';
+        $paymentDate = optional($row->created_at)->format('d/m/Y');
+
+        fputcsv($out, [$account, number_format((float) $payment, 2, '.', ''), $chargesLabel, $totalCharge, $approver, $paymentDate]);
+      }
+
+      fclose($out);
+    };
+
+    return response()->stream($callback, 200, $headers);
+  }
 }

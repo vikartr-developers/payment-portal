@@ -10,11 +10,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-@endsection
 
-
-
-@section('vendor-script')
     <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
@@ -130,6 +126,14 @@
                             d.start_date = $('#start_date').val() || '';
                             d.end_date = $('#end_date').val() || '';
                             d.search_term = $('#search_term').val() || '';
+
+                            // Handle request type filter
+                            var requestType = $('#request_type_filter').val();
+                            if (requestType === 'pending') {
+                                d.status = 'pending'; // Override status for pending requests
+                            } else if (requestType === 'rejected') {
+                                d.status = 'rejected'; // Override status for rejected requests
+                            }
                         },
                         headers: {
                             'X-CSRF-TOKEN': csrfToken
@@ -274,14 +278,7 @@
                     order: [
                         [11, 'desc']
                     ],
-                    dom: '<"row"' + '<"col-md-6"l><"col-md-6"fB>>' + 'rt' + '<"row"' +
-                        '<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                    buttons: [{
-                        extend: 'collection',
-                        text: 'Export',
-                        className: 'btn btn-outline-success',
-                        buttons: ['copy', 'excel', 'pdf', 'print']
-                    }],
+
                     responsive: true
                 });
             }
@@ -292,10 +289,52 @@
             }
 
             // Filter controls triggering DataTable reload
-            $('#mode_filter, #status_filter').on('change', triggerReload);
+            $('#request_type_filter, #mode_filter, #status_filter').on('change', triggerReload);
             $('#start_date, #end_date').on('change', triggerReload);
             $('#search_term').on('keyup', function(e) {
                 if (e.key === 'Enter') triggerReload();
+            });
+
+            // Top button handlers
+            $('#pendingRequestsBtn').on('click', function() {
+                $('#request_type_filter').val('pending').trigger('change');
+            });
+
+            $('#rejectedRequestsBtn').on('click', function() {
+                $('#request_type_filter').val('rejected').trigger('change');
+            });
+
+            // Export full dataset (server-side) using current filters (top button)
+            $('#exportExcelBtn').on('click', function(e) {
+                e.preventDefault();
+                var params = {};
+                var mode = $('#mode_filter').val();
+                var status = $('#status_filter').val();
+                var start_date = $('#start_date').val();
+                var end_date = $('#end_date').val();
+                var search_term = $('#search_term').val();
+
+                // Handle request type filter for export
+                var requestType = $('#request_type_filter').val();
+                if (requestType === 'pending') {
+                    params.status = 'pending';
+                } else if (requestType === 'rejected') {
+                    params.status = 'rejected';
+                } else if (status && status !== 'all') {
+                    params.status = status;
+                }
+
+                if (mode && mode !== 'all') params.mode = mode;
+                if (start_date) params.start_date = start_date;
+                if (end_date) params.end_date = end_date;
+                if (search_term) params.search_term = search_term;
+
+                var query = Object.keys(params).map(function(k) {
+                    return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+                }).join('&');
+
+                var url = '{{ route('requests.assigned.export') }}' + (query ? ('?' + query) : '');
+                window.location = url;
             });
 
             // Auto-reload handler
@@ -454,33 +493,47 @@
 
         /* Reduce table font size slightly to fit more content and keep layout tight */
         /* .datatables-assigned-requests th,
-                                                    .datatables-assigned-requests td {
-                                                        white-space: nowrap;
-                                                        font-size: 0.92rem;
-                                                        padding: 0.6rem 0.5rem;
-                                                    } */
+                                                                                                                    .datatables-assigned-requests td {
+                                                                                                                        white-space: nowrap;
+                                                                                                                        font-size: 0.92rem;
+                                                                                                                        padding: 0.6rem 0.5rem;
+                                                                                                                    } */
 
         /* On small screens reduce font further to avoid overflow */
         @media (max-width: 992px) {
 
             /* .datatables-assigned-requests th,
-                                                        .datatables-assigned-requests td {
-                                                            font-size: 0.82rem;
-                                                            padding: 0.45rem 0.35rem;
-                                                        } */
+                                                                                                                        .datatables-assigned-requests td {
+                                                                                                                            font-size: 0.82rem;
+                                                                                                                            padding: 0.45rem 0.35rem;
+                                                                                                                        } */
         }
     </style>
     <section class="app-assigned-requests-list">
         <div class="card">
-            <h4 class="card-title ps-5 pt-5"> Deposit Requests
-                <span class="cache-status-indicator ms-2" title="Cache status">
-                    <span class="cache-dot cache-pending"></span>
-                    <small class="cache-text">LOADING</small>
-                    <small class="load-time ms-1"></small>
-                </span>
-            </h4>
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <div>
+                    <h5 class="card-title"> Deposit Requests</h5>
+                    <span class="cache-status-indicator ms-2" title="Cache status">
+                        <span class="cache-dot cache-pending"></span>
+                        <small class="cache-text">LOADING</small>
+                        <small class="load-time ms-1"></small>
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <button id="pendingRequestsBtn" class="btn btn-success">Pending Requests</button>
+                    <button id="rejectedRequestsBtn" class="btn btn-danger">Rejected Requests</button>
+                    <a id="exportExcelBtn" class="btn btn-primary">Export Excel</a>
+                </div>
+            </div>
+
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <select id="request_type_filter" class="form-select" style="width: auto;">
+                        <option value="all">All Requests</option>
+                        <option value="pending" selected>Pending Requests</option>
+                        <option value="rejected">Rejected Requests</option>
+                    </select>
                     <select id="mode_filter" class="form-select" style="width: auto;">
                         <option value="all">All Modes</option>
                         <option value="bank">Bank</option>
@@ -488,9 +541,9 @@
                         <option value="crypto">Crypto</option>
                     </select>
                     <select id="status_filter" class="form-select" style="width: auto;">
-                        <option value="all">All </option>
+                        <option value="all">All Status</option>
                         <option value="pending">Pending</option>
-                        <option value="accepted" selected>Approved</option>
+                        <option value="accepted">Approved</option>
                         <option value="rejected">Rejected</option>
                     </select>
                     <input type="date" id="start_date" class="form-control" style="width: auto;"

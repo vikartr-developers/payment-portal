@@ -456,6 +456,7 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
 
   // Payment Reports (DataTable + Excel export)
   Route::get('reports/payments', [\App\Http\Controllers\Reports\PaymentReportController::class, 'index'])->name('reports.payments');
+  Route::get('reports/payments/export', [\App\Http\Controllers\Reports\PaymentReportController::class, 'export'])->name('reports.payments.export');
   Route::get('reports/payments/data', [\App\Http\Controllers\Reports\PaymentReportController::class, 'data'])->name('reports.payments.data');
 
 
@@ -514,11 +515,13 @@ Route::middleware(['auth'])->prefix('app/payment')->group(function () {
 
   // Assigned requests for approver
   Route::get('assigned-requests', [RequestController::class, 'assignedRequests'])->name('requests.assigned');
+  Route::get('assigned-requests/export', [RequestController::class, 'assignedExport'])->name('requests.assigned.export');
   Route::get('api/assigned-requests', [RequestController::class, 'assignedRequestsDataTable'])->name('requests.assigned.data');
   Route::get('/api/requests', [RequestController::class, 'dataTable'])->name('requests.data');
 
   // Withdrawal Requests module
   Route::resource('withdrawals', \App\Http\Controllers\WithdrawalRequestController::class);
+  Route::get('withdrawals/data/export', [\App\Http\Controllers\WithdrawalRequestController::class, 'export'])->name('withdrawals.export');
   // API endpoint for DataTables
   Route::get('api/withdrawals', [\App\Http\Controllers\WithdrawalRequestController::class, 'dataTable'])->name('withdrawals.data');
   Route::patch('withdrawals/restore/{id}', [\App\Http\Controllers\WithdrawalRequestController::class, 'restore'])->name('withdrawals.restore');
