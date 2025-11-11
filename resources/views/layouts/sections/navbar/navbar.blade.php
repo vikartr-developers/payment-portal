@@ -43,7 +43,7 @@
 
 <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
 
-    @if (!isset($menuHorizontal))
+    {{-- @if (!isset($menuHorizontal))
         <!-- Search -->
         <div class="navbar-nav align-items-center">
             <div class="nav-item navbar-search-wrapper mb-0">
@@ -54,7 +54,7 @@
             </div>
         </div>
         <!-- /Search -->
-    @endif
+    @endif --}}
     <ul class="navbar-nav flex-row align-items-center ms-auto">
         <!-- Language -->
         {{-- <li class="nav-item dropdown-language dropdown me-2 me-xl-0">

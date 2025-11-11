@@ -13,6 +13,20 @@
 @section('page-style')
     <!-- Page -->
     <link rel="stylesheet" href="{{ asset('assets/vendor/css/pages/cards-advance.css') }}">
+    <style>
+        .card {
+            border-radius: 18px !important;
+            box-shadow: 0 2px 18px rgba(153, 164, 188, 0.16);
+        }
+
+        .card-body {
+            padding: 1.5rem 1rem;
+        }
+
+        span[style*="background"] {
+            box-shadow: 0 1px 6px rgba(153, 164, 188, 0.18);
+        }
+    </style>
 @endsection
 
 @section('vendor-script')
@@ -49,9 +63,84 @@
                             <button id="clearBtn" class="btn btn-outline-secondary ms-2">Clear</button>
                         </div>
                     </div>
+                    <div class="row mb-4 g-4">
+                        <!-- Net Wallet Balance -->
+                        <div class="col">
+                            <div class="card border-0 shadow-sm" style="background:#e8f9e9; border-radius: 20px;">
+                                <div class="card-body text-center py-4">
+                                    <span
+                                        style="display:inline-block; background:#b3e2b0; border-radius:50%; width:48px; height:48px; line-height:48px;">
+                                        <i class="ti ti-wallet text-success" style="font-size: 2rem;"></i>
+                                    </span>
+                                    {{-- <h4 id="net_wallet_balance" class="mb-0">0</h4> --}}
+                                    <div class="mt-3 mb-2"id="net_wallet_balance"
+                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                    <div style="font-size: 0.95rem; color: #388e3c;">Net Wallet Balance</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Pending Request -->
+                        <div class="col">
+                            <div class="card border-0 shadow-sm" style="background:#f3e9fa; border-radius: 20px;">
+                                <div class="card-body text-center py-4">
+                                    <span
+                                        style="display:inline-block; background:#ceafe7; border-radius:50%; width:48px; height:48px; line-height:48px;">
+                                        <i class="ti ti-clock text-primary" style="font-size: 2rem;"></i>
+                                    </span>
+                                    <div class="mt-3 mb-2" id="pending_requests"
+                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                    <div style="font-size: 0.95rem; color: #673ab7;">Pending Request</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Rejection -->
+                        <div class="col">
+                            <div class="card border-0 shadow-sm" style="background:#e9f0fa; border-radius: 20px;">
+                                <div class="card-body text-center py-4">
+                                    <span
+                                        style="display:inline-block; background:#a1c6ef; border-radius:50%; width:48px; height:48px; line-height:48px;">
+                                        <i class="ti ti-ban text-info" style="font-size: 2rem;"></i>
+                                    </span>
+                                    <div class="mt-3 mb-2" id="rejections" style="font-size: 1.6rem; font-weight: bold;">
+                                        ₹0.00</div>
+                                    <div style="font-size: 0.95rem; color: #1976d2;">Rejection</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Today's Revenue -->
+                        <div class="col">
+                            <div class="card border-0 shadow-sm" style="background:#e8f9e9; border-radius: 20px;">
+                                <div class="card-body text-center py-4">
+                                    <span
+                                        style="display:inline-block; background:#b3e2b0; border-radius:50%; width:48px; height:48px; line-height:48px;">
+                                        <i class="ti ti-currency-dollar text-success" style="font-size: 2rem;"></i>
+                                    </span>
+                                    <div class="mt-3 mb-2" id="todays_revenue"
+                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                    <div style="font-size: 0.95rem; color: #388e3c;">Today's Revenue</div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Total Transactions -->
+                        <div class="col">
+                            <div class="card border-0 shadow-sm" style="background:#fae9e9; border-radius: 20px;">
+                                <div class="card-body text-center py-4">
+                                    <span
+                                        style="display:inline-block; background:#efb3b3; border-radius:50%; width:48px; height:48px; line-height:48px;">
+                                        <i class="ti ti-list-check text-danger" style="font-size: 2rem;"></i>
+                                    </span>
+                                    <div class="mt-3 mb-2" id="total_transactions"
+                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                    <div style="font-size: 0.95rem; color: #d32f2f;">Total Transactions</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
 
                     <!-- summary cards (styled) -->
-                    <div class="row mb-4 g-3">
+                    {{-- <div class="row mb-4 g-3">
                         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
                             <div class="card shadow-sm bg-light h-100">
                                 <div class="card-body d-flex align-items-center py-3">
@@ -131,7 +220,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <div class="row">
                         <div class="col-lg-8 mb-4">
@@ -150,12 +239,12 @@
 
                     <script>
                         (function() {
-                            // helper to format currency
+                            // helper to format currency (Indian Rupee)
                             function fmt(amount) {
-                                if (amount === null || amount === undefined) return '0';
-                                return new Intl.NumberFormat(undefined, {
+                                if (amount === null || amount === undefined) return '₹0.00';
+                                return new Intl.NumberFormat('en-IN', {
                                     style: 'currency',
-                                    currency: 'USD',
+                                    currency: 'INR',
                                     maximumFractionDigits: 2
                                 }).format(amount);
                             }
@@ -365,12 +454,12 @@
 
         <script>
             (function() {
-                // helper to format currency
+                // helper to format currency (Indian Rupee)
                 function fmt(amount) {
-                    if (amount === null || amount === undefined) return '0';
-                    return new Intl.NumberFormat(undefined, {
+                    if (amount === null || amount === undefined) return '₹0.00';
+                    return new Intl.NumberFormat('en-IN', {
                         style: 'currency',
-                        currency: 'USD',
+                        currency: 'INR',
                         maximumFractionDigits: 2
                     }).format(amount);
                 }

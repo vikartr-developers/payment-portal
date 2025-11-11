@@ -23,69 +23,7 @@
         <h6 class="alert alert-warning">{{ session('status') }}</h6>
     @endif
     <section class="app-user-list">
-        <div class="row">
-            <div class="col-lg-6 col-sm-6">
-                <div class="card">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <h3 class="fw-bolder mb-75">{{ $data['admin_users'] }}</h3>
-                            <span>Total </span>
-                        </div>
-                        <div class="avatar bg-light-primary p-50">
-                            <span class="avatar-content">
-                                <i data-feather="user" class="font-medium-4"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-sm-6">
-                <div class="card">
-                    <div class="card-body d-flex align-items-center justify-content-between">
 
-                        <div>
-                            <h3 class="fw-bolder mb-75">{{ $data['customers'] }}</h3>
-                            <span>Total Sub Approvers</span>
-                        </div>
-                        <div class="avatar bg-light-danger p-50">
-                            <span class="avatar-content">
-                                <i data-feather="user-plus" class="font-medium-4"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {{-- <div class="col-lg-3 col-sm-6">
-                <div class="card">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <h3 class="fw-bolder mb-75">{{ $data['agents_count'] }}</h3>
-                            <span>Total Agents</span>
-                        </div>
-                        <div class="avatar bg-light-success p-50">
-                            <span class="avatar-content">
-                                <i data-feather="user-check" class="font-medium-4"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-sm-6">
-                <div class="card">
-                    <div class="card-body d-flex align-items-center justify-content-between">
-                        <div>
-                            <h3 class="fw-bolder mb-75">{{ $data['total_inquiries'] }}</h3>
-                            <span>Total Inquiries</span>
-                        </div>
-                        <div class="avatar bg-light-warning p-50">
-                            <span class="avatar-content">
-                                <i data-feather="user-x" class="font-medium-4"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
-        </div>
         <!-- list and filter start -->
         <div class="card mt-5">
             <div class="card-header ">
@@ -100,8 +38,8 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Phone No</th>
-                                <th>Role</th>
+                                {{-- <th>Phone No</th>
+                                <th>Role</th> --}}
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -136,14 +74,14 @@
                         data: 'email',
                         name: 'email'
                     },
-                    {
-                        data: 'contact',
-                        name: 'contact'
-                    },
-                    {
-                        data: 'role_name',
-                        name: 'role_name'
-                    },
+                    // {
+                    //     data: 'contact',
+                    //     name: 'contact'
+                    // },
+                    // {
+                    //     data: 'role_name',
+                    //     name: 'role_name'
+                    // },
                     {
                         data: 'actions',
                         name: 'actions',

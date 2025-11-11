@@ -6,6 +6,7 @@ use App\Models\BankManagement;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentGatewayController extends Controller
 {
@@ -93,7 +94,7 @@ class PaymentGatewayController extends Controller
     $request->validate([
       'payment_method' => 'required|in:upi,bank,crypto',
       'utr' => 'required|string|max:12|min:12',
-      'screenshot' => 'required|image|max:2048',
+      'screenshot' => 'required|image',
     ]);
 
     $username = Session::get('payment_username');
@@ -105,8 +106,14 @@ class PaymentGatewayController extends Controller
       return redirect()->route('payment.gateway')->with('error', 'Session expired. Please start again.');
     }
 
-    // Store screenshot
-    $screenshotPath = $request->file('screenshot')->store('payment_screenshots', 'public');
+    // Store screenshot with a stable, unique filename on the public disk
+    try {
+      $file = $request->file('screenshot');
+      $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+      $screenshotPath = $file->storeAs('payment_screenshots', $filename, 'public'); // returns path relative to disk
+    } catch (\Exception $e) {
+      return redirect()->route('payment.gateway')->with('error', 'Failed to save screenshot. Please try again.');
+    }
 
     // Create payment request record
     // Try to assign this new request to a random approver (if any)

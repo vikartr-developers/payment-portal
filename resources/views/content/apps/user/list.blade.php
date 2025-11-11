@@ -69,8 +69,8 @@
                             <tr>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Phone No</th>
-                                <th>Role</th>
+                                {{-- <th>Phone No</th>
+                                <th>Role</th> --}}
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -119,14 +119,14 @@
                         data: 'email',
                         name: 'email'
                     },
-                    {
-                        data: 'contact',
-                        name: 'contact'
-                    },
-                    {
-                        data: 'role_name',
-                        name: 'role_name'
-                    },
+                    // {
+                    //     data: 'contact',
+                    //     name: 'contact'
+                    // },
+                    // {
+                    //     data: 'role_name',
+                    //     name: 'role_name'
+                    // },
                     {
                         data: 'actions',
                         name: 'actions',

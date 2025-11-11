@@ -51,10 +51,13 @@
                 <div class="w-px-400 mx-auto">
                     <!-- Logo -->
                     <div class="app-brand mb-4 text-center">
-                        <a href="{{ url('/') }}" class="app-brand-link gap-2">
-                            <span class="app-brand-logo demo">
-                                @include('_partials.macros', ['height' => 20, 'withbg' => 'fill: #fff;'])
-                            </span>
+                        <a href="{{ url('/') }}" class="app-brand-link mx-auto">
+                            <img class="logo m-auto" src="{{ asset('assets/img/logo/logo.jpg') }}" width="100"
+                                alt="">
+
+                            {{-- <span class="app-brand-logo demo">
+                                @include('_partials.macros')
+                            </span> --}}
                         </a>
                     </div>
                     <!-- /Logo -->

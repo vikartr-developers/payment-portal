@@ -56,13 +56,13 @@
         </div>
 
         <div class="row">
-            <div class="col-12 col-md-6">
+            {{-- <div class="col-12 col-md-6">
                 <div class="mb-3">
                     <label for="bank_name" class="form-label">Bank Name</label>
                     <input type="text" name="bank_name" class="form-control" id="bank_name"
                         value="{{ old('bank_name', $record->bank_name ?? '') }}">
                 </div>
-            </div>
+            </div> --}}
             <div class="col-12 col-md-6">
                 <div class="mb-3">
                     <label for="branch_name" class="form-label">Branch Name</label>
@@ -70,31 +70,35 @@
                         value="{{ old('branch_name', $record->branch_name ?? '') }}">
                 </div>
             </div>
+            {{-- </div> --}}
+
+            <div class="col-12 col-md-6">
+                <label for="status" class="form-label">Status</label>
+                <select name="status" id="status" class="form-select">
+                    <option value="active" {{ old('status', $record->status ?? 'active') == 'active' ? 'selected' : '' }}>
+                        Active</option>
+                    <option value="inactive" {{ old('status', $record->status ?? '') == 'inactive' ? 'selected' : '' }}>
+                        Inactive</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label for="deposit_limit" class="form-label">Per Day Deposit Limit</label>
+                <input type="number" step="0.01" name="deposit_limit" class="form-control" id="deposit_limit"
+                    value="{{ old('deposit_limit', $record->deposit_limit ?? '') }}">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" name="is_default" id="is_default"
+                        {{ old('is_default', $record->is_default ?? false) ? 'checked' : '' }}>
+                    <label class="form-check-label" for="is_default">Set as Default</label>
+                </div>
+            </div>
+
         </div>
 
-        <div class="mb-3">
-            <label for="status" class="form-label">Status</label>
-            <select name="status" id="status" class="form-select">
-                <option value="active" {{ old('status', $record->status ?? 'active') == 'active' ? 'selected' : '' }}>
-                    Active</option>
-                <option value="inactive" {{ old('status', $record->status ?? '') == 'inactive' ? 'selected' : '' }}>
-                    Inactive</option>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="deposit_limit" class="form-label">Per Day Deposit Limit</label>
-            <input type="number" step="0.01" name="deposit_limit" class="form-control" id="deposit_limit"
-                value="{{ old('deposit_limit', $record->deposit_limit ?? '') }}">
-        </div>
-
-        <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" name="is_default" id="is_default"
-                {{ old('is_default', $record->is_default ?? false) ? 'checked' : '' }}>
-            <label class="form-check-label" for="is_default">Set as Default</label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">{{ isset($record) ? 'Update' : 'Save' }}</button>
+        <button type="submit" class="btn btn-primary mt-2">{{ isset($record) ? 'Update' : 'Save' }}</button>
     </form>
 @endsection
 

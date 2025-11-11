@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Pay Out')
+@section('title', 'Payout')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 @section('vendor-style')
@@ -20,7 +20,7 @@
 @section('content')
     <section class="app-withdrawals-list">
         <div class="card">
-            <h4 class="card-title ps-5 pt-5">Pay Out</h4>
+            <h4 class="card-title ps-5 pt-5">Payout</h4>
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <select id="status_filter" class="form-select" style="width: auto;">

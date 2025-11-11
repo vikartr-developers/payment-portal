@@ -72,8 +72,8 @@ class RequestController extends Controller
     // Role-based scope
     if ($current && $current->hasRole('Approver')) {
       $requestsQuery->whereNull('assign_to');
-    } elseif ($current && $current->hasRole('user')) {
-      $requestsQuery->where('created_by', $current->id);
+    } elseif ($current && $current->hasRole('SubApprover')) {
+      $requestsQuery->where('assign_to', $current->id);
     }
 
     // Filters
@@ -119,7 +119,10 @@ class RequestController extends Controller
       ->addColumn('image', function ($req) {
         if (!$req->image)
           return '<span class="text-muted">-</span>';
-        $src = asset('storage/' . $req->image);
+
+        // $src = asset('storage/' . $req->image);
+        // dd($req->image);
+        $src = '/storage/app/public/' . $req->image;
         return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
       })
       ->editColumn('status', function ($req) {
@@ -254,8 +257,11 @@ ti-eye"></i>'
       })
       ->addColumn('image', function ($req) {
         if (!$req->image)
+
           return '<span class="text-muted">-</span>';
-        $src = asset('storage/' . $req->image);
+        // dd($req->image);
+        // '/storage/app/public/' . $imgPath
+        $src = '/storage/app/public/' . $req->image;
         return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
       })
       ->editColumn('status', function ($req) {
@@ -276,8 +282,8 @@ ti-eye"></i>'
         //   . '<i class="ti ti-eye"></i>'
         //   . '</a>';
         if ($req->status === 'pending') {
-          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">Approved</button>';
-          $actions .= '<button class="btn btn-sm btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject"><i class="ti ti-x"></i></button>';
+          $actions .= '<button class="btn btn-sm mt-1 btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">Approved</button>';
+          $actions .= '<button class="btn btn-sm mt-1 btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">Reject</button>';
         }
         return $actions;
       })

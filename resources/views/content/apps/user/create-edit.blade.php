@@ -46,9 +46,9 @@
                                     @enderror
                                 </span>
                             </div> --}}
-                            <div class="col-md-6 col-sm-12 mb-1">
+                            <div class="col-md-4 col-sm-12 mb-1">
                                 <label class="form-label" for="first_name">
-                                    First Name</label>
+                                    Name</label>
                                 <input type="text" id="first_name" class="form-control" placeholder="First Name"
                                     name="first_name"
                                     value="{{ old('first_name') ?? ($user != '' ? $user->first_name : '') }}">
@@ -58,18 +58,7 @@
                                     @enderror
                                 </span>
                             </div>
-                            <div class="col-md-6 col-sm-12 mb-1">
-                                <label class="form-label" for="last_name">
-                                    Last Name</label>
-                                <input type="text" id="last_name" class="form-control" placeholder="Last Name"
-                                    name="last_name"
-                                    value="{{ old('last_name') ?? ($user != '' ? $user->last_name : '') }}">
-                                <span class="text-danger">
-                                    @error('last_name')
-                                        {{ $message }}
-                                    @enderror
-                                </span>
-                            </div>
+
                             {{-- <div class="col-md-6 col-sm-12 mb-1">
                                 <label class="form-label" for="phone_no">
                                     Phone No</label>
@@ -81,7 +70,7 @@
                                     @enderror
                                 </span>
                             </div> --}}
-                            <div class="col-md-6 col-sm-12 mb-1">
+                            <div class="col-md-4 col-sm-12 mb-1">
                                 <label class="form-label" for="email">
                                     Email</label>
                                 <input type="email" id="email" class="form-control" placeholder="Email" name="email"
@@ -201,7 +190,7 @@
                                 </span>
                             </div> --}}
 
-                            <div class="col-md-6 col-sm-6">
+                            <div class="col-md-4 col-sm-6">
                                 <div class="row align-items-md-end">
                                     <div class="col-md-9 col-sm-12">
                                         <label class="form-label" for="password">
@@ -225,10 +214,22 @@
                                             @enderror
                                         </span>
                                     </div>
-                                    <div class="col-md-3 col-sm-12">
+                                    {{-- <div class="col-md-3 col-sm-12">
                                         <button type="button" class="btn btn-outline-primary"
                                             id="generatePassword">Generate Password
                                         </button>
+                                    </div> --}}
+                                    <div class="col-md-6 col-sm-12 mb-1">
+                                        {{-- <label class="form-label" for="last_name">
+                                    Last Name</label> --}}
+                                        <input type="hidden" id="last_name" class="form-control" placeholder="Last Name"
+                                            name="last_name"
+                                            value="{{ old('last_name') ?? ($user != '' ? $user->last_name : ' -') }}">
+                                        <span class="text-danger">
+                                            @error('last_name')
+                                                {{ $message }}
+                                            @enderror
+                                        </span>
                                     </div>
                                 </div>
                             </div>

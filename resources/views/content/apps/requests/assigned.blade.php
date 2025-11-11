@@ -4,63 +4,30 @@
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-@section('vendor-style')
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
-    <style>
-        .cache-status-indicator {
-            display: inline-flex;
-            align-items: center;
-            font-size: 0.75rem;
-        }
 
-        .cache-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 4px;
-        }
-
-        .cache-success {
-            background-color: #28a745;
-        }
-
-        .cache-warning {
-            background-color: #ffc107;
-        }
-
-        .cache-pending {
-            background-color: #6c757d;
-        }
-
-        .cache-loading {
-            background-color: #007bff;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-    </style>
+@section('vendor-script')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
 @endsection
+
+
 
 @section('vendor-script')
     <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+    <!-- DataTables Buttons (client-side export) dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
 @endsection
+
 
 @section('page-script')
     <script>
@@ -312,7 +279,7 @@
                     buttons: [{
                         extend: 'collection',
                         text: 'Export',
-                        className: 'btn btn-outline-secondary',
+                        className: 'btn btn-outline-success',
                         buttons: ['copy', 'excel', 'pdf', 'print']
                     }],
                     responsive: true
@@ -395,6 +362,114 @@
 @endsection
 
 @section('content')
+    <style>
+        /* Rounded corners and card effect for the table */
+        .table {
+            border-radius: 16px !important;
+            overflow: hidden;
+            box-shadow: 0 4px 18px rgba(153, 164, 188, 0.13);
+            background: #fff;
+            /* Base card background */
+        }
+
+        /* Header styles */
+        .table thead th {
+            /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
+            color: #352e5a;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+        }
+
+        /* Zebra striping for rows */
+        .table-striped>tbody>tr:nth-of-type(odd) {
+            background-color: #f8fafc;
+        }
+
+        .table-striped>tbody>tr:nth-of-type(even) {
+            background-color: #f3f4f8;
+        }
+
+        /* Hover effect on rows */
+        .table tbody tr:hover {
+            background: #e0f7fa !important;
+            box-shadow: 0 1px 6px rgba(60, 120, 200, 0.07);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+
+        /* Cell padding and font */
+        .table th,
+        .table td {
+            padding: 0.85rem 0.75rem;
+            font-size: 1rem;
+            vertical-align: middle !important;
+        }
+
+        /* Bolder important cells, like status or actions */
+        .table td .fw-medium,
+        .table td .text-success,
+        .table td .text-danger,
+        .table td .text-warning {
+            font-weight: 600;
+            font-size: 1.06em;
+        }
+
+        .table td small {
+            font-size: 0.92em;
+            color: #8678c5;
+        }
+
+        /* Rounded pagination for DataTables */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 8px !important;
+            margin: 0 3px;
+            background: #f3e9fa !important;
+            color: #352e5a !important;
+            border: none !important;
+            transition: background 0.18s;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #b3e2b0 !important;
+            color: #283593 !important;
+        }
+
+        /* Search and filter boxes styling */
+        .dataTables_filter input,
+        .dataTables_length select {
+            border-radius: 8px;
+            border: 1px solid #d1c4e9;
+            padding: 0.4em 1em;
+            font-size: 1em;
+            background: #fafaff;
+            margin-right: 6px;
+        }
+
+        /* Make table horizontally scrollable on smaller viewports so icons don't get hidden */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Reduce table font size slightly to fit more content and keep layout tight */
+        /* .datatables-assigned-requests th,
+                                                    .datatables-assigned-requests td {
+                                                        white-space: nowrap;
+                                                        font-size: 0.92rem;
+                                                        padding: 0.6rem 0.5rem;
+                                                    } */
+
+        /* On small screens reduce font further to avoid overflow */
+        @media (max-width: 992px) {
+
+            /* .datatables-assigned-requests th,
+                                                        .datatables-assigned-requests td {
+                                                            font-size: 0.82rem;
+                                                            padding: 0.45rem 0.35rem;
+                                                        } */
+        }
+    </style>
     <section class="app-assigned-requests-list">
         <div class="card">
             <h4 class="card-title ps-5 pt-5"> Deposit Requests
@@ -432,13 +507,13 @@
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>
-                    <a href="{{ route('requests.add') }}" class="btn btn-primary">Add Payment Request</a>
+                    {{-- <a href="{{ route('requests.add') }}" class="btn btn-primary">Add Payment Request</a> --}}
 
                 </div>
             </div>
             <div class="card-body border-bottom pt-0">
-                <div class="table-responsive">
-                    <table class="table datatables-assigned-requests table-striped">
+                <div class="table w-100">
+                    <table class="table w-100 datatables-assigned-requests ">
                         <thead>
                             <tr>
                                 <th>ID</th>

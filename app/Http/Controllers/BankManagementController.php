@@ -175,7 +175,6 @@ class BankManagementController extends Controller
     $validated = $request->validate([
       'type' => 'required|in:bank,upi',
       'bank_name' => 'nullable|string|max:255',
-      'branch_name' => 'nullable|string|max:255',
       'account_number' => 'nullable|required_if:type,bank|max:20',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',
@@ -204,7 +203,6 @@ class BankManagementController extends Controller
     $validated = $request->validate([
       'type' => 'required|in:bank,upi',
       'bank_name' => 'nullable|string|max:255',
-      'branch_name' => 'nullable|string|max:255',
       'account_number' => 'nullable|required_if:type,bank|max:20',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',

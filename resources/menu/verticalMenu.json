@@ -5,7 +5,7 @@
     },
     {
       "url": "app/roles/list",
-      "name": "Roles",
+      "name": "Role",
       "slug": "app-roles-list",
       "icon": "menu-icon tf-icons ti ti-settings",
       "permission": ["role-list", "role-create"]
@@ -26,14 +26,14 @@
     },
     {
       "url": "app/site-users/list",
-      "name": "Sub Approvers",
+      "name": "Sub Approver",
       "icon": "menu-icon tf-icons ti ti-users",
 
       "slug": "app-site-users-list",
-      "permission": ["user-list", "user-create"]
+      "permission": ["approvers-list", "approvers-create"]
     },
     {
-      "name": "Users",
+      "name": "User",
       "icon": "menu-icon tf-icons ti ti-users",
 
       "url": "app/users/list",
@@ -45,7 +45,7 @@
     },
     {
       "url": "app/payment/assigned-requests",
-      "name": "Deposit Requests",
+      "name": "Deposit Request",
       "icon": "menu-icon tf-icons ti ti-users",
 
       "slug": "requests.assigned",
@@ -53,7 +53,7 @@
     },
 
     {
-      "name": "Charge Backs",
+      "name": "Charge Back",
       "icon": "menu-icon tf-icons ti ti-refresh-alert",
       "url": "app/payment/chargebacks",
       "slug": "chargebacks.list",
@@ -85,7 +85,7 @@
     }, {
       "url": "app/payment/withdrawals",
       "icon": "menu-icon tf-icons ti ti-wallet",
-      "name": "Pay Out",
+      "name": "Payout",
       "slug": "withdrawals.index",
       "permission": ["withdrawal-list", "withdrawal-create"]
     }

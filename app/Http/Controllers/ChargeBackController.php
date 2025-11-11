@@ -17,7 +17,7 @@ class ChargeBackController extends Controller
   public function __construct()
   {
     // Create permissions if not exist
-    $permissions = ['chargeback-list', 'chargeback-create', 'chargeback-edit', 'chargeback-delete'];
+    $permissions = ['chargeback-list', 'chargeback-create', 'chargeback-edit', 'chargeback-delete', "approvers-list", "approvers-create"];
     foreach ($permissions as $permission) {
       Permission::firstOrCreate(['name' => $permission]);
     }

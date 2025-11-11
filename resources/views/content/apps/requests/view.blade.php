@@ -1,7 +1,9 @@
 @extends('layouts/layoutMaster')
 
 @section('title', 'View Deposit Request')
-
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
 @section('content')
     <div class="row">
         <div class="col-12">
@@ -50,14 +52,57 @@
 
                         <dt class="col-sm-3">Updated At</dt>
                         <dd class="col-sm-9">{{ $requestModel->updated_at }}</dd>
-
                         @if ($requestModel->image)
+                            @php
+                                $imgPath = $requestModel->image;
+                                $imgExists = Storage::disk('public')->exists($imgPath);
+                                // $imgUrl = '/storage/app/public/' . $imgPath;
+                                $imgUrl = $imgExists ? '/storage/app/public/' . $imgPath : null;
+                            @endphp
                             <dt class="col-sm-3">Image</dt>
                             <dd class="col-sm-9">
-                                <img src="{{ asset('storage/' . $requestModel->image) }}" width="200"
-                                    alt="Payment Image">
+                                @if ($imgExists)
+                                    <a href="{{ $imgUrl }}" target="_blank" rel="noopener">
+                                        <img src="{{ $imgUrl }}" width="200" alt="Payment Image">
+                                    </a>
+                                @else
+                                    <div class="text-muted">Image not found on disk: <code>{{ $imgPath }}</code></div>
+                                @endif
                             </dd>
                         @endif
+
+
+                        {{--
+                        @if ($requestModel->image)
+                            @php
+                                $imgPath = $requestModel->image;
+                                $disk = \Illuminate\Support\Facades\Storage::disk('public');
+                                // Prefer the exact storage path if the file exists there (as requested)
+                                $storageFile = storage_path('app/public/' . $imgPath);
+                                if (file_exists($storageFile)) {
+                                    // User requested path: /storage/app/public/payment_screenshots/...
+                                    $imgUrl = asset('storage/app/public/' . $imgPath);
+                                    $imgExists = true;
+                                } elseif ($disk->exists($imgPath)) {
+                                    // Default public storage link path: /storage/payment_screenshots/...
+                                    $imgUrl = asset('storage/' . $imgPath);
+                                    $imgExists = true;
+                                } else {
+                                    $imgUrl = asset('storage/' . $imgPath);
+                                    $imgExists = false;
+                                }
+                            @endphp
+                            <dt class="col-sm-3">Image</dt>
+                            <dd class="col-sm-9">
+                                @if ($imgExists)
+                                    <a href="{{ $imgUrl }}" target="_blank" rel="noopener">
+                                        <img src="{{ $imgUrl }}" width="200" alt="Payment Image">
+                                    </a>
+                                @else
+                                    <div class="text-muted">Image not found on disk: <code>{{ $imgPath }}</code></div>
+                                @endif
+                            </dd>
+                        @endif --}}
                     </dl>
                     <a href="{{ route('requests.list') }}" class="btn btn-secondary">Back to List</a>
                 </div>

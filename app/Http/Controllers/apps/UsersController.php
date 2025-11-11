@@ -92,22 +92,23 @@ class UsersController extends Controller
       return $row->first_name . ' ' . $row->last_name;
     })->addColumn('full_name', function ($row) {
       return $row->first_name . ' ' . $row->last_name;
-    })->addColumn('role_name', function ($row) {
-      return head($row->getRoleNames());
-    })->addColumn('actions', function ($row) {
-      $encryptedId = encrypt($row->id);
-      // Update Button
-      // $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn btn-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i data-feather='edit'></i></a>";
+    })
+      ->addColumn('role_name', function ($row) {
+        return head($row->getRoleNames());
+      })->addColumn('actions', function ($row) {
+        $encryptedId = encrypt($row->id);
+        // Update Button
+        // $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn btn-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i data-feather='edit'></i></a>";
+  
+        $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn-sm border-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i class='text-warning' data-feather='edit'></i></a>";
 
-      $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn-sm border-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i class='text-warning' data-feather='edit'></i></a>";
-
-      // Delete Button
-      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
-
-      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
-
-      return $updateButton;
-    })->rawColumns(['actions'])->make(true);
+        // Delete Button
+        // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
+  
+        // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
+  
+        return $updateButton;
+      })->rawColumns(['actions'])->make(true);
   }
 
   /**
@@ -355,9 +356,9 @@ class UsersController extends Controller
       // Delete Button
       // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
 
-      $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
+      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
 
-      return $updateButton . " " . $deleteButton;
+      return $updateButton;
     })->rawColumns(['actions'])->make(true);
   }
 }

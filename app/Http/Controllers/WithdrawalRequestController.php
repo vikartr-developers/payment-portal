@@ -109,7 +109,7 @@ class WithdrawalRequestController extends Controller
   {
     // Only Approver may add
     if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
-      abort(403, 'Only approvers can create Pay Out .');
+      abort(403, 'Only approvers can create Payout .');
     }
     return view('content.apps.withdrawals.form');
   }
@@ -118,7 +118,7 @@ class WithdrawalRequestController extends Controller
   public function store(Request $request)
   {
     if (!Auth::user() || !Auth::user()->hasRole('Approver')) {
-      abort(403, 'Only approvers can create Pay Out.');
+      abort(403, 'Only approvers can create Payout.');
     }
 
     $validated = $request->validate([
