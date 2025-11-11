@@ -491,23 +491,7 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Reduce table font size slightly to fit more content and keep layout tight */
-        /* .datatables-assigned-requests th,
-                                                                                                                    .datatables-assigned-requests td {
-                                                                                                                        white-space: nowrap;
-                                                                                                                        font-size: 0.92rem;
-                                                                                                                        padding: 0.6rem 0.5rem;
-                                                                                                                    } */
-
-        /* On small screens reduce font further to avoid overflow */
-        @media (max-width: 992px) {
-
-            /* .datatables-assigned-requests th,
-                                                                                                                        .datatables-assigned-requests td {
-                                                                                                                            font-size: 0.82rem;
-                                                                                                                            padding: 0.45rem 0.35rem;
-                                                                                                                        } */
-        }
+        @media (max-width: 992px) {}
     </style>
     <section class="app-assigned-requests-list">
         <div class="card">
