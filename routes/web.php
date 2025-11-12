@@ -215,6 +215,10 @@ Route::post('/payment-gateway/select-method', [PaymentGatewayController::class, 
 Route::post('/payment-gateway/show-details', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
 Route::post('/payment-gateway/process', [PaymentGatewayController::class, 'processPayment'])->name('payment.process');
 
+// Payout Request (Frontend - No Auth Required)
+Route::get('/payout-request', [\App\Http\Controllers\WithdrawalRequestController::class, 'createFrontend'])->name('payout.request');
+Route::post('/payout-request', [\App\Http\Controllers\WithdrawalRequestController::class, 'storeFrontend'])->name('payout.request.store');
+
 // apps
 Route::get('/app/email', [Email::class, 'index'])->name('app-email');
 Route::get('/app/chat', [Chat::class, 'index'])->name('app-chat');
@@ -400,6 +404,14 @@ Route::resource('/user-list', UserManagement::class);
 
 Auth::routes();
 
+// Logout route (GET method for menu link)
+Route::get('/logout', function () {
+  Auth::logout();
+  request()->session()->invalidate();
+  request()->session()->regenerateToken();
+  return redirect('/login');
+})->middleware('auth')->name('logout.get');
+
 // Two-factor authentication routes (TOTP / Google Authenticator)
 Route::get('2fa/setup', [TwoFactorController::class, 'showSetup'])->middleware('auth')->name('2fa.setup');
 Route::post('2fa/enable', [TwoFactorController::class, 'enable'])->middleware('auth')->name('2fa.enable');
@@ -436,6 +448,7 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
   Route::get('users/edit/{encrypted_id}', [UsersController::class, 'edit'])->name('app-users-edit');
   Route::put('users/update/{encrypted_id}', [UsersController::class, 'update'])->name('app-users-update');
   Route::get('users/destroy/{encrypted_id}', [UsersController::class, 'destroy'])->name('app-users-destroy');
+  Route::post('users/toggle-status/{encrypted_id}', [UsersController::class, 'toggleStatus'])->name('app-users-toggle-status');
   Route::get('users/getAll', [UsersController::class, 'getAll'])->name('app-users-get-all');
   Route::get('site-users/list', [UsersController::class, 'siteUserIndex'])->name('app-site-users-list');
   Route::get('site-users/getAllSiteUsers', [UsersController::class, 'getAllSiteUsers'])->name('app-site-users-get-all');
@@ -450,6 +463,8 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
   Route::get('bank-management/all', [BankManagementController::class, 'all'])->name('bank-management.all');
   Route::post('/bank-management/{id}/set-default', [BankManagementController::class, 'setDefault'])->name('bank-management.set-default');
   Route::post('/bank-management/{id}/toggle-status', [BankManagementController::class, 'toggleStatus'])->name('bank-management.toggle-status');
+  Route::post('/bank-management/{id}/assign-sub-approvers', [BankManagementController::class, 'assignSubApprovers'])->name('bank-management.assign-sub-approvers');
+  Route::get('/bank-management/{id}/get-sub-approvers', [BankManagementController::class, 'getSubApprovers'])->name('bank-management.get-sub-approvers');
 
   Route::resource('crypto-management', CryptoManagementController::class);
   Route::post('crypto-management/{id}/set-default', [CryptoManagementController::class, 'setDefault'])->name('crypto-management.set-default');
@@ -458,6 +473,7 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
   Route::get('reports/payments', [\App\Http\Controllers\Reports\PaymentReportController::class, 'index'])->name('reports.payments');
   Route::get('reports/payments/export', [\App\Http\Controllers\Reports\PaymentReportController::class, 'export'])->name('reports.payments.export');
   Route::get('reports/payments/data', [\App\Http\Controllers\Reports\PaymentReportController::class, 'data'])->name('reports.payments.data');
+  Route::get('reports/payments/bank-details/{id}', [\App\Http\Controllers\Reports\PaymentReportController::class, 'getBankDetails'])->name('reports.payments.bank-details');
 
 
 });
@@ -512,6 +528,8 @@ Route::middleware(['auth'])->prefix('app/payment')->group(function () {
   Route::post('requests/accept/{id}', [RequestController::class, 'accept'])->name('requests.accept');
   Route::post('requests/accept-payment/{id}', [RequestController::class, 'accept_payment'])->name('requests.accept-payment');
   Route::post('requests/reject/{id}', [RequestController::class, 'reject'])->name('requests.reject');
+  Route::get('requests/{id}/get', [RequestController::class, 'getRequest'])->name('requests.get');
+  Route::post('requests/{id}/update-and-approve', [RequestController::class, 'updateAndApprove'])->name('requests.update-and-approve');
 
   // Assigned requests for approver
   Route::get('assigned-requests', [RequestController::class, 'assignedRequests'])->name('requests.assigned');
@@ -525,6 +543,10 @@ Route::middleware(['auth'])->prefix('app/payment')->group(function () {
   // API endpoint for DataTables
   Route::get('api/withdrawals', [\App\Http\Controllers\WithdrawalRequestController::class, 'dataTable'])->name('withdrawals.data');
   Route::patch('withdrawals/restore/{id}', [\App\Http\Controllers\WithdrawalRequestController::class, 'restore'])->name('withdrawals.restore');
+  Route::get('withdrawals/{id}/get', [\App\Http\Controllers\WithdrawalRequestController::class, 'getWithdrawal'])->name('withdrawals.get');
+  Route::post('withdrawals/{id}/upload-screenshot', [\App\Http\Controllers\WithdrawalRequestController::class, 'uploadScreenshot'])->name('withdrawals.upload-screenshot');
+  Route::post('withdrawals/{id}/change-status', [\App\Http\Controllers\WithdrawalRequestController::class, 'changeStatus'])->name('withdrawals.change-status');
+
   Route::get('requests/view/{id}', [RequestController::class, 'view'])->name('requests.view');
 
   // Charge Back routes

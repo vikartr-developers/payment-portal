@@ -106,6 +106,12 @@ class PaymentGatewayController extends Controller
       return redirect()->route('payment.gateway')->with('error', 'Session expired. Please start again.');
     }
 
+    // Check if UTR already exists in the system
+    $existingRequest = \App\Models\Request::where('utr', $request->utr)->first();
+    if ($existingRequest) {
+      return redirect()->route('payment.gateway')->with('error', 'This UTR number has already been used. Please check your transaction or contact support.');
+    }
+
     // Store screenshot with a stable, unique filename on the public disk
     try {
       $file = $request->file('screenshot');

@@ -13,6 +13,11 @@
 
 @section('content')
 
+    @php
+        $isAdmin = auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'));
+        $isApprover = auth()->user() && auth()->user()->hasRole('Approver');
+    @endphp
+
     @if ($page_data['form_title'] == 'Add New User')
         <form action="{{ route('app-users-store') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -81,6 +86,47 @@
                                     @enderror
                                 </span>
                             </div>
+
+                            <!-- Slab Fields for Indian Rupee -->
+                            <div class="col-md-4 col-sm-12 mb-1">
+                                <label class="form-label" for="from_slab">
+                                    From Slab (INR)</label>
+                                <input type="number" step="0.01" id="from_slab" class="form-control" placeholder="0.00"
+                                    name="from_slab"
+                                    value="{{ old('from_slab') ?? ($user != '' ? $user->from_slab : '') }}">
+                                <span class="text-danger">
+                                    @error('from_slab')
+                                        {{ $message }}
+                                    @enderror
+                                </span>
+                            </div>
+
+                            <div class="col-md-4 col-sm-12 mb-1">
+                                <label class="form-label" for="to_slab">
+                                    To Slab (INR)</label>
+                                <input type="number" step="0.01" id="to_slab" class="form-control" placeholder="0.00"
+                                    name="to_slab" value="{{ old('to_slab') ?? ($user != '' ? $user->to_slab : '') }}">
+                                <span class="text-danger">
+                                    @error('to_slab')
+                                        {{ $message }}
+                                    @enderror
+                                </span>
+                            </div>
+
+                            @if ($isApprover)
+                                <div class="col-md-4 col-sm-12 mb-1">
+                                    <label class="form-label" for="commission">
+                                        Commission (%)</label>
+                                    <input type="number" step="0.01" min="0" max="100" id="commission"
+                                        class="form-control" placeholder="0.00" name="commission"
+                                        value="{{ old('commission') ?? optional($user)->commission }}">
+                                    <span class="text-danger">
+                                        @error('commission')
+                                            {{ $message }}
+                                        @enderror
+                                    </span>
+                                </div>
+                            @endif
 
 
 
@@ -224,7 +270,7 @@
                                     Last Name</label> --}}
                                         <input type="hidden" id="last_name" class="form-control" placeholder="Last Name"
                                             name="last_name"
-                                            value="{{ old('last_name') ?? ($user != '' ? $user->last_name : ' -') }}">
+                                            value="{{ old('last_name') ?? (optional($user)->last_name ?? ' -') }}">
                                         <span class="text-danger">
                                             @error('last_name')
                                                 {{ $message }}
@@ -234,12 +280,6 @@
                                 </div>
                             </div>
                             {{-- Only Admin / Super Admin can choose role and set status. Non-admin creators will create SubApprover users by default. --}}
-                            @php
-                                $isAdmin =
-                                    auth()->user() &&
-                                    (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'));
-                            @endphp
-
                             @if ($isAdmin)
                                 <div class="col-md-6 col-sm-12 mb-1">
                                     <label class="form-label" for="role">Select Role</label>

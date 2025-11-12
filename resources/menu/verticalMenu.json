@@ -88,6 +88,17 @@
       "name": "Payout",
       "slug": "withdrawals.index",
       "permission": ["withdrawal-list", "withdrawal-create"]
+    },
+    {
+      "menuHeader": "Account"
+    },
+    {
+      "url": "logout",
+      "icon": "menu-icon tf-icons ti ti-logout",
+      "name": "Logout",
+      "slug": "logout",
+      "permission": ["request-list", "request-create"]
+
     }
 
   ]

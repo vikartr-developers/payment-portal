@@ -5,7 +5,9 @@
             <div class="row gx-0 gy-4 g-md-5">
                 <div class="col-lg-5">
                     <a href="{{ url('front-pages/landing') }}" class="app-brand-link mb-4">
-                        <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 20, 'withbg' => 'fill: #fff;'])</span>
+                        <img class="" src="{{ asset('assets/img/logo/logo.jpg') }}" width="150" alt="">
+
+                        {{-- <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 20, 'withbg' => 'fill: #fff;'])</span> --}}
                         <span
                             class="app-brand-text demo footer-link fw-bold ms-2 ps-1">{{ config('variables.templateName') }}</span>
                     </a>
@@ -76,7 +78,7 @@
             </div>
         </div>
     </div>
-    <div class="footer-bottom py-3">
+    {{-- <div class="footer-bottom py-3">
         <div
             class="container d-flex flex-wrap justify-content-between flex-md-row flex-column text-center text-md-start">
             <div class="mb-2 mb-md-0">
@@ -112,6 +114,6 @@
                 </a>
             </div>
         </div>
-    </div>
+    </div> --}}
 </footer>
 <!-- Footer: End -->

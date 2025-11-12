@@ -275,16 +275,22 @@ ti-eye"></i>'
       ->addColumn('action', function ($req) {
         $encryptedId = Crypt::encrypt($req->id);
         $actions = '';
-        $actions .= '<a href="' . route('requests.edit', $encryptedId) . '" class="text-warning me-1" title="Edit">'
-          . 'Edit'
-          . '</a>';
-        // $actions .= '<a href="' . route('requests.view', $encryptedId) . '" class="btn btn-sm btn-primary me-1" title="View">'
-        //   . '<i class="ti ti-eye"></i>'
-        //   . '</a>';
+
+        // Edit button that opens modal
+        $actions .= '<button class="btn btn-sm btn-warning me-1 assigned-edit-request" data-id="' . $encryptedId . '" title="Edit">'
+          . '<i class="ti ti-edit"></i>'
+          . '</button>';
+
+        // Accept/Reject buttons for pending requests
         if ($req->status === 'pending') {
-          $actions .= '<button class="btn btn-sm mt-1 btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">Approved</button>';
-          $actions .= '<button class="btn btn-sm mt-1 btn-outline-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">Reject</button>';
+          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">'
+            . '<i class="ti ti-check"></i>'
+            . '</button>';
+          $actions .= '<button class="btn btn-sm btn-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">'
+            . '<i class="ti ti-x"></i>'
+            . '</button>';
         }
+
         return $actions;
       })
       ->rawColumns(['status', 'image', 'action'])
@@ -593,6 +599,87 @@ ti-eye"></i>'
     $requestModel->save();
 
     return response()->json(['success' => true, 'message' => 'Request rejected']);
+  }
+
+  /**
+   * Get request data for modal
+   */
+  public function getRequest(string $id)
+  {
+    $id = Crypt::decrypt($id);
+    $requestModel = Request::findOrFail($id);
+
+    return response()->json([
+      'success' => true,
+      'data' => [
+        'id' => Crypt::encrypt($requestModel->id),
+        'trans_id' => 'TXN-' . str_pad((string) $requestModel->id, 6, '0', STR_PAD_LEFT),
+        'name' => $requestModel->name,
+        'mode' => $requestModel->mode,
+        'amount' => $requestModel->amount,
+        'payment_amount' => $requestModel->payment_amount,
+        'utr' => $requestModel->utr,
+        'payment_from' => $requestModel->payment_from,
+        'account_upi' => $requestModel->account_upi,
+        'status' => $requestModel->status,
+        'image' => $requestModel->image ? '/storage/app/public/' . $requestModel->image : null,
+        'created_at' => $requestModel->created_at ? $requestModel->created_at->format('Y-m-d H:i:s') : null,
+      ]
+    ]);
+  }
+
+  /**
+   * Update and approve request
+   */
+  public function updateAndApprove(HttpRequest $request, string $id)
+  {
+    $id = Crypt::decrypt($id);
+    $requestModel = Request::findOrFail($id);
+
+    // Authorization: only approver or users with 'request-edit' permission
+    if (!Auth::user() || (!Auth::user()->hasRole('Approver') && !Auth::user()->can('request-edit'))) {
+      return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+    }
+
+    // Validate inputs
+    $validator = Validator::make($request->all(), [
+      'utr' => 'required|string|max:100',
+      'payment_amount' => 'required|numeric|min:0',
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Validation failed',
+        'errors' => $validator->errors()
+      ], 422);
+    }
+
+    // Check if UTR already exists in another request
+    $existingRequest = Request::where('utr', $request->utr)
+      ->where('id', '!=', $requestModel->id)
+      ->first();
+
+    if ($existingRequest) {
+      return response()->json([
+        'success' => false,
+        'message' => 'This UTR already exists in another request'
+      ], 422);
+    }
+
+    // Update request
+    $requestModel->utr = $request->utr;
+    $requestModel->payment_amount = $request->payment_amount;
+    $requestModel->status = 'accepted';
+    $requestModel->accepted_at = now();
+    $requestModel->accepted_by = Auth::id();
+    $requestModel->updated_by = Auth::id();
+    $requestModel->save();
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Transaction updated and approved successfully'
+    ]);
   }
 
   /**

@@ -40,6 +40,9 @@ class User extends Authenticatable
     'state_name',
     'zip_code',
     'country_code',
+    'from_slab',
+    'to_slab',
+    'commission',
     // 2FA
     'google2fa_secret',
     'google2fa_enabled',

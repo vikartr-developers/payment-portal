@@ -167,6 +167,13 @@
                             name: 'trans_id'
                         },
                         {
+                            data: 'name',
+                            name: 'name',
+                            render: function(data, type, full) {
+                                return '<div class="fw-medium">' + (data || '-') + '</div>';
+                            }
+                        },
+                        {
                             data: 'approver_name',
                             name: 'approver_name',
                             defaultContent: '-'
@@ -193,31 +200,24 @@
                             }
                         },
                         {
-                            data: 'amount',
+                            data: null,
                             name: 'amount',
                             render: function(data, type, full) {
-                                var amount = data != null ? parseFloat(data) : null;
-                                if (amount != null) {
-                                    return amount.toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    });
-                                }
-                                return '-';
-                            }
-                        },
-                        {
-                            data: 'payment_amount',
-                            name: 'payment_amount',
-                            render: function(data, type, full) {
-                                var pAmount = data != null ? parseFloat(data) : null;
+                                var amount = full.amount != null ? parseFloat(full.amount) : null;
+                                var pAmount = full.payment_amount != null ? parseFloat(full
+                                    .payment_amount) : null;
+                                var amountHtml = amount != null ? amount.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                }) : '-';
                                 if (pAmount != null) {
-                                    return pAmount.toLocaleString(undefined, {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    });
+                                    amountHtml += ' <small class="text-muted">(' + pAmount
+                                        .toLocaleString(undefined, {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        }) + ')</small>';
                                 }
-                                return '-';
+                                return amountHtml;
                             }
                         },
                         {
@@ -278,9 +278,8 @@
                     order: [
                         [11, 'desc']
                     ],
-                    scrollX: true,
-                    responsive: false,
-                    autoWidth: false
+
+                    responsive: true
                 });
             }
 
@@ -354,13 +353,6 @@
                 }
             });
 
-            // DataTable search handler
-            $('#dt_search').on('keyup', function() {
-                if (dt_assigned_requests) {
-                    dt_assigned_requests.search(this.value).draw();
-                }
-            });
-
             // Accept assigned request
             $(document).on('click', '.assigned-accept-request', function() {
                 const requestId = $(this).data('id');
@@ -404,130 +396,12 @@
                     });
                 }
             });
-
-            // Edit/Update Transaction - Open Modal
-            $(document).on('click', '.assigned-edit-request', function() {
-                const requestId = $(this).data('id');
-
-                // Fetch request data
-                $.ajax({
-                    url: '/app/payment/requests/' + requestId + '/get',
-                    type: 'GET',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    success: function(response) {
-                        const data = response.data;
-
-                        // Populate modal fields
-                        $('#update_request_id').val(data.id);
-                        $('#update_trans_id').val(data.trans_id || '-');
-                        $('#update_mode').val(data.mode || '-');
-                        $('#update_amount').val(data.amount || '0.00');
-                        $('#update_utr').val(data.utr || '');
-                        $('#update_payment_amount').val(data.payment_amount || '');
-                        $('#update_payment_from').val(data.payment_from || '-');
-                        $('#update_current_status').val(data.status || '-');
-
-                        // Show modal
-                        $('#updateTransactionModal').modal('show');
-                    },
-                    error: function(xhr) {
-                        toastr.error(xhr.responseJSON?.message || 'Error loading request data');
-                    }
-                });
-            });
-
-            // Approve Transaction
-            $('#approveTransactionBtn').on('click', function() {
-                const requestId = $('#update_request_id').val();
-                const utr = $('#update_utr').val().trim();
-                const paymentAmount = $('#update_payment_amount').val();
-
-                if (!utr) {
-                    toastr.error('Please enter UTR number');
-                    return;
-                }
-
-                if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-                    toastr.error('Please enter valid payment amount');
-                    return;
-                }
-
-                if (confirm('Are you sure you want to approve this transaction?')) {
-                    const btn = $(this);
-                    btn.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-1"></span>Approving...');
-
-                    $.ajax({
-                        url: '/app/payment/requests/' + requestId + '/update-and-approve',
-                        type: 'POST',
-                        data: {
-                            _token: csrfToken,
-                            utr: utr,
-                            payment_amount: paymentAmount
-                        },
-                        success: function(response) {
-                            $('#updateTransactionModal').modal('hide');
-                            dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message ||
-                                'Transaction approved successfully');
-                        },
-                        error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error approving transaction');
-                        },
-                        complete: function() {
-                            btn.prop('disabled', false).html(
-                                '<i class="ti ti-check me-1"></i>Approve');
-                        }
-                    });
-                }
-            });
-
-            // Cancel Transaction
-            $('#cancelTransactionBtn').on('click', function() {
-                const requestId = $('#update_request_id').val();
-
-                if (confirm('Are you sure you want to cancel this transaction?')) {
-                    const btn = $(this);
-                    btn.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-1"></span>Cancelling...');
-
-                    $.ajax({
-                        url: '/app/payment/requests/reject/' + requestId,
-                        type: 'POST',
-                        data: {
-                            _token: csrfToken
-                        },
-                        success: function(response) {
-                            $('#updateTransactionModal').modal('hide');
-                            dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message ||
-                                'Transaction cancelled successfully');
-                        },
-                        error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error cancelling transaction');
-                        },
-                        complete: function() {
-                            btn.prop('disabled', false).html(
-                                '<i class="ti ti-x me-1"></i>Cancel Transaction');
-                        }
-                    });
-                }
-            });
         });
     </script>
 @endsection
 
 @section('content')
     <style>
-        #DataTables_Table_0_filter,
-        #DataTables_Table_0_length {
-            display: none;
-        }
-
         /* Rounded corners and card effect for the table */
         .table {
             border-radius: 16px !important;
@@ -541,7 +415,7 @@
         .table thead th {
             /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
             color: #352e5a;
-            /* font-size: 1rem; */
+            font-size: 1rem;
             font-weight: 600;
             border: none;
         }
@@ -565,10 +439,9 @@
         /* Cell padding and font */
         .table th,
         .table td {
-            padding: 0.5rem 0.5rem;
-            /* font-size: 0.875rem; */
+            padding: 0.85rem 0.75rem;
+            font-size: 1rem;
             vertical-align: middle !important;
-            white-space: nowrap;
         }
 
         /* Bolder important cells, like status or actions */
@@ -577,11 +450,11 @@
         .table td .text-danger,
         .table td .text-warning {
             font-weight: 600;
-            /* font-size: 1.06em; */
+            font-size: 1.06em;
         }
 
         .table td small {
-            /* font-size: 0.92em; */
+            font-size: 0.92em;
             color: #8678c5;
         }
 
@@ -607,7 +480,7 @@
             border-radius: 8px;
             border: 1px solid #d1c4e9;
             padding: 0.4em 1em;
-            /* font-size: 1em; */
+            font-size: 1em;
             background: #fafaff;
             margin-right: 6px;
         }
@@ -616,16 +489,6 @@
         .table-responsive {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-        }
-
-        /* Force horizontal scroll for table */
-        .card-body {
-            overflow-x: auto;
-        }
-
-        .datatables-assigned-requests {
-            width: max-content !important;
-            min-width: 100%;
         }
 
         @media (max-width: 992px) {}
@@ -644,35 +507,28 @@
                 <div class="d-flex gap-2">
                     <button id="pendingRequestsBtn" class="btn btn-success">Pending Requests</button>
                     <button id="rejectedRequestsBtn" class="btn btn-danger">Rejected Requests</button>
-                    <a id="exportExcelBtn" style="color:#fff" class="btn btn-primary">Export Excel</a>
+                    <a id="exportExcelBtn" class="btn btn-primary">Export Excel</a>
                 </div>
             </div>
-            {{-- <select id="request_type_filter" class="form-select" style="width: auto; opacity: 1;">
-                <option value="all">All Requests</option>
-                <option value="pending" selected>Pending Requests</option>
-                <option value="accepted">Approved</option>
-                <option value="rejected">Rejected Requests</option>
-            </select> --}}
+
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-
+                    <select id="request_type_filter" class="form-select" style="width: auto;">
+                        <option value="all">All Requests</option>
+                        <option value="pending" selected>Pending Requests</option>
+                        <option value="rejected">Rejected Requests</option>
+                    </select>
                     <select id="mode_filter" class="form-select" style="width: auto;">
                         <option value="all">All Modes</option>
                         <option value="bank">Bank</option>
                         <option value="upi">UPI</option>
                         <option value="crypto">Crypto</option>
                     </select>
-                    {{-- <select id="status_filter" class="form-select" style="width: auto;">
+                    <select id="status_filter" class="form-select" style="width: auto;">
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="accepted">Approved</option>
                         <option value="rejected">Rejected</option>
-                    </select> --}}
-                    <select id="request_type_filter" class="form-select" style="width: auto; opacity: 1;">
-                        <option value="all">All Status</option>
-                        <option value="pending" selected>Pending </option>
-                        <option value="accepted">Approved</option>
-                        <option value="rejected">Rejected </option>
                     </select>
                     <input type="date" id="start_date" class="form-control" style="width: auto;"
                         placeholder="Start date" />
@@ -688,8 +544,6 @@
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>
-                    <input type="search" id="dt_search" class="form-control" style="width: 200px;"
-                        placeholder="Search in table..." />
                     {{-- <a href="{{ route('requests.add') }}" class="btn btn-primary">Add Payment Request</a> --}}
 
                 </div>
@@ -700,17 +554,17 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Trans. ID</th>
-                                <th>Approver Name</th>
+                                <th>Trans ID</th>
+                                <th>Name</th>
+                                <th>Approver</th>
                                 <th>Mode</th>
                                 <th>Amount</th>
-                                <th>Payment Amount</th>
                                 <th>UTR</th>
                                 <th>Payment From</th>
-                                <th>Account/UPI</th>
+                                <th>Account / UPI</th>
                                 <th>Image</th>
                                 <th>Status</th>
-                                <th>Date</th>
+                                <th>Date/Time</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -719,72 +573,5 @@
                 </div>
             </div>
         </div>
-
-        <!-- Update Transaction Modal -->
-        <div class="modal fade" id="updateTransactionModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ti ti-edit me-2"></i>Update Transaction
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="update_request_id">
-
-                        <!-- Transaction Info -->
-                        {{-- <div class="mb-3">
-                            <label class="form-label fw-bold">Transaction ID</label>
-                            <input type="text" class="form-control" id="update_trans_id" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Mode</label>
-                            <input type="text" class="form-control" id="update_mode" readonly>
-                        </div> --}}
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Amount</label>
-                            <input type="text" class="form-control" id="update_amount" readonly>
-                        </div>
-
-                        <!-- Editable Fields -->
-                        <div class="mb-3">
-                            <label for="update_utr" class="form-label fw-bold">UTR <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="update_utr" placeholder="Enter UTR number"
-                                required>
-                        </div>
-
-                        {{-- <div class="mb-3">
-                            <label for="update_payment_amount" class="form-label fw-bold">Payment Amount <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" id="update_payment_amount"
-                                placeholder="Enter payment amount" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Payment From</label>
-                            <input type="text" class="form-control" id="update_payment_from" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Current Status</label>
-                            <input type="text" class="form-control" id="update_current_status" readonly>
-                        </div>
-                    </div> --}}
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            {{-- <button type="button" class="btn btn-danger" id="cancelTransactionBtn">
-                            <i class="ti ti-x me-1"></i>Cancel Transaction
-                        </button> --}}
-                            <button type="button" class="btn btn-success" id="approveTransactionBtn">
-                                <i class="ti ti-check me-1"></i>Approve
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
     </section>
 @endsection

@@ -89,9 +89,9 @@ class UsersController extends Controller
     $users = $this->userService->getAllUser();
     // dd($users->role);
     return DataTables::of($users)->addColumn('full_name', function ($row) {
-      return $row->first_name . ' ' . $row->last_name;
+      return $row->first_name;
     })->addColumn('full_name', function ($row) {
-      return $row->first_name . ' ' . $row->last_name;
+      return $row->first_name;
     })
       ->addColumn('role_name', function ($row) {
         return head($row->getRoleNames());
@@ -99,14 +99,14 @@ class UsersController extends Controller
         $encryptedId = encrypt($row->id);
         // Update Button
         // $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn btn-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i data-feather='edit'></i></a>";
-
+  
         $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn-sm border-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i class='text-warning' data-feather='edit'></i></a>";
 
         // Delete Button
         // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
-
+  
         // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
-
+  
         return $updateButton;
       })->rawColumns(['actions'])->make(true);
   }
@@ -146,8 +146,14 @@ class UsersController extends Controller
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       $userData['password'] = Hash::make($request->get('password'));
+      $userData['from_slab'] = $request->get('from_slab');
+      $userData['to_slab'] = $request->get('to_slab');
 
       $userData['address'] = $request->get('address');
+      // Only allow setting commission if currently logged-in user has role 'Approver'
+      if (auth()->user() && auth()->user()->hasRole('Approver')) {
+        $userData['commission'] = $request->get('commission');
+      }
       if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
         $userData['status'] = $request->get('status') == 'on' ? true : false;
       } else {
@@ -273,6 +279,12 @@ class UsersController extends Controller
 
       $userData['state_name'] = $request->get('state_name');
       $userData['zip_code'] = $request->get('zip_code');
+      $userData['from_slab'] = $request->get('from_slab');
+      $userData['to_slab'] = $request->get('to_slab');
+      // Only allow Approver to set commission on update
+      if (auth()->user() && auth()->user()->hasRole('Approver')) {
+        $userData['commission'] = $request->get('commission');
+      }
       if ($request->get('password') != null && $request->get('password') != '') {
         $userData['password'] = Hash::make($request->get('password'));
       }
@@ -340,25 +352,70 @@ class UsersController extends Controller
   public function getAllSiteUsers()
   {
     $users = $this->userService->getAllSiteUser();
-    return DataTables::of($users)->addColumn('full_name', function ($row) {
-      return $row->first_name . ' ' . $row->last_name;
-    })->addColumn('full_name', function ($row) {
-      return $row->first_name . ' ' . $row->last_name;
-    })->addColumn('role_name', function ($row) {
-      return head($row->getRoleNames());
-    })->addColumn('actions', function ($row) {
-      $encryptedId = encrypt($row->id);
-      // Update Button
-      // $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn btn-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i data-feather='edit'></i></a>";
+    return DataTables::of($users)
+      ->addColumn('name', function ($row) {
+        return $row->name ?? ($row->first_name . ' ' . $row->last_name);
+      })
+      ->addColumn('status', function ($row) {
+        if ($row->status == 1 || $row->status == 'active') {
+          return '<span class="badge bg-success">Active</span>';
+        } else {
+          return '<span class="badge bg-danger">Inactive</span>';
+        }
+      })
+      ->addColumn('updated_at', function ($row) {
+        return $row->updated_at ? $row->updated_at->format('Y-m-d H:i:s') : '-';
+      })
+      ->addColumn('actions', function ($row) {
+        $encryptedId = encrypt($row->id);
 
-      $updateButton = "<a data-bs-toggle='tooltip' title='Edit' data-bs-delay='400' class='btn-sm border-warning'  href='" . route('app-users-edit', $encryptedId) . "'><i class='text-warning' data-feather='edit'></i></a>";
+        // Edit Button
+        $editButton = "<a data-bs-toggle='tooltip' title='Edit' class='btn btn-sm btn-primary me-1' href='" . route('app-users-edit', $encryptedId) . "'><i class='ti ti-edit'></i></a>";
 
-      // Delete Button
-      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class='btn btn-danger confirm-delete' data-idos='.$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i data-feather='trash-2'></i></a>";
+        // Disable/Enable Button
+        $statusText = ($row->status == 1 || $row->status == 'active') ? 'Disable' : 'Enable';
+        $statusIcon = ($row->status == 1 || $row->status == 'active') ? 'ban' : 'check';
+        $statusClass = ($row->status == 1 || $row->status == 'active') ? 'warning' : 'success';
+        $toggleUrl = route('app-users-toggle-status', $encryptedId);
 
-      // $deleteButton = "<a data-bs-toggle='tooltip' title='Delete' data-bs-delay='400' class=' btn-sm border-danger confirm-delete' data-idos='$encryptedId' id='confirm-color  href='" . route('app-users-destroy', $encryptedId) . "'><i class='text-danger' data-feather='trash-2'></i></a>";
+        $disableButton = "<button data-bs-toggle='tooltip' title='" . $statusText . "' class='btn btn-sm btn-" . $statusClass . " toggle-status' data-id='" . $row->id . "' data-url='" . $toggleUrl . "'><i class='ti ti-" . $statusIcon . "'></i></button>";
 
-      return $updateButton;
-    })->rawColumns(['actions'])->make(true);
+        return $editButton . $disableButton;
+      })
+      ->rawColumns(['status', 'actions'])
+      ->make(true);
+  }
+
+  /**
+   * Toggle user status (active/inactive)
+   */
+  public function toggleStatus($encrypted_id)
+  {
+    try {
+      $id = decrypt($encrypted_id);
+      $user = User::findOrFail($id);
+
+      // Toggle status
+      if ($user->status == 1 || $user->status == 'active') {
+        $user->status = 0;
+        $message = 'User disabled successfully';
+      } else {
+        $user->status = 1;
+        $message = 'User enabled successfully';
+      }
+
+      $user->save();
+
+      return response()->json([
+        'success' => true,
+        'message' => $message,
+        'status' => $user->status
+      ]);
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => 'Failed to update user status'
+      ], 500);
+    }
   }
 }

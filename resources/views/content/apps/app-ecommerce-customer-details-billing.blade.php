@@ -81,7 +81,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <div class="avatar">
                                 <div class="avatar-initial rounded bg-label-primary">
-                                    <i class='ti ti-currency-dollar ti-md'></i>
+                                    <i class='ti ti-currency-rupee ti-md'></i>
                                 </div>
                             </div>
                             <div class="gap-0 d-flex flex-column">

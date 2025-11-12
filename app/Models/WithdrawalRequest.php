@@ -22,6 +22,7 @@ class WithdrawalRequest extends Model
     'amount',
     'status',
     'approver_status',
+    'screenshot',
     'created_by',
     'updated_by',
     'deleted_by',

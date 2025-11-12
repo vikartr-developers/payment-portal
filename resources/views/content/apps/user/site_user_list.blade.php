@@ -1,20 +1,57 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Customers List')
+@section('title', 'Sub Approvers List')
 
 @section('vendor-style')
-    {{-- Page Css files --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+    <style>
+        #users-table {
+            font-size: 13px;
+        }
 
+        #users-table thead th {
+            background: #f8f9fb;
+            color: #333;
+            border-bottom: 2px solid #e9ecef;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        #users-table tbody tr td {
+            vertical-align: middle;
+            white-space: nowrap;
+            padding: 8px 12px;
+        }
+
+        #users-table .btn {
+            padding: 4px 8px;
+            font-size: 11px;
+            margin-right: 2px;
+        }
+
+        #users-table form {
+            display: inline-block;
+            margin: 0;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+    </style>
 @endsection
+
 @section('vendor-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-@endsection
-
-@section('page-style')
-    {{-- Page Css files --}}
+    @yield('links')
 @endsection
 
 @section('content')
@@ -23,23 +60,22 @@
         <h6 class="alert alert-warning">{{ session('status') }}</h6>
     @endif
     <section class="app-user-list">
-
-        <!-- list and filter start -->
         <div class="card mt-5">
-            <div class="card-header ">
-                <h4 class="card-title">Sub Approvers list</h4>
-                <a href="{{ route('app-users-add') }}" class="col-md-2 btn btn-primary">Add Sub Approvers
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0">Sub Approvers List</h4>
+                <a href="{{ route('app-users-add') }}" class="btn btn-primary">
+                    <i class="ti ti-plus me-1"></i>Add Sub Approver
                 </a>
             </div>
-            <div class="card-body border-bottom ">
-                <div class="card-datatable table-responsive pt-0">
-                    <table class="user-list-table table dt-responsive w-100" id="users-table">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" id="users-table">
                         <thead>
                             <tr>
-                                <th>Name</th>
+                                <th>Approver Name</th>
                                 <th>Email</th>
-                                {{-- <th>Phone No</th>
-                                <th>Role</th> --}}
+                                <th>Status</th>
+                                <th>Updated At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -47,41 +83,34 @@
                 </div>
             </div>
         </div>
-        <!-- list and filter end -->
     </section>
     <!-- users list ends -->
-@endsection
-
-@section('vendor-script')
-    {{-- Vendor js files --}}
-
-    @yield('links')
 @endsection
 
 @section('page-script')
     <script>
         $(document).ready(function() {
-            $('#users-table').DataTable({
+            var table = $('#users-table').DataTable({
                 processing: true,
                 serverSide: true,
                 "lengthMenu": [10, 25, 50, 100, 200],
                 ajax: "{{ route('app-site-users-get-all') }}",
                 columns: [{
-                        data: 'full_name',
-                        name: 'full_name'
+                        data: 'name',
+                        name: 'name'
                     },
                     {
                         data: 'email',
                         name: 'email'
                     },
-                    // {
-                    //     data: 'contact',
-                    //     name: 'contact'
-                    // },
-                    // {
-                    //     data: 'role_name',
-                    //     name: 'role_name'
-                    // },
+                    {
+                        data: 'status',
+                        name: 'status'
+                    },
+                    {
+                        data: 'updated_at',
+                        name: 'updated_at'
+                    },
                     {
                         data: 'actions',
                         name: 'actions',
@@ -89,60 +118,68 @@
                         searchable: false
                     }
                 ],
+                order: [
+                    [3, 'desc']
+                ], // Sort by updated_at descending
+                dom: '<"d-flex justify-content-between align-items-center mb-3"<"dt-buttons btn-group"><"ms-auto"f>>rt<"d-flex justify-content-between align-items-center mt-3"ip>',
+                buttons: [{
+                        extend: 'excelHtml5',
+                        text: '<i class="ti ti-file-spreadsheet me-1"></i>Excel',
+                        className: 'btn btn-outline-primary',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        text: '<i class="ti ti-file-text me-1"></i>CSV',
+                        className: 'btn btn-outline-secondary',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="ti ti-printer me-1"></i>Print',
+                        className: 'btn btn-outline-info',
+                        exportOptions: {
+                            columns: [0, 1, 2, 3]
+                        }
+                    }
+                ],
                 drawCallback: function() {
                     feather.replace();
                     $('[data-bs-toggle="tooltip"]').tooltip();
-                },
-                dom: '<"export-buttons"B>lfrtip',
-                "paging": true,
-                buttons: [{
-                    extend: 'excel',
-                    className: 'btn btn-primary',
-                    exportOptions: {
-                        columns: [0, 1, 2, 3]
-                    }
-                }]
-            });
-        });
 
-
-        $(document).on("click", ".confirm-delete", function(e) {
-            e.preventDefault();
-            var id = $(this).data("idos");
-            Swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                    cancelButton: 'btn btn-outline-danger ms-1'
-                },
-                buttonsStyling: false
-            }).then(function(result) {
-                if (result.value) {
-                    window.location.href = '/app/users/destroy/' + id;
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Deleted!',
-                        text: 'Record has been deleted.',
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        }
-                    });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    Swal.fire({
-                        title: 'Cancelled',
-                        text: 'Your imaginary record is safe :)',
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        }
-                    });
+                    // Handle disable/enable toggle
+                    $('#users-table').off('click', '.toggle-status').on('click', '.toggle-status',
+                        function(e) {
+                            e.preventDefault();
+                            var url = $(this).data('url');
+                            var userId = $(this).data('id');
+                            if (!url) return;
+                            if (!confirm('Are you sure you want to change this user status?'))
+                                return;
+                            var token = $('meta[name="csrf-token"]').attr('content');
+                            $.post(url, {
+                                _token: token
+                            }, function(resp) {
+                                if (resp && resp.success) {
+                                    if (window.toastr) toastr.success(resp.message ||
+                                        'Status updated');
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    if (window.toastr) toastr.error(resp.message ||
+                                        'Unable to update status');
+                                }
+                            }).fail(function() {
+                                if (window.toastr) toastr.error('Request failed');
+                            });
+                        });
                 }
             });
+
+            table.buttons().container().appendTo($('.dt-buttons'));
         });
     </script>
-    {{-- Page js files --}}
 @endsection

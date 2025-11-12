@@ -28,7 +28,9 @@ class CreateUserRequest extends FormRequest
       'email' => 'required|unique:users,email',
       'first_name' => 'required',
       'last_name' => 'required',
-      'password' => 'required:string|min:8'
+      'password' => 'required:string|min:8',
+      // Commission percentage (visible to Approver role in the form). Accepts 0-100 with up to 2 decimals.
+      'commission' => 'nullable|numeric|min:0|max:100'
     ];
   }
 }

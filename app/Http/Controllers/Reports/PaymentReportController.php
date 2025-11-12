@@ -74,11 +74,76 @@ class PaymentReportController extends Controller
       })
       ->addColumn('action', function ($row) {
         $encryptedId = Crypt::encrypt($row->id);
-        $viewUrl = route('requests.view', ['id' => $encryptedId]);
-        return '<a href="' . $viewUrl . '" class="btn btn-sm btn-primary">View</a>';
+        return '<button class="btn btn-sm btn-primary view-details-btn" data-id="' . $encryptedId . '">View</button>';
       })
       ->rawColumns(['action'])
       ->make(true);
+  }
+
+  /**
+   * Get bank account details for a payment request
+   */
+  public function getBankDetails($id)
+  {
+    try {
+      $id = Crypt::decrypt($id);
+      $request = PaymentRequest::leftJoin('bank_managements', function ($join) {
+        $join->on('requests.account_upi', '=', DB::raw("COALESCE(bank_managements.account_number, bank_managements.upi_id)"));
+      })
+        ->leftJoin('users', 'users.id', '=', 'requests.assign_to')
+        ->select([
+          'requests.*',
+          'bank_managements.name as bank_name',
+          'bank_managements.bank_name as bank_full_name',
+          'bank_managements.branch_name',
+          'bank_managements.account_number',
+          'bank_managements.account_holder_name',
+          'bank_managements.ifsc_code',
+          'bank_managements.upi_id',
+          'bank_managements.upi_number',
+          'bank_managements.type as account_type',
+          'users.name as approver_name',
+        ])
+        ->where('requests.id', $id)
+        ->first();
+
+      if (!$request) {
+        return response()->json(['error' => 'Request not found'], 404);
+      }
+
+      $chargePercent = config('app.charge_percent', env('CHARGE_PERCENT', 4)) / 100.0;
+      $amount = floatval($request->payment_amount ?: $request->amount ?: 0);
+      $charge = $amount * $chargePercent;
+
+      return response()->json([
+        'success' => true,
+        'data' => [
+          'request_id' => $request->id,
+          'utr' => $request->utr,
+          'amount' => number_format($amount, 2),
+          'charge_percent' => round($chargePercent * 100, 2),
+          'charge_amount' => number_format($charge, 2),
+          'payment_date' => optional($request->created_at)->format('d/m/Y H:i'),
+          'status' => $request->status,
+          'account_upi' => $request->account_upi,
+          'payment_from' => $request->payment_from,
+          'mode' => $request->mode,
+          'approver_name' => $request->approver_name ?: '-',
+          // Bank details
+          'bank_name' => $request->bank_name ?: '-',
+          'bank_full_name' => $request->bank_full_name ?: '-',
+          'branch_name' => $request->branch_name ?: '-',
+          'account_number' => $request->account_number ?: '-',
+          'account_holder_name' => $request->account_holder_name ?: '-',
+          'ifsc_code' => $request->ifsc_code ?: '-',
+          'upi_id' => $request->upi_id ?: '-',
+          'upi_number' => $request->upi_number ?: '-',
+          'account_type' => $request->account_type ?: '-',
+        ]
+      ]);
+    } catch (\Exception $e) {
+      return response()->json(['error' => 'Failed to fetch details: ' . $e->getMessage()], 500);
+    }
   }
 
   /**

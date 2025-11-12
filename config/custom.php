@@ -12,10 +12,10 @@ return [
     'myStyle' => 'light', // Options[String]: light(default), dark & system mode
     'myRTLSupport' => true, // options[Boolean]: true(default), false // To provide RTLSupport or not
     'myRTLMode' => false, // options[Boolean]: false(default), true // To set layout to RTL layout  (myRTLSupport must be true for rtl mode)
-    'hasCustomizer' => true, // options[Boolean]: true(default), false // Display customizer or not THIS WILL REMOVE INCLUDED JS FILE. SO LOCAL STORAGE WON'T WORK
-    'displayCustomizer' => true, // options[Boolean]: true(default), false // Display customizer UI or not, THIS WON'T REMOVE INCLUDED JS FILE. SO LOCAL STORAGE WILL WORK
-    'contentLayout' => 'compact', // options[String]: 'compact', 'wide' (compact=container-xxl, wide=container-fluid)
-    'navbarType' => 'sticky', // options[String]: 'sticky', 'static', 'hidden' (Only for vertical Layout)
+    'hasCustomizer' => false, // options[Boolean]: true(default), false // Display customizer or not THIS WILL REMOVE INCLUDED JS FILE. SO LOCAL STORAGE WON'T WORK
+    'displayCustomizer' => false, // options[Boolean]: true(default), false // Display customizer UI or not, THIS WON'T REMOVE INCLUDED JS FILE. SO LOCAL STORAGE WILL WORK
+    'contentLayout' => 'wide', // options[String]: 'compact', 'wide' (compact=container-xxl, wide=container-fluid)
+    'navbarType' => 'hidden', // options[String]: 'sticky', 'static', 'hidden' (Only for vertical Layout)
     'footerFixed' => false, // options[Boolean]: false(default), true // Footer Fixed
     'menuFixed' => true, // options[Boolean]: true(default), false // Layout(menu) Fixed (Only for vertical Layout)
     'menuCollapsed' => false, // options[Boolean]: false(default), true // Show menu collapsed, (Only for vertical Layout)

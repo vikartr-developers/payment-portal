@@ -41,27 +41,30 @@
             <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
             <style>
                 /* table.dataTable,
-                                                                                                            table.dataTable th,
-                                                                                                            table.dataTable td,
-                                                                                                            .dataTables_wrapper {
-                                                                                                                font-size: 12px !important;
-                                                                                                            }
+                                                                                                                                                                                                                table.dataTable th,
+                                                                                                                                                                                                                table.dataTable td,
+                                                                                                                                                                                                                .dataTables_wrapper {
+                                                                                                                                                                                                                    font-size: 12px !important;
+                                                                                                                                                                                                                }
 
-                                                                                                            .table> :not(caption)>*>* {
-                                                                                                                padding: 0.3rem 0.5rem;
-                                                                                                            }
+                                                                                                                                                                                                                .table> :not(caption)>*>* {
+                                                                                                                                                                                                                    padding: 0.3rem 0.5rem;
+                                                                                                                                                                                                                }
 
-                                                                                                            table.table.dataTable,
-                                                                                                            table.table td,
-                                                                                                            table.table th {
-                                                                                                                font-size: 12px !important;
-                                                                                                            } */
+                                                                                                                                                                                                                table.table.dataTable,
+                                                                                                                                                                                                                table.table td,
+                                                                                                                                                                                                                table.table th {
+                                                                                                                                                                                                                    font-size: 12px !important;
+                                                                                                                                                                                                                } */
             </style>
             <style>
                 /* Rounded corners and card effect for the table */
                 .table {
+                    max-width: 100% !important;
+                    color: #000 !important;
                     border-radius: 16px !important;
                     overflow: scroll;
+                    /* font-size: 9px !important; */
                     box-shadow: 0 4px 18px rgba(153, 164, 188, 0.13);
                     /* background: #fff; */
 
@@ -71,9 +74,15 @@
                 .table thead th {
                     /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
                     color: #000 !important;
-                    font-size: 1rem;
+                    /* font-size: 12px !important; */
                     font-weight: 600;
                     border: none;
+                }
+
+                .table td {
+                    color: #000 !important;
+                    /* font-size: 12px !important; */
+
                 }
 
                 /* Zebra striping for rows */
@@ -148,6 +157,27 @@
                 .app-brand-logo.demo {
                     width: 90px;
                     height: auto;
+                }
+
+                .app-brand .demo {
+                    height: auto;
+
+                }
+
+                .app-brand img {
+                    width: 200px !important;
+                }
+
+                .light-style .menu .app-brand.demo {
+                    height: auto !important;
+                }
+
+                .app-brand-logo.demo {
+                    width: 200px;
+                }
+
+                .app-brand img {
+                    z-index: 99999;
                 }
             </style>
             {{-- <script>

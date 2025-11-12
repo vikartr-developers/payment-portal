@@ -49,7 +49,7 @@
                 <div class="swiper-wrapper">
                 @section('content')
 
-                    <div class="row mb-3">
+                    <div class="row d-flex justify-content-end mb-3  ">
                         <div class="col-md-3">
                             <label for="date_range" class="form-label">Date Range</label>
                             <select id="date_range" class="form-select">
@@ -124,7 +124,7 @@
                                 <div class="card-body text-center py-4">
                                     <span
                                         style="display:inline-block; background:#b3e2b0; border-radius:50%; width:48px; height:48px; line-height:48px;">
-                                        <i class="ti ti-currency-dollar text-success" style="font-size: 2rem;"></i>
+                                        <i class="ti ti-currency-rupee text-success" style="font-size: 2rem;"></i>
                                     </span>
                                     <div class="mt-3 mb-2" id="todays_revenue"
                                         style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
@@ -205,7 +205,7 @@
                                 <div class="card-body d-flex align-items-center py-3">
                                     <div class="me-3">
                                         <span class="badge bg-success rounded p-2">
-                                            <i class="ti ti-currency-dollar ti-sm text-white"></i>
+                                            <i class="ti ti-currency-rupee ti-sm text-white"></i>
                                         </span>
                                     </div>
                                     <div>
@@ -489,7 +489,7 @@
                     <div class="card-body d-flex align-items-center py-3">
                         <div class="me-3">
                             <span class="badge bg-success rounded p-2">
-                                <i class="ti ti-currency-dollar ti-sm text-white"></i>
+                                <i class="ti ti-currency-rupee ti-sm text-white"></i>
                             </span>
                         </div>
                         <div>
@@ -732,8 +732,8 @@
                 <div class="row gap-4 gap-sm-0">
                     <div class="col-12 col-sm-4">
                         <div class="d-flex gap-2 align-items-center">
-                            <div class="badge rounded bg-label-primary p-1"><i
-                                    class="ti ti-currency-dollar ti-sm"></i></div>
+                            <div class="badge rounded bg-label-primary p-1"><i class="ti ti-currency-rupee ti-sm"></i>
+                            </div>
                             <h6 class="mb-0">Earnings</h6>
                         </div>
                         <h4 class="my-2 pt-1">$545.69</h4>
@@ -994,7 +994,7 @@
             <div id="totalEarningChart"></div>
             <div class="d-flex align-items-start my-4">
                 <div class="badge rounded bg-label-primary p-2 me-3 rounded"><i
-                        class="ti ti-currency-dollar ti-sm"></i></div>
+                        class="ti ti-currency-rupee ti-sm"></i></div>
                 <div class="d-flex justify-content-between w-100 gap-2 align-items-center">
                     <div class="me-2">
                         <h6 class="mb-0">Total Sales</h6>

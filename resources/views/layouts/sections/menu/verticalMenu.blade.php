@@ -11,7 +11,7 @@
                 <span class="app-brand-logo demo">
                     @include('_partials.macros', ['height' => 20])
                 </span>
-                <span class="app-brand-text demo menu-text fw-bold">{{ config('variables.templateName') }}</span>
+                {{-- <span class="app-brand-text demo menu-text fw-bold">{{ config('variables.templateName') }}</span> --}}
             </a>
             <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
                 <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i>
@@ -30,7 +30,7 @@
                 // 1. Check top-level menu permissions
                 if (isset($menu->permission) && is_array($menu->permission)) {
                     foreach ($menu->permission as $perm) {
-                        if (Auth::user()->can($perm)) {
+                        if (Auth::check() && Auth::user()->can($perm)) {
                             $showMenu = true;
                             break;
                         }
@@ -42,7 +42,7 @@
                     foreach ($menu->submenu as $submenu) {
                         if (isset($submenu->permission) && is_array($submenu->permission)) {
                             foreach ($submenu->permission as $perm) {
-                                if (Auth::user()->can($perm)) {
+                                if (Auth::check() && Auth::user()->can($perm)) {
                                     $showMenu = true;
                                     break 2; // exit both loops
                                 }

@@ -64,6 +64,15 @@
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 @endsection
 
+@section('page-style')
+    <style>
+        #paymentsTable_filter,
+        #paymentsTable_length {
+            display: none;
+        }
+    </style>
+@endsection
+
 @section('content')
     <!-- Summary Cards Row -->
     <div class="row mb-4">
@@ -71,7 +80,7 @@
             <div class="card summary-card ">
                 <div class="card-body d-flex align-items-center">
                     <div class="summary-icon bg-success text-white me-3">
-                        <i class="ti ti-currency-dollar"></i>
+                        <i class="ti ti-currency-rupee"></i>
                     </div>
                     <div class="flex-grow-1">
                         <p class="summary-label">Total Deposits</p>
@@ -101,7 +110,7 @@
                 <h5 class="card-title">Payment Reports</h5>
             </div>
             <div class="d-flex gap-2">
-                <a id="exportExcelBtn" class="btn btn-primary">Export Excel</a>
+                <a id="exportExcelBtn" style="color:#fff" class="btn btn-primary">Export Excel</a>
             </div>
         </div>
         <div class="card-body">
@@ -114,6 +123,10 @@
                     <label for="end_date" class="form-label">End date</label>
                     <input type="date" id="end_date" class="form-control" />
                 </div>
+                <div class="col-md-3">
+                    <label for="dt_search" class="form-label">Search</label>
+                    <input type="search" id="dt_search" class="form-control" placeholder="Search in table..." />
+                </div>
                 <div class="col-md-3 d-flex align-items-end">
                     <button id="filterBtn" class="btn btn-primary">Filter</button>
                     <button id="clearBtn" class="btn btn-outline-secondary ms-2">Clear</button>
@@ -121,7 +134,7 @@
             </div>
 
             <div class="table-responsive">
-                <table id="paymentsTable" class="table table-striped table-bordered">
+                <table id="paymentsTable" class="table ">
                     <thead>
                         <tr>
                             <th>Account Number / UPI</th>
@@ -134,6 +147,69 @@
                         </tr>
                     </thead>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Details Modal -->
+    <div class="modal fade" id="bankDetailsModal" tabindex="-1" aria-labelledby="bankDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bankDetailsModalLabel">Bank Account Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalLoader" class="text-center py-4" style="display:none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="modalContent" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted mb-1">Payment Information</h6>
+                                <hr class="mt-1 mb-3">
+                                <p class="mb-2"><strong>Request ID:</strong> <span id="modal_request_id">-</span></p>
+                                <p class="mb-2"><strong>UTR:</strong> <span id="modal_utr">-</span></p>
+                                <p class="mb-2"><strong>Amount:</strong> <span id="modal_amount"
+                                        class="text-success fw-bold">₹0.00</span></p>
+                                <p class="mb-2"><strong>Charges:</strong> <span id="modal_charge_percent">-</span></p>
+                                <p class="mb-2"><strong>Charge Amount:</strong> <span id="modal_charge_amount"
+                                        class="text-primary fw-bold">₹0.00</span></p>
+                                <p class="mb-2"><strong>Payment Date:</strong> <span id="modal_payment_date">-</span></p>
+                                <p class="mb-2"><strong>Status:</strong> <span id="modal_status"
+                                        class="badge">-</span></p>
+                                <p class="mb-2"><strong>Mode:</strong> <span id="modal_mode">-</span></p>
+                                <p class="mb-2"><strong>Approver:</strong> <span id="modal_approver">-</span></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <h6 class="text-muted mb-1">Bank Account Details</h6>
+                                <hr class="mt-1 mb-3">
+                                <p class="mb-2"><strong>Account Type:</strong> <span id="modal_account_type">-</span>
+                                </p>
+                                <p class="mb-2"><strong>Bank Name:</strong> <span id="modal_bank_name">-</span></p>
+                                <p class="mb-2"><strong>Branch:</strong> <span id="modal_branch_name">-</span></p>
+                                <p class="mb-2"><strong>Account Number:</strong> <span id="modal_account_number"
+                                        class="text-primary fw-bold">-</span></p>
+                                <p class="mb-2"><strong>Account Holder:</strong> <span
+                                        id="modal_account_holder">-</span></p>
+                                <p class="mb-2"><strong>IFSC Code:</strong> <span id="modal_ifsc_code">-</span></p>
+                                <p class="mb-2"><strong>UPI ID:</strong> <span id="modal_upi_id"
+                                        class="text-primary fw-bold">-</span></p>
+                                <p class="mb-2"><strong>UPI Number:</strong> <span id="modal_upi_number">-</span></p>
+                                <p class="mb-2"><strong>Payment From:</strong> <span id="modal_payment_from">-</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="modalError" class="alert alert-danger" style="display:none;" role="alert">
+                        Failed to load details. Please try again.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
@@ -266,6 +342,14 @@
                     table.ajax.reload();
                     updateSummaryCards();
                 });
+
+                // DataTable search handler
+                $('#dt_search').on('keyup', function() {
+                    if (table) {
+                        table.search(this.value).draw();
+                    }
+                });
+
                 // Export full dataset (server-side) using current filters
                 $('#exportExcelBtn').on('click', function(e) {
                     e.preventDefault();
@@ -278,6 +362,79 @@
                     if (params.length) url += '?' + params.join('&');
                     // trigger download
                     window.location = url;
+                });
+
+                // Handle View button click to show bank details modal
+                $(document).on('click', '.view-details-btn', function() {
+                    var requestId = $(this).data('id');
+                    var modal = $('#bankDetailsModal');
+
+                    // Show modal and loader
+                    modal.modal('show');
+                    $('#modalLoader').show();
+                    $('#modalContent').hide();
+                    $('#modalError').hide();
+
+                    // Fetch bank details
+                    $.ajax({
+                        url: '{{ route('reports.payments.bank-details', ['id' => '__ID__']) }}'
+                            .replace('__ID__', requestId),
+                        method: 'GET',
+                        success: function(response) {
+                            if (response.success && response.data) {
+                                var data = response.data;
+
+                                // Populate modal with data
+                                $('#modal_request_id').text(data.request_id || '-');
+                                $('#modal_utr').text(data.utr || '-');
+                                $('#modal_amount').text('₹' + data.amount);
+                                $('#modal_charge_percent').text(data.charge_percent + '%');
+                                $('#modal_charge_amount').text('₹' + data.charge_amount);
+                                $('#modal_payment_date').text(data.payment_date || '-');
+                                $('#modal_mode').text(data.mode || '-');
+                                $('#modal_approver').text(data.approver_name || '-');
+
+                                // Status badge
+                                var statusClass = 'bg-secondary';
+                                if (data.status === 'approved') statusClass = 'bg-success';
+                                else if (data.status === 'rejected') statusClass =
+                                    'bg-danger';
+                                else if (data.status === 'pending') statusClass =
+                                    'bg-warning';
+                                $('#modal_status').removeClass().addClass('badge ' +
+                                    statusClass).text(data.status || '-');
+
+                                // Bank details
+                                $('#modal_account_type').text(data.account_type || '-');
+                                $('#modal_bank_name').text(data.bank_full_name || data
+                                    .bank_name || '-');
+                                $('#modal_branch_name').text(data.branch_name || '-');
+                                $('#modal_account_number').text(data.account_number || '-');
+                                $('#modal_account_holder').text(data.account_holder_name ||
+                                    '-');
+                                $('#modal_ifsc_code').text(data.ifsc_code || '-');
+                                $('#modal_upi_id').text(data.upi_id || '-');
+                                $('#modal_upi_number').text(data.upi_number || '-');
+                                $('#modal_payment_from').text(data.payment_from || '-');
+
+                                // Hide loader, show content
+                                $('#modalLoader').hide();
+                                $('#modalContent').show();
+                            } else {
+                                $('#modalLoader').hide();
+                                $('#modalError').text(response.error ||
+                                    'Failed to load details').show();
+                            }
+                        },
+                        error: function(xhr) {
+                            $('#modalLoader').hide();
+                            var errorMsg = 'Failed to load details. Please try again.';
+                            if (xhr.responseJSON && xhr.responseJSON.error) {
+                                errorMsg = xhr.responseJSON.error;
+                            }
+                            $('#modalError').text(errorMsg).show();
+                        }
+                    });
                 });
             });
         })();

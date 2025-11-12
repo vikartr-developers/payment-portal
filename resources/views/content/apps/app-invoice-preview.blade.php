@@ -196,7 +196,7 @@
                     <button class="btn btn-primary d-grid w-100" data-bs-toggle="offcanvas"
                         data-bs-target="#addPaymentOffcanvas">
                         <span class="d-flex align-items-center justify-content-center text-nowrap"><i
-                                class="ti ti-currency-dollar ti-xs me-2"></i>Add Payment</span>
+                                class="ti ti-currency-rupee ti-xs me-2"></i>Add Payment</span>
                     </button>
                 </div>
             </div>

@@ -23,11 +23,11 @@
         }
 
         .payment-method-option:hover {
-            border-color: #A3E94B;
+            border-color: #000000;
         }
 
         .payment-method-option.selected {
-            border-color: #A3E94B;
+            border-color: #000000;
             background-color: #f8f7ff;
         }
 
@@ -109,7 +109,7 @@
                         <label class="payment-method-option" for="upi">
                             <input type="radio" name="payment_method" id="upi" value="upi" required>
                             <div class="d-flex align-items-center">
-                                <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #A3E94B;"></i>
+                                <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #000000;"></i>
                                 <div>
                                     <h5 class="mb-1">UPI Payment</h5>
                                     <p class="text-muted mb-0">Pay using any UPI app</p>
@@ -120,7 +120,7 @@
                         <label class="payment-method-option" for="bank">
                             <input type="radio" name="payment_method" id="bank" value="bank" required>
                             <div class="d-flex align-items-center">
-                                <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #A3E94B;"></i>
+                                <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #000000;"></i>
                                 <div>
                                     <h5 class="mb-1">Bank Transfer</h5>
                                     <p class="text-muted mb-0">IMPS and RTGS only</p>
@@ -168,10 +168,10 @@
                                             <p class="mb-1"><strong>UPI Number:</strong> {{ $upiAccount->upi_number }}</p>
                                         @endif
                                         <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}</p>
-                                        @if ($upiAccount->deposit_limit)
+                                        {{-- @if ($upiAccount->deposit_limit)
                                             <p class="mb-0 text-muted"><small>Deposit Limit:
                                                     ₹{{ number_format($upiAccount->deposit_limit, 2) }}</small></p>
-                                        @endif
+                                        @endif --}}
                                     </div>
                                     <!-- Hidden data for QR generation -->
                                     <input type="hidden" id="upiPaymentUrl" value="{{ $upiPaymentUrl }}">
@@ -453,7 +453,7 @@
                     if (found) {
                         feedback.addClass('text-danger').text(
                             'This screenshot was just uploaded — duplicates are not allowed right now.'
-                            );
+                        );
                         // clear input
                         $(this).val('');
                         return;

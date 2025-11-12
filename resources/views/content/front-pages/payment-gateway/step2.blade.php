@@ -20,7 +20,7 @@
         }
 
         .payment-option:hover {
-            border-color: #A3E94B;
+            border-color: #000000;
             box-shadow: 0 4px 15px rgba(115, 103, 240, 0.2);
         }
 
@@ -29,13 +29,13 @@
         }
 
         .payment-option.selected {
-            border-color: #A3E94B;
+            border-color: #000000;
             background-color: #f8f7ff;
         }
 
         .payment-icon {
             font-size: 3rem;
-            color: #A3E94B;
+            color: #000000;
             margin-bottom: 15px;
         }
     </style>

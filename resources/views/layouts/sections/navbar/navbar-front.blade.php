@@ -17,7 +17,9 @@
                 </button>
                 <!-- Mobile menu toggle: End-->
                 <a href="{{ url('front-pages/landing') }}" class="app-brand-link">
-                    <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 20, 'withbg' => 'fill: #fff;'])</span>
+                    <img class="w-100" src="{{ asset('assets/img/logo/logo.jpg') }}" alt="" height="60px">
+
+                    {{-- <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 100, 'withbg' => 'fill: #fff;'])</span> --}}
                     <span
                         class="app-brand-text demo menu-text fw-bold ms-2 ps-1">{{ config('variables.templateName') }}</span>
                 </a>
@@ -253,11 +255,11 @@
                     <!-- / Style Switcher-->
                 @endif
                 <!-- navbar button: Start -->
-                <li>
+                {{-- <li>
                     <a href="{{ url('/login') }}" class="btn btn-primary" target="_blank"><span
                             class="tf-icons ti ti-login scaleX-n1-rtl me-md-1"></span><span
                             class="d-none d-md-block">Login</span></a>
-                </li>
+                </li> --}}
                 <!-- navbar button: End -->
             </ul>
             <!-- Toolbar: End -->

@@ -9,7 +9,7 @@
 <footer class="content-footer footer bg-footer-theme">
     <div class="{{ $containerFooter }}">
         <div class="footer-container d-flex align-items-center justify-content-between py-2 flex-md-row flex-column">
-            <div>
+            {{-- <div>
                 ©
                 <script>
                     document.write(new Date().getFullYear())
@@ -17,7 +17,7 @@
                     href="{{ !empty(config('variables.creatorUrl')) ? config('variables.creatorUrl') : '' }}"
                     target="_blank"
                     class="fw-medium">{{ !empty(config('variables.creatorName')) ? config('variables.creatorName') : '' }}</a>
-            </div>
+            </div> --}}
             {{-- <div class="d-none d-lg-inline-block">
         <a href="{{ config('variables.licenseUrl') ? config('variables.licenseUrl') : '#' }}" class="footer-link me-4" target="_blank">License</a>
         <a href="{{ config('variables.moreThemes') ? config('variables.moreThemes') : '#' }}" target="_blank" class="footer-link me-4">More Themes</a>

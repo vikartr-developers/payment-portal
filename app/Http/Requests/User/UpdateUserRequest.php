@@ -32,6 +32,8 @@ class UpdateUserRequest extends FormRequest
             ],
             'first_name' => 'required',
             'last_name' => 'required',
+            // Commission percentage is optional and must be between 0 and 100
+            'commission' => 'nullable|numeric|min:0|max:100',
         ];
     }
 }

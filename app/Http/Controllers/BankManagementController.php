@@ -9,9 +9,12 @@ use Yajra\DataTables\DataTables;
 
 class BankManagementController extends Controller
 {
-  public function show(Request $request)
+  public function show($id)
   {
+    $record = BankManagement::with('subApprovers')->findOrFail($id);
+    return view('content.apps.bank_management.show', compact('record'));
   }
+
   public function index(Request $request)
   {
     if ($request->ajax()) {
@@ -24,33 +27,56 @@ class BankManagementController extends Controller
         $data = BankManagement::where('created_by', auth()->user()->id);
       }
       return DataTables::of($data)
-        ->addColumn('account_info', function ($row) {
-          return $row->type == 'bank' ? $row->account_number : $row->upi_id;
+        ->addColumn('name', function ($row) {
+          return $row->name ?? '-';
+        })
+        ->addColumn('daily_max_amount', function ($row) {
+          return $row->daily_max_amount ? number_format($row->daily_max_amount, 2) : '-';
+        })
+        ->addColumn('max_transaction_amount', function ($row) {
+          return $row->max_transaction_amount ? number_format($row->max_transaction_amount, 2) : '-';
+        })
+        ->addColumn('daily_max_transaction_count', function ($row) {
+          return $row->daily_max_transaction_count ?? '-';
+        })
+        ->addColumn('upi', function ($row) {
+          if ($row->type == 'upi') {
+            $badge = $row->is_merchant_upi ? '<span class="badge bg-success">Merchant</span>' : '<span class="badge bg-info">Normal</span>';
+            return $row->upi_id . ' ' . $badge;
+          }
+          return '-';
         })
         ->addColumn('status', function ($row) {
           return ucfirst($row->status ?? 'inactive');
         })
-        ->addColumn('code_or_number', function ($row) {
-          return $row->type == 'bank' ? $row->ifsc_code : $row->upi_number;
+        ->addColumn('assign_sub_approver', function ($row) {
+          $count = $row->subApprovers()->count();
+          return "<button class='btn btn-sm btn-info assign-btn' data-id='{$row->id}' data-name='{$row->name}'>
+                    <i class='ti ti-users me-1'></i>Assign ({$count})
+                  </button>";
         })
-        // ->addColumn('default', function ($row) {
-        //   return $row->is_default ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-secondary">No</span>';
-        // })
         ->addColumn('action', function ($row) {
           $edit = route('bank-management.edit', $row->id);
+          $view = route('bank-management.show', $row->id);
           $delete = route('bank-management.destroy', $row->id);
           $statusToggle = route('bank-management.toggle-status', $row->id);
-          $btn = "<a href='$edit' class='btn btn-sm btn-warning me-1'>Edit</a>";
-          $btn .= "<form method='POST' action='$delete' style='display:inline-block;'>" . csrf_field() . method_field('DELETE') .
-            "<button class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure?\")'>Delete</button></form>";
-          // Approver can toggle status directly
-          if (auth()->user() && auth()->user()->hasRole('Approver')) {
-            $toggleText = $row->status === 'active' ? 'Deactivate' : 'Activate';
-            $btn .= " <button class='btn btn-sm btn-secondary toggle-status' data-id='" . $row->id . "' data-url='" . $statusToggle . "'>" . $toggleText . "</button>";
+
+          $btn = "<a href='$edit' class='btn btn-sm btn-primary me-1' title='Edit'><i class='ti ti-edit'></i></a>";
+          $btn .= "<a href='$view' class='btn btn-sm btn-info me-1' title='View'><i class='ti ti-eye'></i></a>";
+
+          // Enable/Disable button
+          if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
+            $toggleText = $row->status === 'active' ? 'Disable' : 'Enable';
+            $toggleIcon = $row->status === 'active' ? 'ban' : 'check';
+            $btn .= " <button class='btn btn-sm btn-secondary toggle-status me-1' data-id='" . $row->id . "' data-url='" . $statusToggle . "' title='" . $toggleText . "'><i class='ti ti-" . $toggleIcon . "'></i></button>";
           }
+
+          $btn .= "<form method='POST' action='$delete' style='display:inline-block;'>" . csrf_field() . method_field('DELETE') .
+            "<button class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure?\")' title='Delete'><i class='ti ti-trash'></i></button></form>";
+
           return $btn;
         })
-        ->rawColumns(['default', 'action'])
+        ->rawColumns(['upi', 'assign_sub_approver', 'action'])
         ->make(true);
     }
     return view('content.apps.bank_management.list');
@@ -64,25 +90,37 @@ class BankManagementController extends Controller
     $accounts = BankManagement::query()->get();
 
     $rows = $accounts->map(function ($row) {
-      $account_info = $row->type == 'bank' ? $row->account_number : $row->upi_id;
-      $code_or_number = $row->type == 'bank' ? $row->ifsc_code : $row->upi_number;
       $edit = route('bank-management.edit', $row->id);
+      $view = route('bank-management.show', $row->id);
       $delete = route('bank-management.destroy', $row->id);
       $statusToggle = route('bank-management.toggle-status', $row->id);
-      $btn = "<a href='$edit' class='btn btn-sm btn-warning me-1'>Edit</a>";
-      $btn .= "<form method='POST' action='$delete' style='display:inline-block;'>" . csrf_field() . method_field('DELETE') .
-        "<button class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure?\")'>Delete</button></form>";
-      if (auth()->user() && auth()->user()->hasRole('Approver')) {
-        $toggleText = $row->status === 'active' ? 'Deactivate' : 'Activate';
-        $btn .= " <button class='btn btn-sm btn-secondary toggle-status' data-id='" . $row->id . "' data-url='" . $statusToggle . "'>" . $toggleText . "</button>";
+
+      $btn = "<a href='$edit' class='btn btn-sm btn-primary me-1' title='Edit'><i class='ti ti-edit'></i></a>";
+      $btn .= "<a href='$view' class='btn btn-sm btn-info me-1' title='View'><i class='ti ti-eye'></i></a>";
+
+      if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
+        $toggleText = $row->status === 'active' ? 'Disable' : 'Enable';
+        $toggleIcon = $row->status === 'active' ? 'ban' : 'check';
+        $btn .= " <button class='btn btn-sm btn-secondary toggle-status me-1' data-id='" . $row->id . "' data-url='" . $statusToggle . "' title='" . $toggleText . "'><i class='ti ti-" . $toggleIcon . "'></i></button>";
       }
+
+      $btn .= "<form method='POST' action='$delete' style='display:inline-block;'>" . csrf_field() . method_field('DELETE') .
+        "<button class='btn btn-sm btn-danger' onclick='return confirm(\"Are you sure?\")' title='Delete'><i class='ti ti-trash'></i></button></form>";
+
+      $count = $row->subApprovers()->count();
+      $assignBtn = "<button class='btn btn-sm btn-info assign-btn' data-id='{$row->id}' data-name='{$row->name}'>
+                      <i class='ti ti-users me-1'></i>Assign ({$count})
+                    </button>";
+
       return [
         'id' => $row->id,
-        'type' => $row->type,
-        'account_info' => $account_info,
-        'code_or_number' => $code_or_number,
-        'deposit_limit' => $row->deposit_limit,
+        'name' => $row->name ?? '-',
+        'daily_max_amount' => $row->daily_max_amount ? number_format($row->daily_max_amount, 2) : '-',
+        'max_transaction_amount' => $row->max_transaction_amount ? number_format($row->max_transaction_amount, 2) : '-',
+        'daily_max_transaction_count' => $row->daily_max_transaction_count ?? '-',
+        'upi' => $row->type == 'upi' ? ($row->upi_id . ($row->is_merchant_upi ? ' (Merchant)' : ' (Normal)')) : '-',
         'status' => ucfirst($row->status ?? 'inactive'),
+        'assign_sub_approver' => $assignBtn,
         'action' => $btn
       ];
     });
@@ -95,12 +133,14 @@ class BankManagementController extends Controller
    */
   public function toggleStatus(Request $request, $id)
   {
+    // dd($id);
     if (!auth()->user() || !auth()->user()->hasRole('Approver')) {
       return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
     }
     $record = BankManagement::findOrFail($id);
     $record->status = $record->status === 'active' ? 'inactive' : 'active';
     $record->save();
+
     return response()->json(['success' => true, 'status' => $record->status]);
   }
 
@@ -124,7 +164,7 @@ class BankManagementController extends Controller
             ->orWhere('payment_from', $identifier);
         })
         ->sum('payment_amount');
-      if ($sum >= floatval($acc->deposit_limit)) {
+      if ($sum >= floatval($acc->max_transaction_amount)) {
         $acc->status = 'inactive';
         $acc->save();
       }
@@ -135,18 +175,7 @@ class BankManagementController extends Controller
   {
     return view('content.apps.bank_management.form');
   }
-  // public function setDefault($id)
-  // {
-  //   $account = BankManagement::findOrFail($id);
 
-  //   // Ensure current user owns this account (add authorization if needed)
-
-  //   BankManagement::where('is_default', true)->update(['is_default' => false]);
-  //   $account->is_default = true;
-  //   $account->save();
-
-  //   return redirect()->back()->with('success', 'Default account updated successfully.');
-  // }
   public function setDefault($id)
   {
     $userId = auth()->user()->id;
@@ -174,16 +203,23 @@ class BankManagementController extends Controller
 
     $validated = $request->validate([
       'type' => 'required|in:bank,upi',
+      'name' => 'required|string|max:255',
       'bank_name' => 'nullable|string|max:255',
+      'account_holder_name' => 'nullable|string|max:255',
       'account_number' => 'nullable|required_if:type,bank|max:20',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',
       'upi_number' => 'nullable|required_if:type,upi|max:15',
-      'deposit_limit' => 'required|numeric|min:0',
+      'is_merchant_upi' => 'boolean',
+      'daily_max_amount' => 'required|numeric|min:0',
+      'daily_max_transaction_count' => 'required|integer|min:0',
+      'max_transaction_amount' => 'required|numeric|min:0',
+      'deposit_limit' => 'nullable|numeric|min:0',
       'is_default' => 'boolean',
       'status' => 'required|in:active,inactive',
     ]);
     $validated['created_by'] = auth()->user()->id;
+    $validated['is_merchant_upi'] = $request->has('is_merchant_upi') ? 1 : 0;
     // if ($validated['is_default']) {
     //   BankManagement::where('is_default', true)->update(['is_default' => false]);
     // }
@@ -202,16 +238,23 @@ class BankManagementController extends Controller
     $record = BankManagement::findOrFail($id);
     $validated = $request->validate([
       'type' => 'required|in:bank,upi',
+      'name' => 'required|string|max:255',
       'bank_name' => 'nullable|string|max:255',
+      'account_holder_name' => 'nullable|string|max:255',
       'account_number' => 'nullable|required_if:type,bank|max:20',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',
       'upi_number' => 'nullable|required_if:type,upi|max:15',
-      'deposit_limit' => 'required|numeric|min:0',
+      'is_merchant_upi' => 'boolean',
+      'daily_max_amount' => 'required|numeric|min:0',
+      'daily_max_transaction_count' => 'required|integer|min:0',
+      'max_transaction_amount' => 'required|numeric|min:0',
+      'deposit_limit' => 'nullable|numeric|min:0',
       'is_default' => 'boolean',
       'status' => 'required|in:active,inactive',
     ]);
-    if ($validated['is_default']) {
+    $validated['is_merchant_upi'] = $request->has('is_merchant_upi') ? 1 : 0;
+    if ($validated['is_default'] ?? false) {
       BankManagement::where('is_default', true)->where('id', '!=', $id)->update(['is_default' => false]);
     }
     $record->update($validated);
@@ -223,5 +266,40 @@ class BankManagementController extends Controller
     $record = BankManagement::findOrFail($id);
     $record->delete();
     return redirect()->route('bank-management.index')->with('success', 'Record deleted.');
+  }
+
+  /**
+   * Assign sub approvers to a bank account
+   */
+  public function assignSubApprovers(Request $request, $id)
+  {
+    $account = BankManagement::findOrFail($id);
+
+    $validated = $request->validate([
+      'sub_approvers' => 'nullable|array',
+      'sub_approvers.*' => 'exists:users,id'
+    ]);
+
+    // Sync sub approvers
+    $account->subApprovers()->sync($validated['sub_approvers'] ?? []);
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Sub approvers assigned successfully'
+    ]);
+  }
+
+  /**
+   * Get sub approvers for a bank account
+   */
+  public function getSubApprovers($id)
+  {
+    $account = BankManagement::findOrFail($id);
+    $subApprovers = $account->subApprovers()->pluck('users.id')->toArray();
+
+    return response()->json([
+      'success' => true,
+      'sub_approvers' => $subApprovers
+    ]);
   }
 }
