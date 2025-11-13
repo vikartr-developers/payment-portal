@@ -28,6 +28,16 @@
             padding: 8px 12px;
         }
 
+        .table thead th,
+        .table tbody td {
+            /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
+            color: #000 !important;
+            font-size: 12px !important;
+            font-weight: 600;
+            letter-spacing: 0px;
+            border: none;
+        }
+
         .dt-buttons .btn {
             margin-right: .35rem;
         }

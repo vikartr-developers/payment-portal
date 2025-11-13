@@ -42,7 +42,7 @@ class BankManagementController extends Controller
         ->addColumn('upi', function ($row) {
           if ($row->type == 'upi') {
             $badge = $row->is_merchant_upi ? '<span class="badge bg-success">Merchant</span>' : '<span class="badge bg-info">Normal</span>';
-            return $row->upi_id . ' ' . $badge;
+            return $row->upi_id;
           }
           return '-';
         })

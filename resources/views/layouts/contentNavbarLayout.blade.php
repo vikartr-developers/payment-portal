@@ -41,21 +41,21 @@
             <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
             <style>
                 /* table.dataTable,
-                                                                                                                                                                                                                table.dataTable th,
-                                                                                                                                                                                                                table.dataTable td,
-                                                                                                                                                                                                                .dataTables_wrapper {
-                                                                                                                                                                                                                    font-size: 12px !important;
-                                                                                                                                                                                                                }
+                                                                                                                                                                                                                    table.dataTable th,
+                                                                                                                                                                                                                    table.dataTable td,
+                                                                                                                                                                                                                    .dataTables_wrapper {
+                                                                                                                                                                                                                        font-size: 12px !important;
+                                                                                                                                                                                                                    }
 
-                                                                                                                                                                                                                .table> :not(caption)>*>* {
-                                                                                                                                                                                                                    padding: 0.3rem 0.5rem;
-                                                                                                                                                                                                                }
+                                                                                                                                                                                                                    .table> :not(caption)>*>* {
+                                                                                                                                                                                                                        padding: 0.3rem 0.5rem;
+                                                                                                                                                                                                                    }
 
-                                                                                                                                                                                                                table.table.dataTable,
-                                                                                                                                                                                                                table.table td,
-                                                                                                                                                                                                                table.table th {
-                                                                                                                                                                                                                    font-size: 12px !important;
-                                                                                                                                                                                                                } */
+                                                                                                                                                                                                                    table.table.dataTable,
+                                                                                                                                                                                                                    table.table td,
+                                                                                                                                                                                                                    table.table th {
+                                                                                                                                                                                                                        font-size: 12px !important;
+                                                                                                                                                                                                                    } */
             </style>
             <style>
                 /* Rounded corners and card effect for the table */
@@ -75,6 +75,7 @@
                     /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
                     color: #000 !important;
                     /* font-size: 12px !important; */
+                    letter-spacing: 0px;
                     font-weight: 600;
                     border: none;
                 }

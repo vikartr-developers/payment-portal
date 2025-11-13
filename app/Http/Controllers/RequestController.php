@@ -262,7 +262,7 @@ ti-eye"></i>'
         // dd($req->image);
         // '/storage/app/public/' . $imgPath
         $src = '/storage/app/public/' . $req->image;
-        return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
+        return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border payment-screenshot-img" style="cursor: pointer;" data-image="' . e($src) . '" title="Click to view full size" />';
       })
       ->editColumn('status', function ($req) {
         return match ($req->status) {

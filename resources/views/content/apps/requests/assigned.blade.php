@@ -422,12 +422,25 @@
                         // Populate modal fields
                         $('#update_request_id').val(data.id);
                         $('#update_trans_id').val(data.trans_id || '-');
-                        $('#update_mode').val(data.mode || '-');
-                        $('#update_amount').val(data.amount || '0.00');
-                        $('#update_utr').val(data.utr || '');
-                        $('#update_payment_amount').val(data.payment_amount || '');
+                        $('#update_mode').val((data.mode || '-').toUpperCase());
+
+                        // Format amount with 2 decimals
+                        const amount = parseFloat(data.amount || 0).toFixed(2);
+                        $('#update_amount').val('₹ ' + amount);
+
                         $('#update_payment_from').val(data.payment_from || '-');
-                        $('#update_current_status').val(data.status || '-');
+
+                        // Format status with proper capitalization
+                        const status = (data.status || 'pending').charAt(0).toUpperCase() + (
+                            data.status || 'pending').slice(1);
+                        $('#update_current_status').val(status);
+
+                        // Populate editable fields
+                        $('#update_utr').val(data.utr || '');
+
+                        // Set payment amount - if exists use it, otherwise use the requested amount as default
+                        const paymentAmount = data.payment_amount || data.amount || '';
+                        $('#update_payment_amount').val(paymentAmount);
 
                         // Show modal
                         $('#updateTransactionModal').modal('show');
@@ -515,6 +528,16 @@
                                 '<i class="ti ti-x me-1"></i>Cancel Transaction');
                         }
                     });
+                }
+            });
+
+            // Image Preview Modal - Show full size image when clicked
+            $(document).on('click', '.payment-screenshot-img', function() {
+                const imageSrc = $(this).data('image');
+                if (imageSrc) {
+                    $('#previewImage').attr('src', imageSrc);
+                    $('#downloadImageBtn').attr('href', imageSrc);
+                    $('#imagePreviewModal').modal('show');
                 }
             });
         });
@@ -720,9 +743,33 @@
             </div>
         </div>
 
+        <!-- Image Preview Modal -->
+        <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="ti ti-photo me-2"></i>Payment Screenshot
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img id="previewImage" src="" alt="Payment Screenshot" class="img-fluid"
+                            style="max-height: 80vh; width: auto;">
+                    </div>
+                    <div class="modal-footer">
+                        <a id="downloadImageBtn" href="" download class="btn btn-primary">
+                            <i class="ti ti-download me-1"></i>Download
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Update Transaction Modal -->
         <div class="modal fade" id="updateTransactionModal" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -733,58 +780,68 @@
                     <div class="modal-body">
                         <input type="hidden" id="update_request_id">
 
-                        <!-- Transaction Info -->
-                        {{-- <div class="mb-3">
-                            <label class="form-label fw-bold">Transaction ID</label>
-                            <input type="text" class="form-control" id="update_trans_id" readonly>
+                        <!-- Transaction Info (Read-only) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Transaction ID</label>
+                                <input type="text" class="form-control-plaintext" id="update_trans_id" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mode</label>
+                                <input type="text" class="form-control-plaintext" id="update_mode" readonly>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Mode</label>
-                            <input type="text" class="form-control" id="update_mode" readonly>
-                        </div> --}}
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Amount</label>
-                            <input type="text" class="form-control" id="update_amount" readonly>
-                        </div>
-
-                        <!-- Editable Fields -->
-                        <div class="mb-3">
-                            <label for="update_utr" class="form-label fw-bold">UTR <span
-                                    class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="update_utr" placeholder="Enter UTR number"
-                                required>
-                        </div>
-
-                        {{-- <div class="mb-3">
-                            <label for="update_payment_amount" class="form-label fw-bold">Payment Amount <span
-                                    class="text-danger">*</span></label>
-                            <input type="number" step="0.01" class="form-control" id="update_payment_amount"
-                                placeholder="Enter payment amount" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Payment From</label>
-                            <input type="text" class="form-control" id="update_payment_from" readonly>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Requested Amount</label>
+                                <input type="text" class="form-control-plaintext" id="update_amount" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Payment From</label>
+                                <input type="text" class="form-control-plaintext" id="update_payment_from" readonly>
+                            </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">Current Status</label>
-                            <input type="text" class="form-control" id="update_current_status" readonly>
+                            <input type="text" class="form-control-plaintext" id="update_current_status" readonly>
                         </div>
-                    </div> --}}
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            {{-- <button type="button" class="btn btn-danger" id="cancelTransactionBtn">
-                            <i class="ti ti-x me-1"></i>Cancel Transaction
-                        </button> --}}
-                            <button type="button" class="btn btn-success" id="approveTransactionBtn">
-                                <i class="ti ti-check me-1"></i>Approve
-                            </button>
+
+                        <hr class="my-4">
+
+                        <!-- Editable Fields -->
+                        <h6 class="mb-3 text-primary">Update Payment Details</h6>
+
+                        <div class="mb-3">
+                            <label for="update_utr" class="form-label fw-bold">UTR Number <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="update_utr" placeholder="Enter UTR number"
+                                required>
+                            <small class="form-text text-muted">Enter the unique transaction reference number</small>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="update_payment_amount" class="form-label fw-bold">Payment Amount <span
+                                    class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="update_payment_amount"
+                                placeholder="Enter actual payment amount" required>
+                            <small class="form-text text-muted">Enter the actual amount received</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="ti ti-x me-1"></i>Close
+                        </button>
+                        <button type="button" class="btn btn-danger" id="cancelTransactionBtn">
+                            <i class="ti ti-ban me-1"></i>Reject Transaction
+                        </button>
+                        <button type="button" class="btn btn-success" id="approveTransactionBtn">
+                            <i class="ti ti-check me-1"></i>Approve & Update
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
     </section>
 @endsection
