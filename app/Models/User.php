@@ -43,6 +43,7 @@ class User extends Authenticatable
     'from_slab',
     'to_slab',
     'commission',
+    'created_by',
     // 2FA
     'google2fa_secret',
     'google2fa_enabled',

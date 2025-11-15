@@ -56,8 +56,8 @@
                             @php
                                 $imgPath = $requestModel->image;
                                 $imgExists = Storage::disk('public')->exists($imgPath);
-                                // $imgUrl = '/storage/app/public/' . $imgPath;
-                                $imgUrl = $imgExists ? '/storage/app/public/' . $imgPath : null;
+                                // Use Laravel's asset() helper with proper storage path
+$imgUrl = $imgExists ? asset('storage/' . $imgPath) : null;
                             @endphp
                             <dt class="col-sm-3">Image</dt>
                             <dd class="col-sm-9">

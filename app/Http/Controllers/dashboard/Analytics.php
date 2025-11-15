@@ -25,12 +25,32 @@ class Analytics extends Controller
   {
     $user = auth()->user();
 
-    $start = $request->query('start_date') ?: now()->startOfDay()->toDateString();
-    $end = $request->query('end_date') ?: now()->endOfDay()->toDateString();
+    // Check if all_time is requested
+    $allTime = $request->query('all_time') === '1';
+
+    if ($allTime) {
+      // Don't apply date filters for all_time
+      $start = null;
+      $end = null;
+    } else {
+      // Get dates from request, no defaults to ensure proper filtering
+      $start = $request->query('start_date');
+      $end = $request->query('end_date');
+
+      // Only set defaults if no parameters provided at all
+      if (!$start && !$end && !$allTime) {
+        $start = now()->startOfDay()->toDateString();
+        $end = now()->endOfDay()->toDateString();
+      }
+    }
 
     $q = PaymentRequest::query();
-    $q->whereDate('created_at', '>=', $start);
-    $q->whereDate('created_at', '<=', $end);
+
+    // Only apply date filters if not requesting all_time and we have dates
+    if (!$allTime && $start && $end) {
+      $q->whereDate('created_at', '>=', $start);
+      $q->whereDate('created_at', '<=', $end);
+    }
 
     if ($user->hasRole('Admin') || $user->hasRole('Super Admin')) {
       // no additional scope
@@ -74,9 +94,13 @@ class Analytics extends Controller
 
     // Series: daily totals + accepted counts for chart
     $seriesData = DB::table('requests')
-      ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(payment_amount) as total'), DB::raw('SUM(CASE WHEN status = "accepted" THEN 1 ELSE 0 END) as accepted_count'), DB::raw('COUNT(*) as total_count'))
-      ->whereDate('created_at', '>=', $start)
-      ->whereDate('created_at', '<=', $end);
+      ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(payment_amount) as total'), DB::raw('SUM(CASE WHEN status = "accepted" THEN 1 ELSE 0 END) as accepted_count'), DB::raw('COUNT(*) as total_count'));
+
+    // Only apply date filters if not requesting all_time and we have dates
+    if (!$allTime && $start && $end) {
+      $seriesData->whereDate('created_at', '>=', $start)
+        ->whereDate('created_at', '<=', $end);
+    }
 
     // apply same scoping rules to the series query
     if (!($user->hasRole('Admin') || $user->hasRole('Super Admin'))) {

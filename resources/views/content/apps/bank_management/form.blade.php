@@ -144,14 +144,14 @@
                                 </div>
                             </div>
 
-                            <div class="col-12 col-md-6">
+                            {{-- <div class="col-12 col-md-6">
                                 <div class="mb-3">
                                     <label for="upi_number" class="form-label">UPI Number</label>
                                     <input type="text" name="upi_number" class="form-control" id="upi_number"
                                         value="{{ old('upi_number', $record->upi_number ?? '') }}"
                                         placeholder="Enter UPI number">
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="col-12">
                                 <div class="form-check mb-3">

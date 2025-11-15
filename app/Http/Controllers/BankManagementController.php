@@ -18,10 +18,29 @@ class BankManagementController extends Controller
   public function index(Request $request)
   {
     if ($request->ajax()) {
-      // If current user is an Approver, show all accounts; otherwise only user's accounts
-      if (auth()->user() && auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('SubApprover')) {
+      // Admin sees all accounts
+      // Approver sees their own accounts + accounts of their created SubApprovers
+      // SubApprover sees only their own created accounts
+      // Regular users see only their own accounts
+      if (auth()->user() && auth()->user()->hasRole('Admin')) {
         $data = BankManagement::query();
         // Enforce daily deposit limits: deactivate accounts which exceeded today's approved total
+        $this->enforceDailyLimits();
+      } elseif (auth()->user() && auth()->user()->hasRole('Approver')) {
+        // Approver sees their own accounts + accounts created by SubApprovers they created
+        $data = BankManagement::where(function ($query) {
+          $query->where('created_by', auth()->user()->id)
+            ->orWhereHas('creator', function ($q) {
+              // Get accounts created by SubApprovers who were created by this Approver
+              $q->whereHas('roles', function ($roleQuery) {
+                $roleQuery->where('name', 'SubApprover');
+              })->where('created_by', auth()->user()->id);
+            });
+        });
+        $this->enforceDailyLimits();
+      } elseif (auth()->user() && auth()->user()->hasRole('SubApprover')) {
+        // SubApprover sees only their own created accounts
+        $data = BankManagement::where('created_by', auth()->user()->id);
         $this->enforceDailyLimits();
       } else {
         $data = BankManagement::where('created_by', auth()->user()->id);
@@ -55,6 +74,16 @@ class BankManagementController extends Controller
                     <i class='ti ti-users me-1'></i>Assign ({$count})
                   </button>";
         })
+        ->addColumn('payment_link', function ($row) {
+          // Only show payment link for Approver and Admin
+          if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
+            $link = route('payment.gateway.approver', ['approver' => auth()->user()->id, 'account' => $row->id]);
+            return "<button class='btn btn-sm btn-success copy-payment-link' data-link='{$link}' title='Copy Payment Link'>
+                      <i class='ti ti-link me-1'></i>Copy Link
+                    </button>";
+          }
+          return '-';
+        })
         ->addColumn('action', function ($row) {
           $edit = route('bank-management.edit', $row->id);
           $view = route('bank-management.show', $row->id);
@@ -76,7 +105,7 @@ class BankManagementController extends Controller
 
           return $btn;
         })
-        ->rawColumns(['upi', 'assign_sub_approver', 'action'])
+        ->rawColumns(['upi', 'assign_sub_approver', 'payment_link', 'action'])
         ->make(true);
     }
     return view('content.apps.bank_management.list');
@@ -87,7 +116,29 @@ class BankManagementController extends Controller
    */
   public function all(Request $request)
   {
-    $accounts = BankManagement::query()->get();
+    // Admin sees all accounts
+    // Approver sees their own accounts + accounts of their created SubApprovers
+    // SubApprover sees only their own created accounts
+    // Regular users see only their own accounts
+    if (auth()->user() && auth()->user()->hasRole('Admin')) {
+      $accounts = BankManagement::query()->get();
+    } elseif (auth()->user() && auth()->user()->hasRole('Approver')) {
+      // Approver sees their own accounts + accounts created by SubApprovers they created
+      $accounts = BankManagement::where(function ($query) {
+        $query->where('created_by', auth()->user()->id)
+          ->orWhereHas('creator', function ($q) {
+            // Get accounts created by SubApprovers who were created by this Approver
+            $q->whereHas('roles', function ($roleQuery) {
+              $roleQuery->where('name', 'SubApprover');
+            })->where('created_by', auth()->user()->id);
+          });
+      })->get();
+    } elseif (auth()->user() && auth()->user()->hasRole('SubApprover')) {
+      // SubApprover sees only their own created accounts
+      $accounts = BankManagement::where('created_by', auth()->user()->id)->get();
+    } else {
+      $accounts = BankManagement::where('created_by', auth()->user()->id)->get();
+    }
 
     $rows = $accounts->map(function ($row) {
       $edit = route('bank-management.edit', $row->id);
@@ -112,6 +163,14 @@ class BankManagementController extends Controller
                       <i class='ti ti-users me-1'></i>Assign ({$count})
                     </button>";
 
+      $paymentLink = '-';
+      if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
+        $link = route('payment.gateway.approver', ['approver' => auth()->user()->id, 'account' => $row->id]);
+        $paymentLink = "<button class='btn btn-sm btn-success copy-payment-link' data-link='{$link}' title='Copy Payment Link'>
+                          <i class='ti ti-link me-1'></i>Copy Link
+                        </button>";
+      }
+
       return [
         'id' => $row->id,
         'name' => $row->name ?? '-',
@@ -121,6 +180,7 @@ class BankManagementController extends Controller
         'upi' => $row->type == 'upi' ? ($row->upi_id . ($row->is_merchant_upi ? ' (Merchant)' : ' (Normal)')) : '-',
         'status' => ucfirst($row->status ?? 'inactive'),
         'assign_sub_approver' => $assignBtn,
+        'payment_link' => $paymentLink,
         'action' => $btn
       ];
     });
@@ -206,10 +266,10 @@ class BankManagementController extends Controller
       'name' => 'required|string|max:255',
       'bank_name' => 'nullable|string|max:255',
       'account_holder_name' => 'nullable|string|max:255',
-      'account_number' => 'nullable|required_if:type,bank|max:20',
+      'account_number' => 'nullable',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',
-      'upi_number' => 'nullable|required_if:type,upi|max:15',
+      'upi_number' => 'nullable|max:15',
       'is_merchant_upi' => 'boolean',
       'daily_max_amount' => 'required|numeric|min:0',
       'daily_max_transaction_count' => 'required|integer|min:0',
@@ -218,6 +278,7 @@ class BankManagementController extends Controller
       'is_default' => 'boolean',
       'status' => 'required|in:active,inactive',
     ]);
+    // dd($validated);
     $validated['created_by'] = auth()->user()->id;
     $validated['is_merchant_upi'] = $request->has('is_merchant_upi') ? 1 : 0;
     // if ($validated['is_default']) {

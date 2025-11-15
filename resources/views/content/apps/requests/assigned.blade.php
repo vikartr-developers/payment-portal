@@ -133,6 +133,8 @@
                                 d.status = 'pending'; // Override status for pending requests
                             } else if (requestType === 'rejected') {
                                 d.status = 'rejected'; // Override status for rejected requests
+                            } else if (requestType === 'progress') {
+                                d.status = 'progress'; // Override status for rejected requests
                             }
                         },
                         headers: {
@@ -561,22 +563,22 @@
         }
 
         /* Header styles */
-        .table thead th {
+        .table th {
             /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
             color: #352e5a;
-            /* font-size: 1rem; */
+            font-size: 12px;
             font-weight: 600;
             border: none;
         }
 
         /* Zebra striping for rows */
-        .table-striped>tbody>tr:nth-of-type(odd) {
-            background-color: #f8fafc;
-        }
+        /* .table-striped>tbody>tr:nth-of-type(odd) {
+                                                                                                        background-color: #f8fafc;
+                                                                                                    }
 
-        .table-striped>tbody>tr:nth-of-type(even) {
-            background-color: #f3f4f8;
-        }
+                                                                                                    .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                        background-color: #f3f4f8;
+                                                                                                    } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {
@@ -588,6 +590,7 @@
         /* Cell padding and font */
         .table th,
         .table td {
+            font-size: 12px;
             padding: 0.5rem 0.5rem;
             /* font-size: 0.875rem; */
             vertical-align: middle !important;
@@ -641,14 +644,14 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Force horizontal scroll for table */
-        .card-body {
+        /* Table responsive wrapper */
+        .table-responsive {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .datatables-assigned-requests {
-            width: max-content !important;
-            min-width: 100%;
+            width: 100% !important;
         }
 
         @media (max-width: 992px) {}
@@ -670,39 +673,10 @@
                     <a id="exportExcelBtn" style="color:#fff" class="btn btn-primary">Export Excel</a>
                 </div>
             </div>
-            {{-- <select id="request_type_filter" class="form-select" style="width: auto; opacity: 1;">
-                <option value="all">All Requests</option>
-                <option value="pending" selected>Pending Requests</option>
-                <option value="accepted">Approved</option>
-                <option value="rejected">Rejected Requests</option>
-            </select> --}}
+
             <div class="card-header border-bottom d-flex justify-content-between align-items-center">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-
-                    <select id="mode_filter" class="form-select" style="width: auto;">
-                        <option value="all">All Modes</option>
-                        <option value="bank">Bank</option>
-                        <option value="upi">UPI</option>
-                        <option value="crypto">Crypto</option>
-                    </select>
-                    {{-- <select id="status_filter" class="form-select" style="width: auto;">
-                        <option value="all">All Status</option>
-                        <option value="pending">Pending</option>
-                        <option value="accepted">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select> --}}
-                    <select id="request_type_filter" class="form-select" style="width: auto; opacity: 1;">
-                        <option value="all">All Status</option>
-                        <option value="pending" selected>Pending </option>
-                        <option value="accepted">Approved</option>
-                        <option value="rejected">Rejected </option>
-                    </select>
-                    <input type="date" id="start_date" class="form-control" style="width: auto;"
-                        placeholder="Start date" />
-                    <input type="date" id="end_date" class="form-control" style="width: auto;" placeholder="End date" />
-                    <input type="text" id="search_term" class="form-control" style="width: 200px;"
-                        placeholder="Search UTR/Trans ID" />
-                    <select id="auto_reload" class="form-select" style="width: auto;">
+                    <select id="auto_reload" class="form-select form-select-sm" style="width: auto;">
                         <option value="0">Auto-reload: Off</option>
                         <option value="5">5s</option>
                         <option value="10">10s</option>
@@ -711,15 +685,39 @@
                         <option value="30">30s</option>
                         <option value="60">60s</option>
                     </select>
-                    <input type="search" id="dt_search" class="form-control" style="width: 200px;"
-                        placeholder="Search in table..." />
+                    <select id="mode_filter" class="form-select form-select-sm" style="width: auto;">
+                        <option value="all">All</option>
+                        <option value="bank">Bank</option>
+                        <option value="upi">UPI</option>
+                        <option value="crypto">Crypto</option>
+                    </select>
+
+                    <select id="request_type_filter" class="form-select form-select-sm" style="width: auto;">
+                        <option value="all">All </option>
+                        <option value="pending" selected>Pending </option>
+                        <option value="accepted">Approved</option>
+                        <option value="progress">Progress</option>
+                        <option value="rejected">Rejected </option>
+                    </select>
+                    <label for="" class="mb-0 small">from:</label>
+                    <input type="date" id="start_date" class="form-control form-control-sm" style="width: auto;"
+                        placeholder="Start date" />
+                    <label for="" class="mb-0 small">to:</label>
+
+                    <input type="date" id="end_date" class="form-control form-control-sm" style="width: auto;"
+                        placeholder="End date" />
+                    {{-- <input type="text" id="search_term" class="form-control" style="width: 200px;"
+                        placeholder="Search UTR/Trans ID" /> --}}
+
+                    <input type="search" id="dt_search" class="form-control form-control-sm" style="width: 180px;"
+                        placeholder="Search UTR/Trans ID" />
                     {{-- <a href="{{ route('requests.add') }}" class="btn btn-primary">Add Payment Request</a> --}}
 
                 </div>
             </div>
             <div class="card-body border-bottom pt-0">
-                <div class="table w-100">
-                    <table class="table w-100 datatables-assigned-requests ">
+                <div class="table">
+                    <table class="table datatables-assigned-requests">
                         <thead>
                             <tr>
                                 <th>ID</th>

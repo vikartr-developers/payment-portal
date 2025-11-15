@@ -40,6 +40,23 @@ class PaymentReportController extends Controller
         'requests.created_at',
       ]);
 
+    // Role-based filtering
+    if (auth()->user()) {
+      if (auth()->user()->hasRole('SubApprover')) {
+        // SubApprover can only see their own reports
+        $query->where('requests.assign_to', auth()->user()->id);
+      } elseif (auth()->user()->hasRole('Approver')) {
+        // Approver can see their reports and their SubApprovers' reports
+        $subApproverIds = \App\Models\User::where('created_by', auth()->user()->id)
+          ->role('SubApprover')
+          ->pluck('id')
+          ->toArray();
+        $subApproverIds[] = auth()->user()->id; // Include the approver themselves
+        $query->whereIn('requests.assign_to', $subApproverIds);
+      }
+      // Admin and Super Admin can see all reports (no filtering)
+    }
+
     if ($start) {
       $query->whereDate('requests.created_at', '>=', $start);
     }
@@ -165,6 +182,23 @@ class PaymentReportController extends Controller
         'users.name as approver_name',
         'requests.created_at',
       ]);
+
+    // Role-based filtering (same as data method)
+    if (auth()->user()) {
+      if (auth()->user()->hasRole('SubApprover')) {
+        // SubApprover can only see their own reports
+        $query->where('requests.assign_to', auth()->user()->id);
+      } elseif (auth()->user()->hasRole('Approver')) {
+        // Approver can see their reports and their SubApprovers' reports
+        $subApproverIds = \App\Models\User::where('created_by', auth()->user()->id)
+          ->role('SubApprover')
+          ->pluck('id')
+          ->toArray();
+        $subApproverIds[] = auth()->user()->id; // Include the approver themselves
+        $query->whereIn('requests.assign_to', $subApproverIds);
+      }
+      // Admin and Super Admin can see all reports (no filtering)
+    }
 
     if ($start) {
       $query->whereDate('requests.created_at', '>=', $start);

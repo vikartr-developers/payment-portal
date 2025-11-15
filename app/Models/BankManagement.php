@@ -39,5 +39,12 @@ class BankManagement extends Model
   {
     return $this->belongsToMany(User::class, 'bank_sub_approvers', 'bank_management_id', 'user_id');
   }
-}
 
+  /**
+   * Get the user who created this account
+   */
+  public function creator()
+  {
+    return $this->belongsTo(User::class, 'created_by');
+  }
+}

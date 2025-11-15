@@ -41,21 +41,21 @@
             <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
             <style>
                 /* table.dataTable,
-                                                                                                                                                                                                                    table.dataTable th,
-                                                                                                                                                                                                                    table.dataTable td,
-                                                                                                                                                                                                                    .dataTables_wrapper {
-                                                                                                                                                                                                                        font-size: 12px !important;
-                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                            table.dataTable th,
+                                                                                                                                                                                                                                            table.dataTable td,
+                                                                                                                                                                                                                                            .dataTables_wrapper {
+                                                                                                                                                                                                                                                font-size: 12px !important;
+                                                                                                                                                                                                                                            }
 
-                                                                                                                                                                                                                    .table> :not(caption)>*>* {
-                                                                                                                                                                                                                        padding: 0.3rem 0.5rem;
-                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                            .table> :not(caption)>*>* {
+                                                                                                                                                                                                                                                padding: 0.3rem 0.5rem;
+                                                                                                                                                                                                                                            }
 
-                                                                                                                                                                                                                    table.table.dataTable,
-                                                                                                                                                                                                                    table.table td,
-                                                                                                                                                                                                                    table.table th {
-                                                                                                                                                                                                                        font-size: 12px !important;
-                                                                                                                                                                                                                    } */
+                                                                                                                                                                                                                                            table.table.dataTable,
+                                                                                                                                                                                                                                            table.table td,
+                                                                                                                                                                                                                                            table.table th {
+                                                                                                                                                                                                                                                font-size: 12px !important;
+                                                                                                                                                                                                                                            } */
             </style>
             <style>
                 /* Rounded corners and card effect for the table */
@@ -74,7 +74,7 @@
                 .table thead th {
                     /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
                     color: #000 !important;
-                    /* font-size: 12px !important; */
+                    font-size: 12px !important;
                     letter-spacing: 0px;
                     font-weight: 600;
                     border: none;
@@ -106,7 +106,8 @@
                 .table th,
                 .table td {
                     padding: 0.85rem 0.75rem;
-                    font-size: 1rem;
+                    font-size: 12px;
+                    /* font-size: 1rem; */
                     vertical-align: middle !important;
                 }
 
@@ -301,7 +302,7 @@
         <div class="layout-overlay layout-menu-toggle"></div>
     @endif
     <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-    <div class="drag-target"></div>
+    <div class="drag-target"> ----></div>
     </div>
     <!-- / Layout wrapper -->
 @endsection

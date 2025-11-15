@@ -20,7 +20,7 @@
         }
 
         .card-body {
-            padding: 1.5rem 1rem;
+            padding: 0.5rem 0.5rem;
         }
 
         span[style*="background"] {
@@ -51,7 +51,7 @@
 
                     <div class="row d-flex justify-content-end mb-3  ">
                         <div class="col-md-3">
-                            <label for="date_range" class="form-label">Date Range</label>
+                            {{-- <label for="date_range" class="form-label">Date Range</label> --}}
                             <select id="date_range" class="form-select">
                                 <option value="all">All</option>
                                 <option value="today">Today</option>
@@ -85,7 +85,7 @@
                                     </span>
                                     {{-- <h4 id="net_wallet_balance" class="mb-0">0</h4> --}}
                                     <div class="mt-3 mb-2"id="net_wallet_balance"
-                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                        style="font-size: 1rem; font-weight: bold;">₹0.00</div>
                                     <div style="font-size: 0.95rem; color: #388e3c;">Net Wallet Balance</div>
                                 </div>
                             </div>
@@ -99,7 +99,7 @@
                                         <i class="ti ti-clock text-primary" style="font-size: 2rem;"></i>
                                     </span>
                                     <div class="mt-3 mb-2" id="pending_requests"
-                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                        style="font-size: 1rem; font-weight: bold;">₹0.00</div>
                                     <div style="font-size: 0.95rem; color: #673ab7;">Pending Request</div>
                                 </div>
                             </div>
@@ -112,7 +112,7 @@
                                         style="display:inline-block; background:#a1c6ef; border-radius:50%; width:48px; height:48px; line-height:48px;">
                                         <i class="ti ti-ban text-info" style="font-size: 2rem;"></i>
                                     </span>
-                                    <div class="mt-3 mb-2" id="rejections" style="font-size: 1.6rem; font-weight: bold;">
+                                    <div class="mt-3 mb-2" id="rejections" style="font-size: 1rem; font-weight: bold;">
                                         ₹0.00</div>
                                     <div style="font-size: 0.95rem; color: #1976d2;">Rejection</div>
                                 </div>
@@ -126,8 +126,8 @@
                                         style="display:inline-block; background:#b3e2b0; border-radius:50%; width:48px; height:48px; line-height:48px;">
                                         <i class="ti ti-currency-rupee text-success" style="font-size: 2rem;"></i>
                                     </span>
-                                    <div class="mt-3 mb-2" id="todays_revenue"
-                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                    <div class="mt-3 mb-2" id="todays_revenue" style="font-size: 1rem; font-weight: bold;">
+                                        ₹0.00</div>
                                     <div style="font-size: 0.95rem; color: #388e3c;">Today's Revenue</div>
                                 </div>
                             </div>
@@ -141,7 +141,7 @@
                                         <i class="ti ti-list-check text-danger" style="font-size: 2rem;"></i>
                                     </span>
                                     <div class="mt-3 mb-2" id="total_transactions"
-                                        style="font-size: 1.6rem; font-weight: bold;">₹0.00</div>
+                                        style="font-size: 1rem; font-weight: bold;">₹0.00</div>
                                     <div style="font-size: 0.95rem; color: #d32f2f;">Total Transactions</div>
                                 </div>
                             </div>
@@ -314,8 +314,8 @@
                                         start = document.getElementById('start_date').value;
                                         end = document.getElementById('end_date').value;
                                         break;
-                                    default: // 'all'
-                                        start = end = '';
+                                    default: // 'all' - get all time data
+                                        start = end = 'all_time';
                                 }
 
                                 return {
@@ -329,9 +329,25 @@
                                     start,
                                     end
                                 } = getDateRange();
-                                const url = start && end ?
-                                    `{{ route('home.stats') }}?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}` :
-                                    `{{ route('home.stats') }}`;
+
+                                console.log('Fetching stats with:', {
+                                    start,
+                                    end
+                                }); // Debug log
+
+                                // Build URL with parameters
+                                let url = `{{ route('home.stats') }}`;
+
+                                // For 'all_time', pass it as a parameter to get all data
+                                if (start === 'all_time' && end === 'all_time') {
+                                    url += `?all_time=1`;
+                                } else if (start && end) {
+                                    // For specific date ranges (today, yesterday, last_month, etc.)
+                                    url += `?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}`;
+                                }
+
+                                console.log('Request URL:', url); // Debug log
+
                                 try {
                                     const res = await fetch(url, {
                                         credentials: 'same-origin'
@@ -339,6 +355,7 @@
                                     if (!res.ok) throw new Error('Failed to load');
                                     const data = await res.json();
 
+                                    console.log('Received data:', data); // Debug log
                                     document.getElementById('net_wallet_balance').innerText = fmt(data.today_revenue);
                                     document.getElementById('pending_requests').innerText = data.pending;
                                     document.getElementById('rejections').innerText = data.rejected;

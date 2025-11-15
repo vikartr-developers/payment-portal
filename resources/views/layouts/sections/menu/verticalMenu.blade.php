@@ -8,7 +8,7 @@
     @if (!isset($navbarFull))
         <div class="app-brand demo">
             <a href="{{ url('/') }}" class="app-brand-link">
-                <span class="app-brand-logo demo">
+                <span class="app-brand-logo demo logo-wrapper">
                     @include('_partials.macros', ['height' => 20])
                 </span>
                 {{-- <span class="app-brand-text demo menu-text fw-bold">{{ config('variables.templateName') }}</span> --}}
@@ -139,3 +139,40 @@
         @endforeach
     </ul>
 </aside>
+
+<style>
+    /* Logo responsive behavior */
+    .logo-wrapper img {
+        transition: all 0.3s ease;
+        width: 200px !important;
+        height: auto;
+    }
+
+    /* When menu is collapsed - make logo smaller */
+    .layout-menu-collapsed .logo-wrapper img {
+        width: 50px !important;
+    }
+
+    .layout-menu-collapsed .app-brand-logo.demo {
+        width: 41px;
+        height: auto;
+    }
+
+    .layout-menu-collapsed .app-brand-logo.demo {
+        width: 50px;
+    }
+
+    /* Mobile - always small logo */
+    @media (max-width: 1199.98px) {
+        .logo-wrapper img {
+            width: 140px !important;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .logo-wrapper img {
+            width: 100px !important;
+        }
+
+    }
+</style>

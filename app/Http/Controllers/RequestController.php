@@ -120,9 +120,9 @@ class RequestController extends Controller
         if (!$req->image)
           return '<span class="text-muted">-</span>';
 
-        // $src = asset('storage/' . $req->image);
+        // Use Laravel's asset() helper with proper storage path
         // dd($req->image);
-        $src = '/storage/app/public/' . $req->image;
+        $src = asset('storage/' . $req->image);
         return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border" />';
       })
       ->editColumn('status', function ($req) {
@@ -260,8 +260,8 @@ ti-eye"></i>'
 
           return '<span class="text-muted">-</span>';
         // dd($req->image);
-        // '/storage/app/public/' . $imgPath
-        $src = '/storage/app/public/' . $req->image;
+        // asset('storage/') . $imgPath
+        $src = asset('storage/' . $req->image);
         return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border payment-screenshot-img" style="cursor: pointer;" data-image="' . e($src) . '" title="Click to view full size" />';
       })
       ->editColumn('status', function ($req) {
@@ -622,7 +622,7 @@ ti-eye"></i>'
         'payment_from' => $requestModel->payment_from,
         'account_upi' => $requestModel->account_upi,
         'status' => $requestModel->status,
-        'image' => $requestModel->image ? '/storage/app/public/' . $requestModel->image : null,
+        'image' => $requestModel->image ? asset('storage/' . $requestModel->image) : null,
         'created_at' => $requestModel->created_at ? $requestModel->created_at->format('Y-m-d H:i:s') : null,
       ]
     ]);

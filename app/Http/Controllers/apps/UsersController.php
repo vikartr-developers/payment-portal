@@ -138,11 +138,11 @@ class UsersController extends Controller
   {
     try {
       $userData['username'] = $request->get('username');
-      $userData['name'] = $request->get('first_name') . ' ' . $request->get('last_name');
-      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name');
+      $userData['name'] = $request->get('first_name') . ' ' . $request->get('last_name') ?? '';
+      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name') ?? '';
 
       $userData['first_name'] = $request->get('first_name');
-      $userData['last_name'] = $request->get('last_name');
+      $userData['last_name'] = $request->get('last_name') ?? '';
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       $userData['password'] = Hash::make($request->get('password'));
@@ -159,6 +159,9 @@ class UsersController extends Controller
       } else {
         $userData['status'] = true;
       }
+      // Track who created this user
+      $userData['created_by'] = auth()->id();
+
       $user = $this->userService->create($userData);
 
       // Determine role assignment: only Admin/Super Admin can set arbitrary role.
@@ -244,8 +247,8 @@ class UsersController extends Controller
       $id = $encrypted_id;
       // $userData['username'] = $request->get('username');
       $userData['first_name'] = $request->get('first_name');
-      $userData['last_name'] = $request->get('last_name');
-      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name');
+      $userData['last_name'] = $request->get('last_name') ?? '';
+      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name') ?? '';
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       $user = User::where('id', $id)->first();
@@ -269,13 +272,13 @@ class UsersController extends Controller
       $id = decrypt($encrypted_id);
       // $userData['username'] = $request->get('username');
       $userData['first_name'] = $request->get('first_name');
-      $userData['last_name'] = $request->get('last_name');
+      $userData['last_name'] = $request->get('last_name') ?? '';
       $userData['email'] = $request->get('email');
       $userData['contact'] = $request->get('phone_no');
       // $userData['address_line_1'] = $request->get('address_line_1');
       $userData['address_line_2'] = $request->get('address_line_2');
       // $userData['city'] = $request->get('city');
-      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name');
+      $userData['address_line_1'] = $request->get('first_name') . ' ' . $request->get('last_name') ?? '';
 
       $userData['state_name'] = $request->get('state_name');
       $userData['zip_code'] = $request->get('zip_code');
@@ -351,7 +354,17 @@ class UsersController extends Controller
 
   public function getAllSiteUsers()
   {
-    $users = $this->userService->getAllSiteUser();
+    // Get all site users (SubApprovers)
+    $query = User::role('SubApprover');
+
+    // If logged-in user is Approver, only show SubApprovers created by them
+    if (auth()->user() && auth()->user()->hasRole('Approver')) {
+      $query->where('created_by', auth()->user()->id);
+    }
+    // Admin and Super Admin can see all SubApprovers (no additional filtering needed)
+
+    $users = $query->get();
+
     return DataTables::of($users)
       ->addColumn('name', function ($row) {
         return $row->name ?? ($row->first_name . ' ' . $row->last_name);

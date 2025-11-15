@@ -211,6 +211,7 @@ Route::get('/front-pages/help-center-article', [HelpCenterArticle::class, 'index
 
 // Payment Gateway (Frontend)
 Route::get('/payment-gateway', [PaymentGatewayController::class, 'index'])->name('payment.gateway');
+Route::get('/payment-gateway/approver/{approver}/{account}', [PaymentGatewayController::class, 'approverPaymentLink'])->name('payment.gateway.approver');
 Route::post('/payment-gateway/select-method', [PaymentGatewayController::class, 'selectMethod'])->name('payment.select-method');
 Route::post('/payment-gateway/show-details', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
 Route::post('/payment-gateway/process', [PaymentGatewayController::class, 'processPayment'])->name('payment.process');

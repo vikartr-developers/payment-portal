@@ -3,11 +3,11 @@
 @section('title', 'Bank & UPI Management')
 
 @section('vendor-style')
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
+    {{-- <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" /> --}}
     <style>
         /* Bank table visual tweaks */
         #bankManagementTable {
@@ -62,8 +62,8 @@
     </style>
 @endsection
 
-@section('vendor-script')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{{-- @section('vendor-script') --}}
+{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -71,7 +71,25 @@
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
-    @yield('links')
+    @yield('links') --}}
+{{-- @endsection --}}
+@section('vendor-script')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script src="{{ asset('assets/vendor/libs/moment/moment.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+    <!-- DataTables Buttons (client-side export) dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
 @endsection
 
 @section('page-script')
@@ -132,6 +150,12 @@
                         searchable: false
                     },
                     {
+                        data: 'payment_link',
+                        name: 'payment_link',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
                         data: 'action',
                         name: 'action',
                         orderable: false,
@@ -168,6 +192,24 @@
                     $('td', row).last().html(data.action);
                 },
                 drawCallback: function() {
+                    // Copy payment link handler
+                    $('#bankManagementTable').off('click', '.copy-payment-link').on('click',
+                        '.copy-payment-link',
+                        function(e) {
+                            e.preventDefault();
+                            var link = $(this).data('link');
+                            if (!link) return;
+
+                            // Create temporary textarea to copy text
+                            var $temp = $('<textarea>');
+                            $('body').append($temp);
+                            $temp.val(link).select();
+                            document.execCommand('copy');
+                            $temp.remove();
+
+                            if (window.toastr) toastr.success('Payment link copied to clipboard!');
+                        });
+
                     // Toggle status handler
                     $('#bankManagementTable').off('click', '.toggle-status').on('click',
                         '.toggle-status',
@@ -281,68 +323,79 @@
 @endsection
 
 @section('content')
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h3>Bank & UPI Accounts</h3>
-            <div>
-                <button type="button" id="archiveBtn" class="btn btn-warning me-2">
-                    <i class="ti ti-archive me-1"></i>Inactive Account List
-                </button>
-                <a href="{{ route('bank-management.create') }}" class="btn btn-primary">
-                    <i class="ti ti-plus me-1"></i>Add New
-                </a>
+
+    <section class="app-assigned-requests-list">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+
+                <h3>Bank & UPI Accounts</h3>
+                <div>
+                    <button type="button" id="archiveBtn" class="btn btn-warning me-2">
+                        <i class="ti ti-archive me-1"></i>Inactive Account List
+                    </button>
+                    <a href="{{ route('bank-management.create') }}" class="btn btn-primary">
+                        <i class="ti ti-plus me-1"></i>Add New
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body border-bottom pt-0">
+                <div class="table">
+                    <table id="bankManagementTable"class="table datatables-assigned-requests">
+
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Daily Max. Amount</th>
+                                <th>Max. TRAN Amount</th>
+                                <th>Max. TRAN Count</th>
+                                <th>UPI</th>
+                                <th>Status</th>
+                                <th>Assign Sub Approver</th>
+                                <th>Payment Link</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <table id="bankManagementTable" class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Daily Max. Amount</th>
-                        <th>Max. TRAN Amount</th>
-                        <th>Max. TRAN Count</th>
-                        <th>UPI</th>
-                        <th>Status</th>
-                        <th>Assign Sub Approver</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-            </table>
-        </div>
-    </div>
 
-    <!-- Assign Sub Approvers Modal -->
-    <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="assignModalLabel">Manage Sub Approvers</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="assignForm">
-                    @csrf
-                    <input type="hidden" id="account_id" name="account_id">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="sub_approvers" class="form-label">Select Sub Approvers (Add/Remove)</label>
-                            <select name="sub_approvers[]" id="sub_approvers" class="form-select" multiple>
-                                @foreach (\App\Models\User::whereHas('roles', function ($q) {
+        <!-- Assign Sub Approvers Modal -->
+        <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="assignModalLabel">Manage Sub Approvers</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="assignForm">
+                        @csrf
+                        <input type="hidden" id="account_id" name="account_id">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="sub_approvers" class="form-label">Select Sub Approvers (Add/Remove)</label>
+                                <select name="sub_approvers[]" id="sub_approvers" class="form-select" multiple>
+                                    @foreach (\App\Models\User::whereHas('roles', function ($q) {
             $q->where('name', 'SubApprover');
         })->get() as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                                @endforeach
-                            </select>
-                            <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
+                                        <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="text-muted">Hold Ctrl (Windows) or Cmd (Mac) to select multiple</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ti ti-device-floppy me-1"></i>Save Changes
-                        </button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-device-floppy me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 @endsection

@@ -17,7 +17,7 @@
                 </button>
                 <!-- Mobile menu toggle: End-->
                 <a href="{{ url('front-pages/landing') }}" class="app-brand-link">
-                    <img class="w-100" src="{{ asset('assets/img/logo/logo.jpg') }}" alt="" height="60px">
+                    <img class="w-100" src="{{ asset('assets/img/logo/logo.png') }}" alt="" height="60px">
 
                     {{-- <span class="app-brand-logo demo">@include('_partials.macros', ['height' => 100, 'withbg' => 'fill: #fff;'])</span> --}}
                     <span
