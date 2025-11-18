@@ -38,7 +38,7 @@
 
       "url": "app/users/list",
       "slug": "app-users-list",
-      "permission": ["user-list", "user-create"]
+      "permission": ["user-list"]
     },
     {
       "menuHeader": "Finance Management"

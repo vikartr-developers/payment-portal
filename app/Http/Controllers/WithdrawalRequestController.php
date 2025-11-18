@@ -80,10 +80,29 @@ class WithdrawalRequestController extends Controller
       });
     }
 
+    // Calculate summary data
+    $summaryQuery = clone $query;
+    $totalPayout = $summaryQuery->sum('amount');
+    $chargePercent = config('app.charge_percent', env('CHARGE_PERCENT', 4)) / 100.0;
+    $totalApproverEarning = $totalPayout * $chargePercent;
+
     return DataTables::of($query)
       ->addColumn('creator_name', function ($row) {
         $user = User::find($row->created_by);
         return $user ? ($user->name ?? trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? ''))) : '-';
+      })
+      ->addColumn('charges', function ($row) use ($chargePercent) {
+        return (floatval($chargePercent) > 0) ? (round($chargePercent * 100, 2) . '%') : 'N/A';
+      })
+      ->addColumn('total_charge', function ($row) use ($chargePercent) {
+        $amt = floatval($row->amount ?: 0);
+        $charge = $amt * $chargePercent;
+        return number_format($charge, 2);
+      })
+      ->addColumn('approver_earning', function ($row) use ($chargePercent) {
+        $amt = floatval($row->amount ?: 0);
+        $earning = $amt * $chargePercent;
+        return number_format($earning, 2);
       })
       ->addColumn('screenshot', function ($row) {
         if ($row->screenshot) {
@@ -123,7 +142,10 @@ class WithdrawalRequestController extends Controller
       ->rawColumns(['screenshot', 'action'])
       ->with([
         'cache_status' => 'DATABASE',
-        'load_time' => (int) ((microtime(true) - $start) * 1000)
+        'load_time' => (int) ((microtime(true) - $start) * 1000),
+        'total_payout' => number_format($totalPayout, 2),
+        'total_approver_earning' => number_format($totalApproverEarning, 2),
+        'charge_percent' => round($chargePercent * 100, 2),
       ])
       ->make(true);
   }

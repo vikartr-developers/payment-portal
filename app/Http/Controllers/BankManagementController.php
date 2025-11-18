@@ -77,7 +77,9 @@ class BankManagementController extends Controller
         ->addColumn('payment_link', function ($row) {
           // Only show payment link for Approver and Admin
           if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
-            $link = route('payment.gateway.approver', ['approver' => auth()->user()->id, 'account' => $row->id]);
+            $userSlug = auth()->user()->slug ?: auth()->user()->id;
+            $accountCode = $row->short_code ?: encrypt($row->id);
+            $link = route('payment.gateway.approver', ['approver' => $userSlug, 'account' => $accountCode]);
             return "<button class='btn btn-sm btn-success copy-payment-link' data-link='{$link}' title='Copy Payment Link'>
                       <i class='ti ti-link me-1'></i>Copy Link
                     </button>";
@@ -165,7 +167,9 @@ class BankManagementController extends Controller
 
       $paymentLink = '-';
       if (auth()->user() && (auth()->user()->hasRole('Approver') || auth()->user()->hasRole('Admin'))) {
-        $link = route('payment.gateway.approver', ['approver' => auth()->user()->id, 'account' => $row->id]);
+        $userSlug = auth()->user()->slug ?: auth()->user()->id;
+        $accountCode = $row->short_code ?: encrypt($row->id);
+        $link = route('payment.gateway.approver', ['approver' => $userSlug, 'account' => $accountCode]);
         $paymentLink = "<button class='btn btn-sm btn-success copy-payment-link' data-link='{$link}' title='Copy Payment Link'>
                           <i class='ti ti-link me-1'></i>Copy Link
                         </button>";

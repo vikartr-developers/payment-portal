@@ -20,27 +20,27 @@
         }
 
         .summary-card .card-body {
-            padding: 1.75rem;
+            padding: 10px;
         }
 
         .summary-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 56px;
-            height: 56px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             font-size: 1.75rem;
         }
 
         .summary-value {
-            font-size: 1.85rem;
+            font-size: 12px;
             font-weight: 700;
             margin: 0.75rem 0 0.25rem;
         }
 
         .summary-label {
-            font-size: 0.95rem;
+            font-size: 10px;
             font-weight: 500;
             color: #6c757d;
             margin: 0;
@@ -97,12 +97,12 @@
 
         /* Zebra striping for rows */
         /* .table-striped>tbody>tr:nth-of-type(odd) {
-                                                                                background-color: #f8fafc;
-                                                                            }
+                                                                                                background-color: #f8fafc;
+                                                                                            }
 
-                                                                            .table-striped>tbody>tr:nth-of-type(even) {
-                                                                                background-color: #f3f4f8;
-                                                                            } */
+                                                                                            .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                background-color: #f3f4f8;
+                                                                                            } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {

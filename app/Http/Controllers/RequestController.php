@@ -31,7 +31,7 @@ class RequestController extends Controller
       $approverRole = Role::firstOrCreate(['name' => 'Approver'], ['guard_name' => 'web']);
       // Give Approver the ability to create users (used by menu visibility and permission checks)
       Permission::firstOrCreate(['name' => 'user-create']);
-      $approverRole->givePermissionTo('user-create');
+      // $approverRole->givePermissionTo('user-create');
     } catch (\Exception $e) {
       // ignore if roles cannot be created in some contexts
     }
@@ -283,7 +283,7 @@ ti-eye"></i>'
 
         // Accept/Reject buttons for pending requests
         if ($req->status === 'pending') {
-          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Accept">'
+          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Approve">'
             . '<i class="ti ti-check"></i>'
             . '</button>';
           $actions .= '<button class="btn btn-sm btn-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">'

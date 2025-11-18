@@ -54,11 +54,90 @@
         .change-status-btn {
             margin: 2px;
         }
+
+        /* Summary card styles */
+        .summary-card {
+            border-radius: 25px !important;
+            border: none;
+            box-shadow: 0 4px 18px rgba(153, 164, 188, 0.16);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(153, 164, 188, 0.24);
+        }
+
+        .summary-card .card-body {
+            padding: 10px;
+        }
+
+        .summary-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.75rem;
+        }
+
+        .summary-value {
+            font-size: 12px;
+            font-weight: 700;
+            margin: 0.75rem 0 0.25rem;
+        }
+
+        .summary-label {
+            font-size: 10px;
+            font-weight: 500;
+            color: #6c757d;
+            margin: 0;
+        }
+
+        .bg-gradient-success {
+            background: linear-gradient(135deg, #e8f9e9 0%, #b3e2b0 100%);
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #e9f0fa 0%, #a1c6ef 100%);
+        }
     </style>
 @endsection
 
 @section('content')
     <section class="app-withdrawals-list">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card summary-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="summary-icon bg-success text-white me-3">
+                            <i class="ti ti-currency-rupee"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="summary-label">Total Payout</p>
+                            <h3 class="summary-value text-success" id="total_payout">₹0.00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card summary-card">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="summary-icon bg-primary text-white me-3">
+                            <i class="ti ti-wallet"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="summary-label">Total Approver Earning</p>
+                            <h3 class="summary-value text-primary" id="total_approver_earning">₹0.00</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="d-flex justify-content-between align-items-center ps-5 pt-5 pe-5">
                 <h4 class="card-title mb-0">Payout</h4>
@@ -97,7 +176,7 @@
                         <option value="false">Active Only</option>
                         <option value="true">Include Deleted</option>
                     </select> --}}
-                    <a href="{{ route('withdrawals.create') }}" class="btn btn-primary">Create Withdrawal</a>
+                    {{-- <a href="{{ route('withdrawals.create') }}" class="btn btn-primary">Create Withdrawal</a> --}}
                 </div>
             </div>
             <div class="card-body">
@@ -116,6 +195,9 @@
                                 <th>Branch</th>
                                 <th>IFSC</th>
                                 <th>Amount</th>
+                                <th>Charges (%)</th>
+                                <th>Total Charge</th>
+                                <th>Approver Earning</th>
                                 <th>Screenshot</th>
                                 <th>Status</th>
                                 <th>Approver Status</th>

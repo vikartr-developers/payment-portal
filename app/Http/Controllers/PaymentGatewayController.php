@@ -27,9 +27,37 @@ class PaymentGatewayController extends Controller
   {
     $pageConfigs = ['myLayout' => 'front'];
 
+    // Find user by slug or ID
+    $user = User::where('slug', $approver)->first();
+    if (!$user) {
+      // Fallback to ID if slug not found (for backward compatibility)
+      $user = User::find($approver);
+    }
+
+    if (!$user) {
+      abort(404, 'Invalid payment link');
+    }
+
+    // Find account by short_code first, then try decryption for backward compatibility
+    $bankAccount = BankManagement::where('short_code', $account)->first();
+
+    if (!$bankAccount) {
+      try {
+        // Try to decrypt as fallback for old links
+        $accountId = decrypt($account);
+        $bankAccount = BankManagement::find($accountId);
+      } catch (\Exception $e) {
+        abort(404, 'Invalid account link');
+      }
+    }
+
+    if (!$bankAccount) {
+      abort(404, 'Account not found');
+    }
+
     // Store approver and account in session for later use
-    Session::put('payment_approver_id', $approver);
-    Session::put('payment_account_id', $account);
+    Session::put('payment_approver_id', $user->id);
+    Session::put('payment_account_id', $bankAccount->id);
 
     return view('content.front-pages.payment-gateway.step1', [
       'pageConfigs' => $pageConfigs,

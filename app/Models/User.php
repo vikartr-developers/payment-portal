@@ -44,6 +44,7 @@ class User extends Authenticatable
     'to_slab',
     'commission',
     'created_by',
+    'slug',
     // 2FA
     'google2fa_secret',
     'google2fa_enabled',
@@ -71,4 +72,41 @@ class User extends Authenticatable
     'password' => 'hashed',
     'google2fa_enabled' => 'boolean',
   ];
+
+  /**
+   * Boot method to auto-generate slug
+   */
+  protected static function boot()
+  {
+    parent::boot();
+
+    static::creating(function ($user) {
+      if (empty($user->slug) && !empty($user->first_name)) {
+        $user->slug = static::generateUniqueSlug($user->first_name);
+      }
+    });
+
+    static::updating(function ($user) {
+      if (empty($user->slug) && !empty($user->first_name)) {
+        $user->slug = static::generateUniqueSlug($user->first_name);
+      }
+    });
+  }
+
+  /**
+   * Generate unique slug from first name
+   */
+  protected static function generateUniqueSlug($firstName)
+  {
+    $slug = \Illuminate\Support\Str::slug($firstName);
+    $originalSlug = $slug;
+    $counter = 1;
+
+    while (static::where('slug', $slug)->exists()) {
+      $slug = $originalSlug . '-' . $counter;
+      $counter++;
+    }
+
+    return $slug;
+  }
 }
