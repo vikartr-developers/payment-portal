@@ -171,13 +171,25 @@ class PaymentGatewayController extends Controller
       return redirect()->route('payment.gateway')->with('error', 'This UTR number has already been used. Please check your transaction or contact support.');
     }
 
-    // Store screenshot with a stable, unique filename on the public disk
-    try {
-      $file = $request->file('screenshot');
-      $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-      $screenshotPath = $file->storeAs('payment_screenshots', $filename, 'public'); // returns path relative to disk
-    } catch (\Exception $e) {
-      return redirect()->route('payment.gateway')->with('error', 'Failed to save screenshot. Please try again.');
+    // Store screenshot in public/payment_screenshots
+    if ($request->hasFile('screenshot')) {
+      try {
+        $file = $request->file('screenshot');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        // Ensure public directory exists
+        if (!file_exists(public_path('payment_screenshots'))) {
+          mkdir(public_path('payment_screenshots'), 0755, true);
+        }
+
+        $file->move(public_path('payment_screenshots'), $filename);
+        $screenshotPath = 'payment_screenshots/' . $filename;
+      } catch (\Exception $e) {
+        \Log::error('Screenshot upload failed: ' . $e->getMessage());
+        return redirect()->route('payment.gateway')->with('error', 'Failed to save screenshot. Please try again.');
+      }
+    } else {
+      return redirect()->route('payment.gateway')->with('error', 'Screenshot is required.');
     }
 
     // Create payment request record

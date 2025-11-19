@@ -195,9 +195,6 @@
                                 <th>Branch</th>
                                 <th>IFSC</th>
                                 <th>Amount</th>
-                                <th>Charges (%)</th>
-                                <th>Total Charge</th>
-                                <th>Approver Earning</th>
                                 <th>Screenshot</th>
                                 <th>Status</th>
                                 <th>Approver Status</th>
@@ -207,6 +204,31 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screenshot Modal -->
+        <div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="screenshotModalLabel">
+                            <i class="ti ti-photo me-2"></i>Payment Screenshot
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <img id="screenshot_modal_img" src="" alt="Screenshot" class="img-fluid"
+                            style="max-height: 70vh; border-radius: 8px;">
+                    </div>
+                    <div class="modal-footer">
+                        <a id="screenshot_download_link" href="" download class="btn btn-primary">
+                            <i class="ti ti-download me-1"></i>Download
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
                 </div>
             </div>
         </div>

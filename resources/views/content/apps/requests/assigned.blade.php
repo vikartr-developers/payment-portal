@@ -533,13 +533,50 @@
                 }
             });
 
-            // Image Preview Modal - Show full size image when clicked
-            $(document).on('click', '.payment-screenshot-img', function() {
-                const imageSrc = $(this).data('image');
-                if (imageSrc) {
-                    $('#previewImage').attr('src', imageSrc);
-                    $('#downloadImageBtn').attr('href', imageSrc);
-                    $('#imagePreviewModal').modal('show');
+            // View Screenshot in Modal Handler
+            $(document).on('click', '.view-screenshot-btn', function(e) {
+                e.preventDefault();
+                var imageUrl = $(this).data('image');
+                console.log('Screenshot URL:', imageUrl);
+                $('#previewImage').attr('src', imageUrl);
+                $('#downloadImageBtn').attr('href', imageUrl);
+                var modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+                modal.show();
+            });
+
+            // Change Screenshot Button
+            $(document).on('click', '#change_screenshot_btn', function() {
+                $('#current_screenshot_section').hide();
+                $('#upload_screenshot_section').show();
+            });
+
+            // Preview new screenshot before upload in update modal
+            $('#update_screenshot_file').on('change', function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    // Validate file size (2MB)
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('File size must be less than 2MB');
+                        $(this).val('');
+                        return;
+                    }
+
+                    // Validate file type
+                    if (!file.type.match('image.*')) {
+                        alert('Please upload an image file (JPG, PNG, JPEG)');
+                        $(this).val('');
+                        return;
+                    }
+
+                    // Show preview
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        $('#update_preview_img').attr('src', e.target.result);
+                        $('#update_screenshot_preview').show();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    $('#update_screenshot_preview').hide();
                 }
             });
         });
@@ -573,12 +610,12 @@
 
         /* Zebra striping for rows */
         /* .table-striped>tbody>tr:nth-of-type(odd) {
-                                                                                                        background-color: #f8fafc;
-                                                                                                    }
+                                                                                                            background-color: #f8fafc;
+                                                                                                        }
 
-                                                                                                    .table-striped>tbody>tr:nth-of-type(even) {
-                                                                                                        background-color: #f3f4f8;
-                                                                                                    } */
+                                                                                                        .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                            background-color: #f3f4f8;
+                                                                                                        } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {
@@ -742,7 +779,8 @@
         </div>
 
         <!-- Image Preview Modal -->
-        <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel"
+            aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -825,6 +863,34 @@
                             <input type="number" step="0.01" class="form-control" id="update_payment_amount"
                                 placeholder="Enter actual payment amount" required>
                             <small class="form-text text-muted">Enter the actual amount received</small>
+                        </div>
+
+                        <!-- Screenshot Section -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Payment Screenshot</label>
+                            <div id="current_screenshot_section" style="display: none;">
+                                <div class="border rounded p-3 mb-2 text-center">
+                                    <img id="current_screenshot_img" src="" alt="Current Screenshot"
+                                        style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                                    <div class="mt-2">
+                                        <a id="current_screenshot_link" href="" target="_blank"
+                                            class="btn btn-sm btn-info me-2">
+                                            <i class="ti ti-eye me-1"></i>View Full Size
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-warning" id="change_screenshot_btn">
+                                            <i class="ti ti-refresh me-1"></i>Change Screenshot
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="upload_screenshot_section">
+                                <input type="file" class="form-control" id="update_screenshot_file" accept="image/*">
+                                <small class="text-muted">Max size: 2MB (JPG, PNG, JPEG)</small>
+                                <div id="update_screenshot_preview" class="text-center mt-2" style="display: none;">
+                                    <img src="" alt="Preview" id="update_preview_img"
+                                        style="max-width: 100%; max-height: 250px; border-radius: 8px;">
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

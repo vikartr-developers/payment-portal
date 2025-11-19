@@ -106,9 +106,10 @@ class WithdrawalRequestController extends Controller
       })
       ->addColumn('screenshot', function ($row) {
         if ($row->screenshot) {
-          return '<a href="' . asset('storage/' . $row->screenshot) . '" target="_blank" class="btn btn-sm btn-info">
+          $imageUrl = url('storage/app/public/' . $row->screenshot);
+          return '<button class="btn btn-sm btn-info view-screenshot-btn" data-image="' . $imageUrl . '" data-id="' . $row->id . '">
                     <i class="ti ti-photo me-1"></i>View
-                  </a>';
+                  </button>';
         }
         return '<button class="btn btn-sm btn-outline-primary upload-screenshot-btn" data-id="' . $row->id . '">
                   <i class="ti ti-upload me-1"></i>Upload
@@ -432,7 +433,7 @@ class WithdrawalRequestController extends Controller
           return response()->json([
             'success' => true,
             'message' => 'Screenshot uploaded successfully',
-            'screenshot_url' => asset('storage/' . $screenshotPath)
+            'screenshot_url' => url('storage/app/public/' . $screenshotPath)
           ]);
         }
 
@@ -478,7 +479,7 @@ class WithdrawalRequestController extends Controller
         'amount' => $item->amount,
         'status' => $item->status,
         'approver_status' => $item->approver_status,
-        'screenshot' => $item->screenshot ? asset('storage/' . $item->screenshot) : null,
+        'screenshot' => $item->screenshot ? url('storage/app/public/' . $item->screenshot) : null,
         'created_at' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
       ]
     ]);

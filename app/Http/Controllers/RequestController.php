@@ -257,12 +257,11 @@ ti-eye"></i>'
       })
       ->addColumn('image', function ($req) {
         if (!$req->image)
-
           return '<span class="text-muted">-</span>';
-        // dd($req->image);
-        // asset('storage/') . $imgPath
-        $src = asset('storage/' . $req->image);
-        return '<img src="' . e($src) . '" alt="img" width="48" height="48" class="rounded border payment-screenshot-img" style="cursor: pointer;" data-image="' . e($src) . '" title="Click to view full size" />';
+        $imageUrl = asset($req->image);
+        return '<button class="btn btn-sm btn-info view-screenshot-btn" data-image="' . $imageUrl . '" data-id="' . $req->id . '">
+                  <i class="ti ti-photo me-1"></i>View
+                </button>';
       })
       ->editColumn('status', function ($req) {
         return match ($req->status) {
@@ -430,7 +429,21 @@ ti-eye"></i>'
     $data['assign_to'] = $assignTo;
 
     if ($request->hasFile('image')) {
-      $data['image'] = $request->file('image')->store('payment_images', 'public');
+      try {
+        $file = $request->file('image');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        // Ensure public directory exists
+        if (!file_exists(public_path('payment_screenshots'))) {
+          mkdir(public_path('payment_screenshots'), 0755, true);
+        }
+
+        $file->move(public_path('payment_screenshots'), $filename);
+        $data['image'] = 'payment_screenshots/' . $filename;
+      } catch (\Exception $e) {
+        \Log::error('Screenshot upload failed: ' . $e->getMessage());
+        return back()->withErrors(['image' => 'Failed to upload screenshot: ' . $e->getMessage()])->withInput();
+      }
     }
 
     Request::create($data);
@@ -489,7 +502,21 @@ ti-eye"></i>'
       $data['updated_by'] = Auth::id();
 
       if ($request->hasFile('image')) {
-        $data['image'] = $request->file('image')->store('payment_images', 'public');
+        try {
+          $file = $request->file('image');
+          $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+          // Ensure public directory exists
+          if (!file_exists(public_path('payment_screenshots'))) {
+            mkdir(public_path('payment_screenshots'), 0755, true);
+          }
+
+          $file->move(public_path('payment_screenshots'), $filename);
+          $data['image'] = 'payment_screenshots/' . $filename;
+        } catch (\Exception $e) {
+          \Log::error('Screenshot upload failed: ' . $e->getMessage());
+          return back()->withErrors(['image' => 'Failed to upload screenshot: ' . $e->getMessage()])->withInput();
+        }
       }
     }
 
@@ -622,7 +649,7 @@ ti-eye"></i>'
         'payment_from' => $requestModel->payment_from,
         'account_upi' => $requestModel->account_upi,
         'status' => $requestModel->status,
-        'image' => $requestModel->image ? asset('storage/' . $requestModel->image) : null,
+        'image' => $requestModel->image ? asset($requestModel->image) : null,
         'created_at' => $requestModel->created_at ? $requestModel->created_at->format('Y-m-d H:i:s') : null,
       ]
     ]);

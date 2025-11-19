@@ -309,7 +309,7 @@ class BankManagementController extends Controller
       'account_number' => 'nullable|required_if:type,bank|max:20',
       'ifsc_code' => 'nullable|required_if:type,bank|max:15',
       'upi_id' => 'nullable|required_if:type,upi|max:50',
-      'upi_number' => 'nullable|required_if:type,upi|max:15',
+      'upi_number' => 'nullable|max:15',
       'is_merchant_upi' => 'boolean',
       'daily_max_amount' => 'required|numeric|min:0',
       'daily_max_transaction_count' => 'required|integer|min:0',
