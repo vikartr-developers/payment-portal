@@ -106,42 +106,72 @@
 
                         <h5 class="mb-3">Select Payment Method</h5>
 
-                        <label class="payment-method-option" for="upi">
-                            <input type="radio" name="payment_method" id="upi" value="upi" required>
-                            <div class="d-flex align-items-center">
-                                <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #000000;"></i>
-                                <div>
-                                    <h5 class="mb-1">UPI Payment</h5>
-                                    <p class="text-muted mb-0">Pay using any UPI app</p>
-                                </div>
-                            </div>
-                        </label>
+                        @if (isset($selectedAccount))
+                            {{-- Pre-selected account mode: Show both UPI and Bank options for this account --}}
+                            <input type="hidden" name="selected_account_id" value="{{ $selectedAccount->id }}">
 
-                        <label class="payment-method-option" for="bank">
-                            <input type="radio" name="payment_method" id="bank" value="bank" required>
-                            <div class="d-flex align-items-center">
-                                <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #000000;"></i>
-                                <div>
-                                    <h5 class="mb-1">Bank Transfer</h5>
-                                    <p class="text-muted mb-0">IMPS and RTGS only</p>
+                            @if ($selectedAccount->upi_id)
+                                <label class="payment-method-option" for="upi">
+                                    <input type="radio" name="payment_method" id="upi" value="upi" required>
+                                    <div class="d-flex align-items-center">
+                                        <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #000000;"></i>
+                                        <div>
+                                            <h5 class="mb-1">UPI Payment</h5>
+                                            <p class="text-muted mb-0">Pay using any UPI app</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endif
+
+                            @if ($selectedAccount->account_number)
+                                <label class="payment-method-option" for="bank">
+                                    <input type="radio" name="payment_method" id="bank" value="bank" required>
+                                    <div class="d-flex align-items-center">
+                                        <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #000000;"></i>
+                                        <div>
+                                            <h5 class="mb-1">Bank Transfer</h5>
+                                            <p class="text-muted mb-0">IMPS and RTGS only</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            @endif
+                        @else
+                            {{-- Normal mode: Show payment method selection --}}
+                            <label class="payment-method-option" for="upi">
+                                <input type="radio" name="payment_method" id="upi" value="upi" required>
+                                <div class="d-flex align-items-center">
+                                    <i class="ti ti-qrcode me-3" style="font-size: 2rem; color: #000000;"></i>
+                                    <div>
+                                        <h5 class="mb-1">UPI Payment</h5>
+                                        <p class="text-muted mb-0">Pay using any UPI app</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </label>
+                            </label>
+
+                            <label class="payment-method-option" for="bank">
+                                <input type="radio" name="payment_method" id="bank" value="bank" required>
+                                <div class="d-flex align-items-center">
+                                    <i class="ti ti-building-bank me-3" style="font-size: 2rem; color: #000000;"></i>
+                                    <div>
+                                        <h5 class="mb-1">Bank Transfer</h5>
+                                        <p class="text-muted mb-0">IMPS and RTGS only</p>
+                                    </div>
+                                </div>
+                            </label>
+                        @endif
 
                         <!-- UPI Payment Section -->
                         <div id="upiPaymentSection">
-                            @if ($upiAccount)
-                                <div class="qr-code-container">
-                                    <h5 class="mb-3">Scan QR Code to Pay</h5>
+                            @if (isset($selectedAccount) && $selectedAccount->upi_id)
+                                {{-- Pre-selected account: Show UPI details --}}
+                                <div class="qr-code-container mb-4">
+                                    <h5 class="mb-3">{{ $selectedAccount->name ?? 'UPI Payment' }}</h5>
                                     @php
-                                        $upiId = $upiAccount->upi_id ?? '';
-                                        $upiNumber = $upiAccount->upi_number ?? '';
-                                        $merchantName = 'Merchant';
-                                        // Create UPI payment URL
+                                        $upiId = $selectedAccount->upi_id ?? '';
+                                        $merchantName = $selectedAccount->name ?? 'Merchant';
                                         $upiPaymentUrl = "upi://pay?pa={$upiId}&pn={$merchantName}&am={$amount}&cu=INR&tn=Payment";
                                     @endphp
-                                    <div id="qrcode" class="mb-3"></div>
-                                    <!-- UPI app logos (click to copy UPI ID) -->
+                                    <div id="qrcode-selected" class="mb-3"></div>
                                     <div class="upi-app-logos" aria-hidden="false">
                                         <img class="upi-app-logo"
                                             src="https://img.icons8.com/?size=100&id=am4ltuIYDpQ5&format=png&color=000000"
@@ -156,67 +186,249 @@
                                         <img class="upi-app-logo"
                                             src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
                                             alt="BHIM" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
-                                        {{-- <img class="upi-app-logo"
-                                            src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
-                                            alt="BHIM" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}"> --}}
                                     </div>
                                     <div class="upi-details mt-3">
-                                        @if ($upiAccount->upi_id)
-                                            <p class="mb-1"><strong>UPI ID:</strong> {{ $upiAccount->upi_id }}</p>
+                                        @if ($selectedAccount->name)
+                                            <p class="mb-1"><strong>Account Name:</strong> {{ $selectedAccount->name }}
+                                            </p>
                                         @endif
-                                        @if ($upiAccount->upi_number)
-                                            <p class="mb-1"><strong>UPI Number:</strong> {{ $upiAccount->upi_number }}</p>
+                                        @if ($selectedAccount->upi_id)
+                                            <p class="mb-1"><strong>UPI ID:</strong> {{ $selectedAccount->upi_id }}</p>
+                                        @endif
+                                        @if ($selectedAccount->upi_number)
+                                            <p class="mb-1"><strong>UPI Number:</strong>
+                                                {{ $selectedAccount->upi_number }}</p>
                                         @endif
                                         <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}</p>
-                                        {{-- @if ($upiAccount->deposit_limit)
-                                            <p class="mb-0 text-muted"><small>Deposit Limit:
-                                                    ₹{{ number_format($upiAccount->deposit_limit, 2) }}</small></p>
-                                        @endif --}}
                                     </div>
-                                    <!-- Hidden data for QR generation -->
-                                    <input type="hidden" id="upiPaymentUrl" value="{{ $upiPaymentUrl }}">
+                                    <input type="hidden" id="selectedUpiPaymentUrl" value="{{ $upiPaymentUrl }}">
                                 </div>
+                            @elseif(isset($accounts))
+                                {{-- Normal mode: Show account selection --}}
+                                @php
+                                    $upiAccounts = $accounts->filter(function ($acc) {
+                                        return !empty($acc->upi_id);
+                                    });
+                                @endphp
+                                @if ($upiAccounts->count() > 0)
+                                    <h5 class="mb-3">Select UPI Account</h5>
+                                    <div class="mb-4">
+                                        @foreach ($upiAccounts as $index => $upiAccount)
+                                            <label class="payment-method-option" for="upi_account_{{ $upiAccount->id }}">
+                                                <input type="radio" name="selected_account_id"
+                                                    id="upi_account_{{ $upiAccount->id }}" value="{{ $upiAccount->id }}"
+                                                    data-type="upi" data-index="{{ $index }}" required>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="ti ti-qrcode me-3"
+                                                        style="font-size: 1.5rem; color: #000000;"></i>
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            {{ $upiAccount->name ?? 'UPI Account ' . ($index + 1) }}</h6>
+                                                        <p class="text-muted mb-0 small">{{ $upiAccount->upi_id }}</p>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+
+                                    @foreach ($upiAccounts as $index => $upiAccount)
+                                        <div class="qr-code-container mb-4 upi-account-details"
+                                            id="upi_details_{{ $upiAccount->id }}" style="display: none;">
+                                            <h5 class="mb-3">{{ $upiAccount->name ?? 'UPI Account' }}</h5>
+                                            @php
+                                                $upiId = $upiAccount->upi_id ?? '';
+                                                $upiNumber = $upiAccount->upi_number ?? '';
+                                                $merchantName = $upiAccount->name ?? 'Merchant';
+                                                // Create UPI payment URL
+                                                $upiPaymentUrl = "upi://pay?pa={$upiId}&pn={$merchantName}&am={$amount}&cu=INR&tn=Payment";
+                                            @endphp
+                                            <div id="qrcode-{{ $index }}" class="mb-3"></div>
+                                            <!-- UPI app logos (click to copy UPI ID) -->
+                                            <div class="upi-app-logos" aria-hidden="false">
+                                                <img class="upi-app-logo"
+                                                    src="https://img.icons8.com/?size=100&id=am4ltuIYDpQ5&format=png&color=000000"
+                                                    alt="Google Pay" title="Copy UPI ID to clipboard"
+                                                    data-upi="{{ $upiId }}">
+                                                <img class="upi-app-logo"
+                                                    src="https://img.icons8.com/?size=100&id=OYtBxIlJwMGA&format=png&color=000000"
+                                                    alt="PhonePe" title="Copy UPI ID to clipboard"
+                                                    data-upi="{{ $upiId }}">
+                                                <img class="upi-app-logo"
+                                                    src="https://img.icons8.com/?size=100&id=68067&format=png&color=000000"
+                                                    alt="Paytm" title="Copy UPI ID to clipboard"
+                                                    data-upi="{{ $upiId }}">
+                                                <img class="upi-app-logo"
+                                                    src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
+                                                    alt="BHIM" title="Copy UPI ID to clipboard"
+                                                    data-upi="{{ $upiId }}">
+                                            </div>
+                                            <div class="upi-details mt-3">
+                                                @if ($upiAccount->name)
+                                                    <p class="mb-1"><strong>Account Name:</strong>
+                                                        {{ $upiAccount->name }}
+                                                    </p>
+                                                @endif
+                                                @if ($upiAccount->upi_id)
+                                                    <p class="mb-1"><strong>UPI ID:</strong> {{ $upiAccount->upi_id }}
+                                                    </p>
+                                                @endif
+                                                @if ($upiAccount->upi_number)
+                                                    <p class="mb-1"><strong>UPI Number:</strong>
+                                                        {{ $upiAccount->upi_number }}</p>
+                                                @endif
+                                                <p class="mb-1"><strong>Amount:</strong>
+                                                    ₹{{ number_format($amount, 2) }}
+                                                </p>
+                                            </div>
+                                            <!-- Hidden data for QR generation -->
+                                            <input type="hidden" class="upiPaymentUrl" value="{{ $upiPaymentUrl }}"
+                                                data-qr-id="qrcode-{{ $index }}">
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="alert alert-danger">
+                                        <i class="ti ti-alert-circle me-2"></i>No UPI accounts available at the moment.
+                                        Please
+                                        try bank transfer or contact support.
+                                    </div>
+                                @endif
                             @else
                                 <div class="alert alert-danger">
-                                    <i class="ti ti-alert-circle me-2"></i>No UPI accounts available at the moment. Please
-                                    try bank transfer or contact support.
+                                    <i class="ti ti-alert-circle me-2"></i>No UPI details available for this account.
                                 </div>
                             @endif
                         </div>
 
                         <!-- Bank Transfer Section -->
                         <div id="bankPaymentSection">
-                            @if ($bankAccount)
-                                <div class="alert alert-warning">
-                                    <h6 class="alert-heading">Bank Transfer Details</h6>
+                            @if (isset($selectedAccount) && $selectedAccount->account_number)
+                                {{-- Pre-selected account: Show bank details --}}
+                                <div class="alert alert-warning mb-4">
+                                    <h6 class="alert-heading">{{ $selectedAccount->name ?? 'Bank Account' }}</h6>
+                                    @if ($selectedAccount->name)
+                                        <p class="mb-1"><strong>Account Name:</strong> {{ $selectedAccount->name }}</p>
+                                    @endif
+                                    @if ($selectedAccount->bank_name)
+                                        <p class="mb-1"><strong>Bank Name:</strong> {{ $selectedAccount->bank_name }}
+                                        </p>
+                                    @endif
+                                    @if ($selectedAccount->account_holder_name)
+                                        <p class="mb-1"><strong>Account Holder:</strong>
+                                            {{ $selectedAccount->account_holder_name }}</p>
+                                    @endif
                                     <p class="mb-1">
                                         <strong>Account Number:</strong>
-                                        <span id="accountNumber">{{ $bankAccount->account_number }}</span>
+                                        <span>{{ $selectedAccount->account_number }}</span>
                                         <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
-                                            data-copy="{{ $bankAccount->account_number }}" title="Copy account number"
-                                            aria-label="Copy account number">
+                                            data-copy="{{ $selectedAccount->account_number }}"
+                                            title="Copy account number">
                                             <i class="ti ti-files"></i>
                                         </button>
                                     </p>
-                                    <p class="mb-1">
-                                        <strong>IFSC Code:</strong>
-                                        <span id="ifscCode">{{ $bankAccount->ifsc_code }}</span>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
-                                            data-copy="{{ $bankAccount->ifsc_code }}" title="Copy IFSC code"
-                                            aria-label="Copy IFSC code">
-                                            <i class="ti ti-files"></i>
-                                        </button>
-                                    </p>
-                                    <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}</p>
-                                    @if ($bankAccount->deposit_limit)
-                                        <p class="mb-0 text-muted"><small>Deposit Limit:
-                                                ₹{{ number_format($bankAccount->deposit_limit, 2) }}</small></p>
+                                    @if ($selectedAccount->ifsc_code)
+                                        <p class="mb-1">
+                                            <strong>IFSC Code:</strong>
+                                            <span>{{ $selectedAccount->ifsc_code }}</span>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                                data-copy="{{ $selectedAccount->ifsc_code }}" title="Copy IFSC code">
+                                                <i class="ti ti-files"></i>
+                                            </button>
+                                        </p>
                                     @endif
+                                    @if ($selectedAccount->branch_name)
+                                        <p class="mb-1"><strong>Branch:</strong> {{ $selectedAccount->branch_name }}</p>
+                                    @endif
+                                    <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}</p>
                                 </div>
+                            @elseif(isset($accounts))
+                                {{-- Normal mode: Show account selection --}}
+                                @php
+                                    $bankAccounts = $accounts->filter(function ($acc) {
+                                        return !empty($acc->account_number);
+                                    });
+                                @endphp
+                                @if ($bankAccounts->count() > 0)
+                                    <h5 class="mb-3">Select Bank Account</h5>
+                                    <div class="mb-4">
+                                        @foreach ($bankAccounts as $index => $bankAccount)
+                                            <label class="payment-method-option"
+                                                for="bank_account_{{ $bankAccount->id }}">
+                                                <input type="radio" name="selected_account_id"
+                                                    id="bank_account_{{ $bankAccount->id }}"
+                                                    value="{{ $bankAccount->id }}" data-type="bank"
+                                                    data-index="{{ $index }}" required>
+                                                <div class="d-flex align-items-center">
+                                                    <i class="ti ti-building-bank me-3"
+                                                        style="font-size: 1.5rem; color: #000000;"></i>
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            {{ $bankAccount->name ?? 'Bank Account ' . ($index + 1) }}</h6>
+                                                        <p class="text-muted mb-0 small">{{ $bankAccount->bank_name }} -
+                                                            {{ $bankAccount->account_number }}</p>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+
+                                    @foreach ($bankAccounts as $index => $bankAccount)
+                                        <div class="alert alert-warning mb-4 bank-account-details"
+                                            id="bank_details_{{ $bankAccount->id }}" style="display: none;">
+                                            <h6 class="alert-heading">{{ $bankAccount->name ?? 'Bank Account' }}</h6>
+                                            {{-- @if ($bankAccount->name)
+                                                <p class="mb-1"><strong>Account Name:</strong> {{ $bankAccount->name }}
+                                                </p>
+                                            @endif
+                                            @if ($bankAccount->bank_name)
+                                                <p class="mb-1"><strong>Bank Name:</strong>
+                                                    {{ $bankAccount->bank_name }}
+                                                </p>
+                                            @endif
+                                            @if ($bankAccount->account_holder_name)
+                                                <p class="mb-1"><strong>Account Holder:</strong>
+                                                    {{ $bankAccount->account_holder_name }}</p>
+                                            @endif --}}
+                                            <p class="mb-1">
+                                                <strong>Account Number:</strong>
+                                                <span
+                                                    id="accountNumber-{{ $index }}">{{ $bankAccount->account_number }}</span>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                                    data-copy="{{ $bankAccount->account_number }}"
+                                                    title="Copy account number" aria-label="Copy account number">
+                                                    <i class="ti ti-files"></i>
+                                                </button>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>IFSC Code:</strong>
+                                                <span
+                                                    id="ifscCode-{{ $index }}">{{ $bankAccount->ifsc_code }}</span>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary ms-2 copy-btn"
+                                                    data-copy="{{ $bankAccount->ifsc_code }}" title="Copy IFSC code"
+                                                    aria-label="Copy IFSC code">
+                                                    <i class="ti ti-files"></i>
+                                                </button>
+                                            </p>
+                                            @if ($bankAccount->branch_name)
+                                                <p class="mb-1"><strong>Branch:</strong> {{ $bankAccount->branch_name }}
+                                                </p>
+                                            @endif
+                                            <p class="mb-1"><strong>Amount:</strong> ₹{{ number_format($amount, 2) }}
+                                            </p>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="alert alert-danger">
+                                        <i class="ti ti-alert-circle me-2"></i>No bank accounts available at the moment.
+                                        Please
+                                        try UPI payment or contact support.
+                                    </div>
+                                @endif
                             @else
                                 <div class="alert alert-danger">
-                                    <i class="ti ti-alert-circle me-2"></i>No bank accounts available at the moment. Please
-                                    try UPI payment or contact support.
+                                    <i class="ti ti-alert-circle me-2"></i>No bank account details available for this
+                                    account.
                                 </div>
                             @endif
                         </div>
@@ -276,48 +488,55 @@
 @section('page-script')
     <script>
         $(function() {
-            // Generate QR Code for UPI payment
-            function generateQRCode() {
-                var upiUrl = $('#upiPaymentUrl').val();
+            // Check if we have a pre-selected account
+            var isPreSelectedAccount = $('input[name="selected_account_id"][type="hidden"]').length > 0;
+
+            // Generate QR Code for pre-selected account if UPI is selected
+            function generateSelectedAccountQR() {
+                var upiUrl = $('#selectedUpiPaymentUrl').val();
                 if (upiUrl) {
                     var qr = qrcode(0, 'M');
                     qr.addData(upiUrl);
                     qr.make();
-
-                    // Create image
-                    var qrImage = qr.createImgTag(6, 8); // size 6, margin 8
-                    $('#qrcode').html(qrImage);
+                    var qrImage = qr.createImgTag(6, 8);
+                    $('#qrcode-selected').html(qrImage);
                 }
+            }
+
+            // Generate QR Code for all UPI payments (normal mode)
+            function generateQRCodes() {
+                $('.upiPaymentUrl').each(function() {
+                    var upiUrl = $(this).val();
+                    var qrId = $(this).data('qr-id');
+                    if (upiUrl && qrId) {
+                        var qr = qrcode(0, 'M');
+                        qr.addData(upiUrl);
+                        qr.make();
+
+                        // Create image
+                        var qrImage = qr.createImgTag(6, 8); // size 6, margin 8
+                        $('#' + qrId).html(qrImage);
+                    }
+                });
             }
 
             // Click on UPI app logo to copy UPI ID to clipboard
             $(document).on('click', '.upi-app-logo', function() {
-                var upi = $(this).data('upi') || $('#upiPaymentUrl').val();
+                var upi = $(this).data('upi');
                 if (!upi) {
                     alert('No UPI ID available to copy.');
                     return;
                 }
 
-                // If the data-upi contains full UPI ID or URL, normalize to UPI ID
-                // If it's a URL like upi://pay?pa=xxx..., try to extract pa=
-                var upiId = upi;
-                var match = String(upi).match(/pa=([^&]+)/);
-                if (match) {
-                    upiId = decodeURIComponent(match[1]);
-                }
-
                 // Try clipboard API, fallback to prompt
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(upiId).then(function() {
-                        // show small feedback
-                        var originalTitle = document.title;
-                        // simple feedback via alert for now
-                        alert('UPI ID copied: ' + upiId);
+                    navigator.clipboard.writeText(upi).then(function() {
+                        alert('UPI ID copied: ' + upi);
                     }).catch(function() {
-                        prompt('Copy UPI ID', upiId);
+                        prompt('Copy UPI ID', upi);
                     });
                 } else {
-                    prompt('Copy UPI ID', upiId);
+                    prompt('Copy UPI ID', upi);
                 }
             });
 
@@ -341,25 +560,66 @@
                 }
             });
 
-            // Handle payment method selection
-            $('.payment-method-option').on('click', function() {
-                $('.payment-method-option').removeClass('selected');
-                $(this).addClass('selected');
-                $(this).find('input[type="radio"]').prop('checked', true);
-
-                var selectedMethod = $(this).find('input[type="radio"]').val();
+            // Handle payment method selection (UPI or Bank)
+            $('input[name="payment_method"]').on('change', function() {
+                var selectedMethod = $(this).val();
 
                 // Hide all sections
                 $('#upiPaymentSection, #bankPaymentSection').hide();
+                $('.upi-account-details, .bank-account-details').hide();
 
                 // Show relevant section
                 if (selectedMethod === 'upi') {
                     $('#upiPaymentSection').slideDown(function() {
-                        // Generate QR code after section is visible
-                        generateQRCode();
+                        // If pre-selected account, generate QR code immediately
+                        if (isPreSelectedAccount) {
+                            generateSelectedAccountQR();
+                            $('#uploadSection').slideDown();
+                            $('#submitBtn').prop('disabled', false);
+                        }
                     });
                 } else if (selectedMethod === 'bank') {
-                    $('#bankPaymentSection').slideDown();
+                    $('#bankPaymentSection').slideDown(function() {
+                        // If pre-selected account, show upload section immediately
+                        if (isPreSelectedAccount) {
+                            $('#uploadSection').slideDown();
+                            $('#submitBtn').prop('disabled', false);
+                        }
+                    });
+                }
+
+                // For normal mode, hide upload section until account is selected
+                if (!isPreSelectedAccount) {
+                    $('#uploadSection').hide();
+                    $('#submitBtn').prop('disabled', true);
+                }
+            });
+
+            // Handle account selection
+            $('input[name="selected_account_id"]').on('change', function() {
+                var accountId = $(this).val();
+                var accountType = $(this).data('type');
+
+                // Hide all account details
+                $('.upi-account-details, .bank-account-details').hide();
+
+                // Show selected account details
+                if (accountType === 'upi') {
+                    $('#upi_details_' + accountId).slideDown(function() {
+                        // Generate QR code for selected account only
+                        var qrUrl = $('#upi_details_' + accountId).find('.upiPaymentUrl').val();
+                        var qrId = $('#upi_details_' + accountId).find('.upiPaymentUrl').data(
+                            'qr-id');
+                        if (qrUrl && qrId) {
+                            var qr = qrcode(0, 'M');
+                            qr.addData(qrUrl);
+                            qr.make();
+                            var qrImage = qr.createImgTag(6, 8);
+                            $('#' + qrId).html(qrImage);
+                        }
+                    });
+                } else if (accountType === 'bank') {
+                    $('#bank_details_' + accountId).slideDown();
                 }
 
                 // Show upload section

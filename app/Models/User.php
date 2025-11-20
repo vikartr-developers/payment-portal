@@ -48,6 +48,7 @@ class User extends Authenticatable
     // 2FA
     'google2fa_secret',
     'google2fa_enabled',
+    'temp_google2fa_secret',
   ];
 
 

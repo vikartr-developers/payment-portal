@@ -6,6 +6,7 @@
 @extends('layouts/blankLayout')
 
 @section('title', 'Login Cover - Pages')
+{{-- {{ dd('lllll') }} --}}
 
 @section('vendor-style')
     <!-- Vendor -->

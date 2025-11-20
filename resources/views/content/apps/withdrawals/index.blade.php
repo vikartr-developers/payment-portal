@@ -211,7 +211,7 @@
         <!-- Screenshot Modal -->
         <div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel"
             aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="screenshotModalLabel">
@@ -221,7 +221,7 @@
                     </div>
                     <div class="modal-body text-center">
                         <img id="screenshot_modal_img" src="" alt="Screenshot" class="img-fluid"
-                            style="max-height: 70vh; border-radius: 8px;">
+                            style="max-height: 50vh; border-radius: 8px;">
                     </div>
                     <div class="modal-footer">
                         <a id="screenshot_download_link" href="" download class="btn btn-primary">

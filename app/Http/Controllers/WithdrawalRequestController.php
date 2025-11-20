@@ -106,7 +106,7 @@ class WithdrawalRequestController extends Controller
       })
       ->addColumn('screenshot', function ($row) {
         if ($row->screenshot) {
-          $imageUrl = url('storage/app/public/' . $row->screenshot);
+          $imageUrl = asset($row->screenshot);
           return '<button class="btn btn-sm btn-info view-screenshot-btn" data-image="' . $imageUrl . '" data-id="' . $row->id . '">
                     <i class="ti ti-photo me-1"></i>View
                   </button>';
@@ -376,13 +376,13 @@ class WithdrawalRequestController extends Controller
         $file = $request->file('screenshot');
         $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-        // Ensure storage directory exists
-        if (!file_exists(storage_path('app/public/payout_screenshots'))) {
-          mkdir(storage_path('app/public/payout_screenshots'), 0755, true);
+        // Ensure public directory exists
+        if (!file_exists(public_path('payout_screenshots'))) {
+          mkdir(public_path('payout_screenshots'), 0755, true);
         }
 
-        $screenshotPath = $file->storeAs('payout_screenshots', $filename, 'public');
-        $data['screenshot'] = $screenshotPath;
+        $file->move(public_path('payout_screenshots'), $filename);
+        $data['screenshot'] = 'payout_screenshots/' . $filename;
       } catch (\Exception $e) {
         \Log::error('Screenshot upload failed: ' . $e->getMessage());
         return back()->withErrors(['screenshot' => 'Failed to upload screenshot: ' . $e->getMessage()])->withInput();
@@ -412,20 +412,20 @@ class WithdrawalRequestController extends Controller
     if ($request->hasFile('screenshot')) {
       try {
         // Delete old screenshot if exists
-        if ($item->screenshot && \Storage::disk('public')->exists($item->screenshot)) {
-          \Storage::disk('public')->delete($item->screenshot);
+        if ($item->screenshot && file_exists(public_path($item->screenshot))) {
+          unlink(public_path($item->screenshot));
         }
 
         $file = $request->file('screenshot');
         $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-        // Ensure storage directory exists
-        if (!file_exists(storage_path('app/public/payout_screenshots'))) {
-          mkdir(storage_path('app/public/payout_screenshots'), 0755, true);
+        // Ensure public directory exists
+        if (!file_exists(public_path('payout_screenshots'))) {
+          mkdir(public_path('payout_screenshots'), 0755, true);
         }
 
-        $screenshotPath = $file->storeAs('payout_screenshots', $filename, 'public');
-        $item->screenshot = $screenshotPath;
+        $file->move(public_path('payout_screenshots'), $filename);
+        $item->screenshot = 'payout_screenshots/' . $filename;
         $item->updated_by = Auth::check() ? Auth::id() : null;
         $item->save();
 
@@ -433,7 +433,7 @@ class WithdrawalRequestController extends Controller
           return response()->json([
             'success' => true,
             'message' => 'Screenshot uploaded successfully',
-            'screenshot_url' => url('storage/app/public/' . $screenshotPath)
+            'screenshot_url' => asset($item->screenshot)
           ]);
         }
 
@@ -479,7 +479,7 @@ class WithdrawalRequestController extends Controller
         'amount' => $item->amount,
         'status' => $item->status,
         'approver_status' => $item->approver_status,
-        'screenshot' => $item->screenshot ? url('storage/app/public/' . $item->screenshot) : null,
+        'screenshot' => $item->screenshot ? asset($item->screenshot) : null,
         'created_at' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : null,
       ]
     ]);

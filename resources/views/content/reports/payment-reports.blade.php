@@ -34,7 +34,7 @@
         }
 
         .summary-value {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 700;
             margin: 0.75rem 0 0.25rem;
         }
@@ -97,12 +97,12 @@
 
         /* Zebra striping for rows */
         /* .table-striped>tbody>tr:nth-of-type(odd) {
-                                                                                                background-color: #f8fafc;
-                                                                                            }
+                                                                                                                                    background-color: #f8fafc;
+                                                                                                                                }
 
-                                                                                            .table-striped>tbody>tr:nth-of-type(even) {
-                                                                                                background-color: #f3f4f8;
-                                                                                            } */
+                                                                                                                                .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                                                    background-color: #f3f4f8;
+                                                                                                                                } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {
@@ -490,41 +490,77 @@
                             .replace('__ID__', requestId),
                         method: 'GET',
                         success: function(response) {
+                            console.log('Response:', response); // Debug log
                             if (response.success && response.data) {
                                 var data = response.data;
 
-                                // Populate modal with data
-                                $('#modal_request_id').text(data.request_id || '-');
-                                $('#modal_utr').text(data.utr || '-');
-                                $('#modal_amount').text('₹' + data.amount);
-                                $('#modal_charge_percent').text(data.charge_percent + '%');
-                                $('#modal_charge_amount').text('₹' + data.charge_amount);
-                                $('#modal_payment_date').text(data.payment_date || '-');
-                                $('#modal_mode').text(data.mode || '-');
-                                $('#modal_approver').text(data.approver_name || '-');
+                                // Helper function to show/hide field rows
+                                function setField(selector, value) {
+                                    var $row = $(selector).closest('p');
+                                    if (value && value !== '-' && value !== null &&
+                                        value !== undefined && value !== '' && value !==
+                                        'null') {
+                                        $(selector).text(value);
+                                        $row.show();
+                                    } else {
+                                        $row.hide();
+                                    }
+                                }
+
+                                // Show all rows initially
+                                $('#modalContent p').show();
+
+                                // Populate modal with data - Payment Information
+                                setField('#modal_request_id', 'TXN-' + String(data
+                                    .request_id).padStart(6, '0'));
+                                setField('#modal_utr', data.utr);
+                                setField('#modal_amount', data.amount ? '₹' + data.amount :
+                                    null);
+                                setField('#modal_charge_percent', data.charge_percent ? data
+                                    .charge_percent + '%' : null);
+                                setField('#modal_charge_amount', data.charge_amount ? '₹' +
+                                    data.charge_amount : null);
+                                setField('#modal_payment_date', data.payment_date);
+                                setField('#modal_mode', data.mode ? data.mode
+                                    .toUpperCase() : null);
+                                setField('#modal_approver', data.approver_name);
 
                                 // Status badge
-                                var statusClass = 'bg-secondary';
-                                if (data.status === 'approved') statusClass = 'bg-success';
-                                else if (data.status === 'rejected') statusClass =
-                                    'bg-danger';
-                                else if (data.status === 'pending') statusClass =
-                                    'bg-warning';
-                                $('#modal_status').removeClass().addClass('badge ' +
-                                    statusClass).text(data.status || '-');
+                                if (data.status && data.status !== '-') {
+                                    var statusClass = 'bg-secondary';
+                                    var statusText = data.status;
+                                    if (data.status === 'approved' || data.status ===
+                                        'accepted') {
+                                        statusClass = 'bg-success';
+                                        statusText = 'Approved';
+                                    } else if (data.status === 'rejected') {
+                                        statusClass = 'bg-danger';
+                                        statusText = 'Rejected';
+                                    } else if (data.status === 'pending') {
+                                        statusClass = 'bg-warning';
+                                        statusText = 'Pending';
+                                    }
+                                    $('#modal_status').removeClass().addClass('badge ' +
+                                        statusClass).text(statusText);
+                                    $('#modal_status').closest('p').show();
+                                } else {
+                                    $('#modal_status').closest('p').hide();
+                                }
 
                                 // Bank details
-                                $('#modal_account_type').text(data.account_type || '-');
-                                $('#modal_bank_name').text(data.bank_full_name || data
-                                    .bank_name || '-');
-                                $('#modal_branch_name').text(data.branch_name || '-');
-                                $('#modal_account_number').text(data.account_number || '-');
-                                $('#modal_account_holder').text(data.account_holder_name ||
-                                    '-');
-                                $('#modal_ifsc_code').text(data.ifsc_code || '-');
-                                $('#modal_upi_id').text(data.upi_id || '-');
-                                $('#modal_upi_number').text(data.upi_number || '-');
-                                $('#modal_payment_from').text(data.payment_from || '-');
+                                setField('#modal_account_type', data.account_type ? (data
+                                    .account_type === 'bank' ? 'Bank Account' : data
+                                    .account_type === 'upi' ? 'UPI' : data
+                                    .account_type.toUpperCase()) : null);
+                                setField('#modal_bank_name', data.bank_full_name || data
+                                    .bank_name);
+                                setField('#modal_branch_name', data.branch_name);
+                                setField('#modal_account_number', data.account_number);
+                                setField('#modal_account_holder', data.account_holder_name);
+                                setField('#modal_ifsc_code', data.ifsc_code);
+                                setField('#modal_upi_id', data.upi_id);
+                                setField('#modal_upi_number', data.upi_number);
+                                setField('#modal_payment_from', data.payment_from);
 
                                 // Hide loader, show content
                                 $('#modalLoader').hide();

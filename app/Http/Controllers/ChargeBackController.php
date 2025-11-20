@@ -69,7 +69,17 @@ class ChargeBackController extends Controller
     // Upload slip first
     $slipPath = null;
     if ($request->hasFile('slip')) {
-      $slipPath = $request->file('slip')->store('chargebacks/slips', 'public');
+      $slipFile = $request->file('slip');
+      $filename = uniqid() . '_' . time() . '.' . $slipFile->getClientOriginalExtension();
+
+      // Create directory if it doesn't exist
+      if (!file_exists(public_path('chargebacks/slips'))) {
+        mkdir(public_path('chargebacks/slips'), 0755, true);
+      }
+
+      // Move file to public directory
+      $slipFile->move(public_path('chargebacks/slips'), $filename);
+      $slipPath = 'chargebacks/slips/' . $filename;
     }
 
     $chargeback = ChargeBack::create([
@@ -132,8 +142,8 @@ class ChargeBackController extends Controller
       ->addColumn('slip', function ($cb) {
         if (!$cb->slip_path)
           return '<span class="text-muted">-</span>';
-        $src = asset('storage/' . $cb->slip_path);
-        return '<a href="' . e($src) . '" target="_blank" class="btn btn-sm btn-outline-primary">View</a>';
+        $src = asset($cb->slip_path);
+        return '<button type="button" class="btn btn-sm btn-outline-primary view-screenshot-btn" data-image="' . e($src) . '"><i class="ti ti-eye me-1"></i>View</button>';
       })
       ->editColumn('status', function ($cb) {
         return match ($cb->status) {

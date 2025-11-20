@@ -87,6 +87,21 @@
                                 </span>
                             </div>
 
+                            @if ($isAdmin)
+                                <div class="col-md-4 col-sm-12 mb-1">
+                                    <label class="form-label" for="slug">
+                                        Slug (Unique URL Identifier)</label>
+                                    <input type="text" id="slug" class="form-control" placeholder="unique-slug"
+                                        name="slug" value="{{ old('slug') ?? ($user != '' ? $user->slug : '') }}">
+                                    <small class="text-muted">Used in payment links. Leave empty to auto-generate.</small>
+                                    <span class="text-danger">
+                                        @error('slug')
+                                            {{ $message }}
+                                        @enderror
+                                    </span>
+                                </div>
+                            @endif
+
                             <!-- Slab Fields for Indian Rupee -->
                             <div class="col-md-4 col-sm-12 mb-1">
                                 <label class="form-label" for="from_slab">
@@ -367,6 +382,36 @@
                 $("#password").select();
                 document.execCommand("copy");
                 alert("Password copied to clipboard!");
+            });
+
+            // Function to generate slug from name
+            function generateSlugFromName(name) {
+                return name
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+
+            // Auto-generate slug from first name if slug is empty
+            $('#first_name').on('blur', function() {
+                const slugInput = $('#slug');
+                if (slugInput.length && !slugInput.val()) {
+                    const firstName = $(this).val();
+                    if (firstName) {
+                        const suggestedSlug = generateSlugFromName(firstName);
+                        slugInput.val(suggestedSlug);
+                    }
+                }
+            });
+
+            // Real-time slug validation and formatting
+            $('#slug').on('blur', function() {
+                const slug = $(this).val();
+                if (slug) {
+                    // Format slug properly
+                    const formattedSlug = generateSlugFromName(slug);
+                    $(this).val(formattedSlug);
+                }
             });
         });
     </script>

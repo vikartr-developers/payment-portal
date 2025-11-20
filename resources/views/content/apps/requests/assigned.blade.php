@@ -258,7 +258,7 @@
                                 var date = new Date(data);
                                 return (
                                     date.toLocaleDateString() +
-                                    ' <small class="text-muted">' + date.toLocaleTimeString(
+                                    '<br><small class="text-muted">' + date.toLocaleTimeString(
                                         [], {
                                             hour: '2-digit',
                                             minute: '2-digit',
@@ -282,7 +282,11 @@
                     ],
                     scrollX: true,
                     responsive: false,
-                    autoWidth: false
+                    autoWidth: false,
+                    columnDefs: [{
+                        targets: '_all',
+                        className: 'text-start'
+                    }]
                 });
             }
 
@@ -610,12 +614,12 @@
 
         /* Zebra striping for rows */
         /* .table-striped>tbody>tr:nth-of-type(odd) {
-                                                                                                            background-color: #f8fafc;
-                                                                                                        }
+                                                                                                                                    background-color: #f8fafc;
+                                                                                                                                }
 
-                                                                                                        .table-striped>tbody>tr:nth-of-type(even) {
-                                                                                                            background-color: #f3f4f8;
-                                                                                                        } */
+                                                                                                                                .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                                                    background-color: #f3f4f8;
+                                                                                                                                } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {
@@ -632,6 +636,13 @@
             /* font-size: 0.875rem; */
             vertical-align: middle !important;
             white-space: nowrap;
+            text-align: left !important;
+        }
+
+        /* Ensure consistent alignment for all screen sizes */
+        .datatables-assigned-requests th,
+        .datatables-assigned-requests td {
+            text-align: left !important;
         }
 
         /* Bolder important cells, like status or actions */
@@ -781,7 +792,7 @@
         <!-- Image Preview Modal -->
         <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel"
             aria-hidden="true">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-sm modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
@@ -791,7 +802,7 @@
                     </div>
                     <div class="modal-body text-center p-0">
                         <img id="previewImage" src="" alt="Payment Screenshot" class="img-fluid"
-                            style="max-height: 80vh; width: auto;">
+                            style="max-height: 50vh; width: auto;">
                     </div>
                     <div class="modal-footer">
                         <a id="downloadImageBtn" href="" download class="btn btn-primary">

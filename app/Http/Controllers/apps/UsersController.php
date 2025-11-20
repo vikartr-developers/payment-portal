@@ -150,6 +150,19 @@ class UsersController extends Controller
       $userData['to_slab'] = $request->get('to_slab');
 
       $userData['address'] = $request->get('address');
+
+      // Only admin can set slug
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        if ($request->filled('slug')) {
+          // Validate slug uniqueness
+          $existingSlug = User::where('slug', $request->get('slug'))->first();
+          if ($existingSlug) {
+            return redirect()->back()->withInput()->withErrors(['slug' => 'This slug is already taken.']);
+          }
+          $userData['slug'] = $request->get('slug');
+        }
+      }
+
       // Only allow setting commission if currently logged-in user has role 'Approver'
       if (auth()->user() && auth()->user()->hasRole('Approver')) {
         $userData['commission'] = $request->get('commission');
@@ -284,6 +297,21 @@ class UsersController extends Controller
       $userData['zip_code'] = $request->get('zip_code');
       $userData['from_slab'] = $request->get('from_slab');
       $userData['to_slab'] = $request->get('to_slab');
+
+      // Only admin can update slug
+      if (auth()->user() && (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))) {
+        if ($request->filled('slug')) {
+          // Validate slug uniqueness (exclude current user)
+          $existingSlug = User::where('slug', $request->get('slug'))
+            ->where('id', '!=', $id)
+            ->first();
+          if ($existingSlug) {
+            return redirect()->back()->withInput()->withErrors(['slug' => 'This slug is already taken.']);
+          }
+          $userData['slug'] = $request->get('slug');
+        }
+      }
+
       // Only allow Approver to set commission on update
       if (auth()->user() && auth()->user()->hasRole('Approver')) {
         $userData['commission'] = $request->get('commission');

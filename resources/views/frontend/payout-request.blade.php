@@ -5,18 +5,18 @@
 @section('page-style')
     <style>
         /* :root {
-                                                                        --primary-color: #000000;
-                                                                        --primary-dark: #5f61e6;
-                                                                        --secondary-color: #8592a3;
-                                                                        --success-color: #71dd37;
-                                                                        --danger-color: #ff3e1d;
-                                                                        --light-bg: #f5f5f9;
-                                                                    } */
+                                                                            --primary-color: #000000;
+                                                                            --primary-dark: #5f61e6;
+                                                                            --secondary-color: #8592a3;
+                                                                            --success-color: #71dd37;
+                                                                            --danger-color: #ff3e1d;
+                                                                            --light-bg: #f5f5f9;
+                                                                        } */
 
         body {
             /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                                                    min-height: 100vh;
-                                                                    padding: 2rem 0; */
+                                                                        min-height: 100vh;
+                                                                        padding: 2rem 0; */
         }
     </style>
 @endsection
@@ -326,7 +326,7 @@
                             <div class="info-text">Minimum amount: ₹1.00</div>
                         </div>
 
-                        <!-- Screenshot Upload Section -->
+                        {{-- <!-- Screenshot Upload Section -->
                         <div class="section-title mt-4">
                             <i class="ti ti-photo"></i> Upload Screenshot (Optional)
                         </div>
@@ -350,7 +350,7 @@
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Submit Buttons -->
                         <div class="text-center mt-4">

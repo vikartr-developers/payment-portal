@@ -266,13 +266,13 @@ class BankManagementController extends Controller
     // dd($request->all());
 
     $validated = $request->validate([
-      'type' => 'required|in:bank,upi',
+      'type' => 'nullable|in:bank,upi',
       'name' => 'required|string|max:255',
       'bank_name' => 'nullable|string|max:255',
       'account_holder_name' => 'nullable|string|max:255',
       'account_number' => 'nullable',
-      'ifsc_code' => 'nullable|required_if:type,bank|max:15',
-      'upi_id' => 'nullable|required_if:type,upi|max:50',
+      'ifsc_code' => 'nullable|max:15',
+      'upi_id' => 'nullable|max:50',
       'upi_number' => 'nullable|max:15',
       'is_merchant_upi' => 'boolean',
       'daily_max_amount' => 'required|numeric|min:0',
@@ -302,13 +302,13 @@ class BankManagementController extends Controller
   {
     $record = BankManagement::findOrFail($id);
     $validated = $request->validate([
-      'type' => 'required|in:bank,upi',
+      'type' => 'nullable|in:bank,upi',
       'name' => 'required|string|max:255',
       'bank_name' => 'nullable|string|max:255',
       'account_holder_name' => 'nullable|string|max:255',
-      'account_number' => 'nullable|required_if:type,bank|max:20',
-      'ifsc_code' => 'nullable|required_if:type,bank|max:15',
-      'upi_id' => 'nullable|required_if:type,upi|max:50',
+      'account_number' => 'nullable|max:20',
+      'ifsc_code' => 'nullable|max:15',
+      'upi_id' => 'nullable|max:50',
       'upi_number' => 'nullable|max:15',
       'is_merchant_upi' => 'boolean',
       'daily_max_amount' => 'required|numeric|min:0',

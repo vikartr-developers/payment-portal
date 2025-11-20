@@ -23,8 +23,25 @@ class TwoFactorController extends Controller
       return redirect()->route('login');
     }
     $google2fa = new \PragmaRX\Google2FA\Google2FA();
-    $secret = $google2fa->generateSecretKey();
+
+    // Check if user already has a temp secret in session or database
+    $secret = $request->session()->get('2fasetupsecret');
+
+    // If no secret in session, check if user has a temp_google2fa_secret stored
+    if (!$secret && !empty($user->temp_google2fa_secret)) {
+      $secret = $user->temp_google2fa_secret;
+    }
+
+    // If still no secret, generate a new one
+    if (!$secret) {
+      $secret = $google2fa->generateSecretKey();
+    }
+
+    // Store in session and user's temp field
     $request->session()->put('2fasetupsecret', $secret);
+    $user->temp_google2fa_secret = $secret;
+    $user->save();
+
     try {
       $qrImage = (new \PragmaRX\Google2FAQRCode\Google2FA())->getQRCodeInline(config('app.name'), $user->email, $secret);
     } catch (\Exception $e) {
@@ -45,7 +62,7 @@ class TwoFactorController extends Controller
     if (empty($secret))
       $secret = $request->input('secret');
     if (empty($secret)) {
-      return redirect()->back()->withErrors(['secret' => 'Missing 2FA secret. Please generate it again.']);
+      return redirect()->back()->with('error', 'Missing 2FA secret. Please refresh the page.');
     }
     $request->validate(['code' => 'required|string']);
     $code = preg_replace('/\D+/', '', trim($request->input('code')));
@@ -54,11 +71,12 @@ class TwoFactorController extends Controller
     if ($google2fa->verifyKey($secret, $code)) {
       $user->google2fa_secret = $secret;
       $user->google2fa_enabled = true;
+      $user->temp_google2fa_secret = null; // Clear temp secret
       $user->save();
       $request->session()->forget('2fasetupsecret');
-      return redirect()->route('home')->with('status', 'Two-factor authentication enabled.');
+      return redirect()->route('home')->with('success', 'Two-factor authentication enabled successfully!');
     }
-    return redirect()->back()->withErrors(['code' => 'The provided 2FA code is invalid.']);
+    return redirect()->back()->with('error', 'The provided 2FA code is invalid. Please try again.');
   }
 
   /**
