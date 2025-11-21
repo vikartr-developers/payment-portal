@@ -18,6 +18,7 @@ class Request extends Model
     'account_upi',
     'image',
     'assign_to',
+    'bank_id',
     'status',
     'process_status',
     'started_at',

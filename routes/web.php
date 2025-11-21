@@ -215,7 +215,7 @@ Route::get('/payment-gateway/approver/{approver}/{account}', [PaymentGatewayCont
 Route::post('/payment-gateway/select-method', [PaymentGatewayController::class, 'selectMethod'])->name('payment.select-method');
 Route::get('/payment-gateway/step2/{transaction_id}', [PaymentGatewayController::class, 'showSelectMethod'])->name('payment.select-method-view');
 Route::post('/payment-gateway/select-payment-type', [PaymentGatewayController::class, 'selectPaymentType'])->name('payment.select-payment-type');
-Route::get('/payment-gateway/step3/{transaction_id}/{payment_type}', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
+Route::get('/payment-gateway/step3/{transaction_id}/{payment_type}/{payment_account_id?}', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
 Route::post('/payment-gateway/process', [PaymentGatewayController::class, 'processPayment'])->name('payment.process');
 Route::get('/payment-status/{transaction_id}', [PaymentGatewayController::class, 'checkStatus'])->name('payment.status');
 Route::post('/payment-status/{transaction_id}/upload', [PaymentGatewayController::class, 'uploadProof'])->name('payment.upload');
@@ -475,6 +475,7 @@ Route::middleware(['auth'])->prefix('app')->group(function () {
   Route::post('/bank-management/{id}/toggle-status', [BankManagementController::class, 'toggleStatus'])->name('bank-management.toggle-status');
   Route::post('/bank-management/{id}/assign-sub-approvers', [BankManagementController::class, 'assignSubApprovers'])->name('bank-management.assign-sub-approvers');
   Route::get('/bank-management/{id}/get-sub-approvers', [BankManagementController::class, 'getSubApprovers'])->name('bank-management.get-sub-approvers');
+  Route::get('/bank-management/{id}/get-sub-approvers-details', [BankManagementController::class, 'getSubApproversDetails'])->name('bank-management.get-sub-approvers-details');
 
   Route::resource('crypto-management', CryptoManagementController::class);
   Route::post('crypto-management/{id}/set-default', [CryptoManagementController::class, 'setDefault'])->name('crypto-management.set-default');

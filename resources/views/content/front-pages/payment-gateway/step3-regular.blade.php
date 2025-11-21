@@ -901,6 +901,11 @@
                 feedback.text('Running OCR to detect UTR — this may take a few seconds...');
                 $('#ocrLoading').addClass('active');
 
+                // Auto-hide OCR loading after 10 seconds
+                const ocrTimeout = setTimeout(() => {
+                    $('#ocrLoading').removeClass('active');
+                }, 10000);
+
                 try {
                     const {
                         data: {
@@ -911,6 +916,7 @@
                         tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '
                     });
 
+                    clearTimeout(ocrTimeout);
                     $('#ocrLoading').removeClass('active');
 
                     // Look for 12-digit UTR pattern (more flexible matching)
@@ -943,6 +949,7 @@
                     }
                 } catch (e) {
                     console.error('OCR failed', e);
+                    clearTimeout(ocrTimeout);
                     $('#ocrLoading').removeClass('active');
                     feedback.removeClass('text-muted').addClass('text-warning').text(
                         'OCR failed — please enter UTR manually below.');

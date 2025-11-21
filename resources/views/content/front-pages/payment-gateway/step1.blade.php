@@ -86,6 +86,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        @if ($payment_approver_id)
+                            <input type="hidden" name="payment_approver_id" value="{{ $payment_approver_id }}">
+                        @endif
+
+                        @if ($payment_approver_id)
+                            <input type="hidden" name="payment_account_id" value="{{ $payment_account_id }}">
+                        @endif
+
+
 
                         <div class="mb-3">
                             <label for="mobile" class="form-label">Mobile Number</label>

@@ -104,7 +104,7 @@ class PaymentReportController extends Controller
   {
     try {
       $id = Crypt::decrypt($id);
-      dd(PaymentRequest::find($id));
+      // dd(PaymentRequest::find($id));
       $request = PaymentRequest::leftJoin('bank_managements', function ($join) {
         $join->on('requests.account_upi', '=', DB::raw("COALESCE(bank_managements.account_number, bank_managements.upi_id)"));
       })

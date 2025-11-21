@@ -56,11 +56,13 @@ class PaymentGatewayController extends Controller
     }
 
     // Store approver and account in session for later use
-    Session::put('payment_approver_id', $user->id);
-    Session::put('payment_account_id', $bankAccount->id);
+    // Session::put('payment_approver_id', $user->id);
+    // Session::put('payment_account_id', $bankAccount->id);
 
     return view('content.front-pages.payment-gateway.step1', [
       'pageConfigs' => $pageConfigs,
+      'payment_approver_id' => $user->id,
+      'payment_account_id' => $bankAccount->id,
       'approverMode' => true
     ]);
   }
@@ -78,50 +80,78 @@ class PaymentGatewayController extends Controller
     ]);
 
     // Check if there's an existing pending request in session
-    $sessionId = Session::getId();
-    $existingRequest = \App\Models\Request::where('session_id', $sessionId)
-      ->where('process_status', '!=', 'completed')
-      ->where('expires_at', '>', now())
-      ->first();
 
-    if (!$existingRequest) {
-      // Create new request record with 7-minute timer
-      $startedAt = now();
-      $expiresAt = now()->addMinutes(7);
+    // $existingRequest = \App\Models\Request::where('session_id', $sessionId)
+    //   ->where('process_status', '!=', 'completed')
+    //   ->where('expires_at', '>', now())
+    //   ->first();
 
-      $requestRecord = \App\Models\Request::create([
-        'name' => $request->username,
-        'payment_from' => $request->mobile ?? $request->username,
-        'amount' => $request->amount,
-        'payment_amount' => $request->amount,
-        'status' => 'progress',
-        'mode' => '',
-        'process_status' => 'step1',
-        'started_at' => $startedAt,
-        'expires_at' => $expiresAt,
-        'session_id' => $sessionId,
-      ]);
 
-      Session::put('payment_request_id', $requestRecord->id);
-    } else {
-      $requestRecord = $existingRequest;
-      Session::put('payment_request_id', $existingRequest->id);
-    }
+    // if (!$existingRequest) {
+    // Create new request record with 7-minute timer
+    $startedAt = now();
+    $expiresAt = now()->addMinutes(7);
+    $selectedAccountId = $request->payment_account_id;
+
+    // if ($selectedAccountId) {
+    //   $selectedAccount = BankManagement::find($selectedAccountId);
+    //   if ($selectedAccount) {
+    //     // Use payment_method to determine which identifier to use
+
+
+    //     // Try to assign to a SubApprover associated with this bank account
+    //     $subApprovers = $selectedAccount->subApprovers()->get();
+
+    //     if ($subApprovers->isNotEmpty()) {
+    //       // Randomly assign to one of the associated SubApprovers
+    //       $randomIndex = random_int(0, $subApprovers->count() - 1);
+    //       $assignTo = $subApprovers[$randomIndex]->id;
+    //     } else {
+
+    //       // If no SubApprovers assigned, assign to the Approver who created this account
+    //       $assignTo = $request->payment_approver_id;
+    //     }
+    //   }
+    // }
+
+    // If no account selected or no owner found, assign to a random SubApprover (if any)
+
+
+    $requestRecord = \App\Models\Request::create([
+      'name' => $request->username,
+      'payment_from' => $request->mobile ?? $request->username,
+      'amount' => $request->amount,
+      'payment_amount' => $request->amount,
+      'status' => 'progress',
+      'mode' => '',
+      'bank_id' => $selectedAccountId ?? null,
+      'assign_to' => $request->payment_approver_id ?? null,
+      'process_status' => 'step1',
+      'started_at' => $startedAt,
+      'expires_at' => $expiresAt,
+      // 'session_id' => $sessionId,
+    ]);
+
+    // Session::put('payment_request_id', $requestRecord->id);
+    // } else {
+    //   $requestRecord = $existingRequest;
+    //   Session::put('payment_request_id', $existingRequest->id);
+    // }
 
     // Store approver info in session if exists
-    $approverId = Session::get('payment_approver_id');
-    $accountId = Session::get('payment_account_id');
+    // $approverId = Session::get('payment_approver_id');
+    // $accountId = Session::get('payment_account_id');
 
-    if ($approverId) {
-      Session::put('payment_approver_id', $approverId);
-    }
-    if ($accountId) {
-      Session::put('payment_account_id', $accountId);
-    }
+    // if ($approverId) {
+    //   Session::put('payment_approver_id', $approverId);
+    // }
+    // if ($accountId) {
+    //   Session::put('payment_account_id', $accountId);
+    // }
 
     // Generate transaction ID and redirect to step 2 with encrypted transaction ID
     $encryptedId = encrypt($requestRecord->id);
-    $transactionId = 'TXN-' . str_pad((string) $requestRecord->id, 6, '0', STR_PAD_LEFT);
+    // $transactionId = 'TXN-' . str_pad((string) $requestRecord->id, 6, '0', STR_PAD_LEFT);
 
     return redirect()->route('payment.select-method-view', ['transaction_id' => $encryptedId]);
   }
@@ -174,6 +204,7 @@ class PaymentGatewayController extends Controller
     $request->validate([
       'payment_type' => 'required|in:regular,crypto',
       'transaction_id' => 'required|string',
+      'payment_account_id' => 'nullable|exists:bank_managements,id',
     ]);
 
     // Decrypt to validate transaction exists
@@ -188,17 +219,24 @@ class PaymentGatewayController extends Controller
       return redirect()->route('payment.gateway')->with('error', 'Invalid transaction link. Please start again.');
     }
 
-    // Redirect to step 3 with transaction ID and payment type in URL
-    return redirect()->route('payment.show-details', [
+    // Redirect to step 3 with transaction ID, payment type, and payment_account_id in URL
+    $routeParams = [
       'transaction_id' => $request->transaction_id,
       'payment_type' => $request->payment_type
-    ]);
+    ];
+
+    // Add payment_account_id to URL if provided
+    if ($request->filled('payment_account_id')) {
+      $routeParams['payment_account_id'] = $request->payment_account_id;
+    }
+
+    return redirect()->route('payment.show-details', $routeParams);
   }
 
   /**
    * Step 3: Show payment details based on selected method
    */
-  public function showPaymentDetails($transaction_id, $payment_type)
+  public function showPaymentDetails($transaction_id, $payment_type, $payment_account_id = null)
   {
     // Validate payment type
     if (!in_array($payment_type, ['regular', 'crypto'])) {
@@ -231,7 +269,8 @@ class PaymentGatewayController extends Controller
 
     $username = $requestRecord->name;
     $amount = $requestRecord->amount;
-    $preSelectedAccountId = Session::get('payment_account_id');
+    // Get payment_account_id from URL parameter, fallback to session
+    $preSelectedAccountId = $requestRecord->bank_id;
     $pageConfigs = ['myLayout' => 'front'];
 
     // Update process status to step2 and store payment type
@@ -356,18 +395,31 @@ class PaymentGatewayController extends Controller
     // Get selected account details and extract account_upi based on payment method
     $accountUpi = null;
     $assignTo = null;
+    $bankId = null;
     $selectedAccountId = $request->input('selected_account_id');
 
     if ($selectedAccountId) {
       $selectedAccount = BankManagement::find($selectedAccountId);
       if ($selectedAccount) {
+        // Store bank_id
+        $bankId = $selectedAccount->id;
+
         // Use payment_method to determine which identifier to use
         $accountUpi = $request->payment_method === 'upi'
           ? $selectedAccount->upi_id
           : $selectedAccount->account_number;
 
-        // Assign to the user who created this bank account
-        $assignTo = $selectedAccount->created_by;
+        // Try to assign to a SubApprover associated with this bank account
+        $subApprovers = $selectedAccount->subApprovers()->get();
+
+        if ($subApprovers->isNotEmpty()) {
+          // Randomly assign to one of the associated SubApprovers
+          $randomIndex = random_int(0, $subApprovers->count() - 1);
+          $assignTo = $subApprovers[$randomIndex]->id;
+        } else {
+          // If no SubApprovers assigned, assign to the Approver who created this account
+          $assignTo = $selectedAccount->created_by;
+        }
       }
     }
 
@@ -396,10 +448,11 @@ class PaymentGatewayController extends Controller
       'status' => 'pending',
       'process_status' => 'completed',
       'assign_to' => $assignTo,
+      'bank_id' => $bankId,
     ]);
 
     // Clear session data
-    Session::forget(['payment_username', 'payment_mobile', 'payment_amount', 'payment_type', 'payment_request_id', 'payment_approver_id', 'payment_account_id']);
+    // Session::forget(['payment_username', 'payment_mobile', 'payment_amount', 'payment_type', 'payment_request_id', 'payment_approver_id', 'payment_account_id']);
 
     // Redirect to transaction status page with encrypted ID
     $encryptedId = encrypt($requestRecord->id);

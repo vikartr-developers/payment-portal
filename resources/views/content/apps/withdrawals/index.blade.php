@@ -177,11 +177,11 @@
             </div>
             <div class="card-header">
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <select id="status_filter" class="form-select" style="width: auto;">
+                    {{-- <select id="status_filter" class="form-select" style="width: auto;">
                         <option value="all">All Statuses</option>
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
-                    </select>
+                    </select> --}}
                     <select id="approver_status_filter" class="form-select" style="width: auto;">
                         <option value="all">All Approver Status</option>
                         <option value="pending">Pending</option>

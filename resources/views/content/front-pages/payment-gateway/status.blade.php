@@ -362,11 +362,11 @@
                     @endif
                 </div>
 
-                <div class="text-center mt-4">
+                {{-- <div class="text-center mt-4">
                     <a href="{{ route('payment.gateway') }}" class="btn btn-outline-secondary">
                         <i class="ti ti-arrow-left me-2"></i>Make Another Payment
                     </a>
-                </div>
+                </div> --}}
             </div>
         </div>
     </section>

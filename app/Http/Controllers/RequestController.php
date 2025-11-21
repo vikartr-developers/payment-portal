@@ -202,16 +202,23 @@ ti-eye"></i>'
   {
     $start = microtime(true);
     $current = Auth::user();
-    // if (!$current || !$current->hasRole('Approver')) {
-    //   abort(403);
-    // }
+
     // If current user is an Approver, they should see requests assigned to themselves
-    // plus requests assigned to any users they created (subordinates)
+    // plus requests assigned to any SubApprovers they created
     if ($current && $current->hasRole('Approver')) {
-      $createdIds = User::where('created_by', $current->id)->pluck('id')->toArray();
-      $allowed = array_merge([$current->id], $createdIds);
-      $requestsQuery = Request::whereIn('assign_to', $allowed);
+      // $createdIds = User::where('created_by', $current->id)->pluck('id')->toArray();
+      // $allowed = array_merge([$current->id], $createdIds);
+      $requestsQuery = Request::where('assign_to', $current->id);
+    }
+    // If current user is a SubApprover, show requests assigned to their parent Approver (created_by)
+    // They can see the parent's data but can only edit their own records
+    elseif ($current && $current->hasRole('SubApprover')) {
+      // Get the parent approver who created this SubApprover
+      $parentApproverId = $current->created_by;
+      // Fallback: only show requests assigned to current SubApprover
+      $requestsQuery = Request::where('assign_to', $parentApproverId);
     } else {
+      // Default: only show requests assigned to current user
       $requestsQuery = Request::where('assign_to', $current->id);
     }
     // dd($requestsQuery->get());
@@ -271,23 +278,45 @@ ti-eye"></i>'
           default => e($req->status ?? '-')
         };
       })
-      ->addColumn('action', function ($req) {
+      ->addColumn('action', function ($req) use ($current) {
         $encryptedId = Crypt::encrypt($req->id);
         $actions = '';
 
-        // Edit button that opens modal
-        $actions .= '<button class="btn btn-sm btn-warning me-1 assigned-edit-request" data-id="' . $encryptedId . '" title="Edit">'
-          . '<i class="ti ti-edit"></i>'
-          . '</button>';
+        // Approvers can edit all records, SubApprovers can only edit their own
+        $canEdit = false;
+        if ($current->hasRole('Approver')) {
+          // Approvers can edit all records in their view
+          $canEdit = true;
+        } elseif ($current->hasRole('SubApprover')) {
+          // SubApprovers can only edit if they are assigned to the bank account used in this request
+          if ($req->bank_id) {
+            $bankAccount = BankManagement::find($req->bank_id);
+            if ($bankAccount) {
+              // Check if current SubApprover is assigned to this bank account
+              $isAssignedToBank = $bankAccount->subApprovers()->where('user_id', $current->id)->exists();
+              $canEdit = $isAssignedToBank;
+            }
+          }
+        }
 
-        // Accept/Reject buttons for pending requests
-        if ($req->status === 'pending') {
-          $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Approve">'
-            . '<i class="ti ti-check"></i>'
+        if ($canEdit) {
+          // Edit button that opens modal
+          $actions .= '<button class="btn btn-sm btn-warning me-1 assigned-edit-request" data-id="' . $encryptedId . '" title="Edit">'
+            . '<i class="ti ti-edit"></i>'
             . '</button>';
-          $actions .= '<button class="btn btn-sm btn-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">'
-            . '<i class="ti ti-x"></i>'
-            . '</button>';
+
+          // Accept/Reject buttons for pending requests
+          if ($req->status === 'pending') {
+            $actions .= '<button class="btn btn-sm btn-success assigned-accept-request me-1" data-id="' . $encryptedId . '" title="Approve">'
+              . '<i class="ti ti-check"></i>'
+              . '</button>';
+            $actions .= '<button class="btn btn-sm btn-danger assigned-reject-request" data-id="' . $encryptedId . '" title="Reject">'
+              . '<i class="ti ti-x"></i>'
+              . '</button>';
+          }
+        } else {
+          // Show view-only indicator for requests user cannot edit
+          $actions = '<span class="badge bg-label-secondary"><i class="ti ti-eye me-1"></i>View Only</span>';
         }
 
         return $actions;
@@ -311,6 +340,20 @@ ti-eye"></i>'
       $createdIds = User::where('created_by', $current->id)->pluck('id')->toArray();
       $allowed = array_merge([$current->id], $createdIds);
       $requestsQuery = Request::whereIn('assign_to', $allowed);
+    }
+    // If current user is a SubApprover, show requests assigned to their parent Approver (created_by)
+    // They can see the parent's data but can only edit their own records
+    elseif ($current && $current->hasRole('SubApprover')) {
+      // Get the parent approver who created this SubApprover
+      $parentApproverId = $current->created_by;
+
+      if ($parentApproverId) {
+        // Show requests assigned to the parent Approver only
+        $requestsQuery = Request::where('assign_to', $parentApproverId);
+      } else {
+        // Fallback: only show requests assigned to current SubApprover
+        $requestsQuery = Request::where('assign_to', $current->id);
+      }
     } else {
       $requestsQuery = Request::where('assign_to', $current->id);
     }

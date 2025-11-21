@@ -70,9 +70,14 @@ class BankManagementController extends Controller
         })
         ->addColumn('assign_sub_approver', function ($row) {
           $count = $row->subApprovers()->count();
-          return "<button class='btn btn-sm btn-info assign-btn' data-id='{$row->id}' data-name='{$row->name}'>
-                    <i class='ti ti-users me-1'></i>Assign ({$count})
+          $assign = '';
+          $assign .= "<button class='btn btn-sm btn-primary assign-btn' data-id='{$row->id}' data-name='{$row->name}'>
+                  Assign ({$count})
                   </button>";
+          $assign .= "<button class='btn btn-primary btn assign-view' data-id='{$row->id}' data-name='{$row->name}'>
+                  View ({$count})
+                  </button>";
+          return $assign;
         })
         ->addColumn('payment_link', function ($row) {
           // Only show payment link for Approver and Admin
@@ -361,6 +366,20 @@ class BankManagementController extends Controller
   {
     $account = BankManagement::findOrFail($id);
     $subApprovers = $account->subApprovers()->pluck('users.id')->toArray();
+
+    return response()->json([
+      'success' => true,
+      'sub_approvers' => $subApprovers
+    ]);
+  }
+
+  /**
+   * Get sub approvers details for a bank account
+   */
+  public function getSubApproversDetails($id)
+  {
+    $account = BankManagement::findOrFail($id);
+    $subApprovers = $account->subApprovers()->select('users.id', 'users.name', 'users.email')->get();
 
     return response()->json([
       'success' => true,
