@@ -190,13 +190,13 @@ class UsersController extends Controller
       }
 
       if (!empty($user)) {
-        return redirect()->route("app-users-list")->with('success', 'User Added Successfully');
+        return redirect()->route("app-site-users-list")->with('success', 'User Added Successfully');
       } else {
         return redirect()->back()->with('error', 'Error while Adding User');
       }
     } catch (\Exception $error) {
       dd($error->getMessage());
-      return redirect()->route("app-users-list")->with('error', 'Error while adding User');
+      return redirect()->route('app-site-users-list')->with('error', 'Error while adding User');
     }
   }
 

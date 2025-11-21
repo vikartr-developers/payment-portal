@@ -41,23 +41,31 @@
             <audio id="notif-sound" src="{{ asset('assets/media/notify.mp3') }}" preload="auto"></audio>
             <style>
                 /* table.dataTable,
-                                                                                                                                                                                                                                                                table.dataTable th,
-                                                                                                                                                                                                                                                                table.dataTable td,
-                                                                                                                                                                                                                                                                .dataTables_wrapper {
-                                                                                                                                                                                                                                                                    font-size: 12px !important;
-                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                table.dataTable th,
+                                                                                                                                                                                                                                                                                                                table.dataTable td,
+                                                                                                                                                                                                                                                                                                                .dataTables_wrapper {
+                                                                                                                                                                                                                                                                                                                    font-size: 12px !important;
+                                                                                                                                                                                                                                                                                                                }
 
-                                                                                                                                                                                                                                                                .table> :not(caption)>*>* {
-                                                                                                                                                                                                                                                                    padding: 0.3rem 0.5rem;
-                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                .table> :not(caption)>*>* {
+                                                                                                                                                                                                                                                                                                                    padding: 0.3rem 0.5rem;
+                                                                                                                                                                                                                                                                                                                }
 
-                                                                                                                                                                                                                                                                table.table.dataTable,
-                                                                                                                                                                                                                                                                table.table td,
-                                                                                                                                                                                                                                                                table.table th {
-                                                                                                                                                                                                                                                                    font-size: 12px !important;
-                                                                                                                                                                                                                                                                } */
+                                                                                                                                                                                                                                                                                                                table.table.dataTable,
+                                                                                                                                                                                                                                                                                                                table.table td,
+                                                                                                                                                                                                                                                                                                                table.table th {
+                                                                                                                                                                                                                                                                                                                    font-size: 12px !important;
+                                                                                                                                                                                                                                                                                                                } */
             </style>
             <style>
+                @import url('https://fonts.googleapis.com/css2?family=Sen:wght@400..800&display=swap');
+            </style>
+            <style>
+                * {
+                    font-family: "Sen", sans-serif;
+
+                }
+
                 /* Rounded corners and card effect for the table */
                 .table {
                     max-width: 100% !important;
@@ -75,7 +83,7 @@
                     /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
                     color: #000 !important;
                     font-size: 15px !important;
-                    letter-spacing: 0px;
+                    /* letter-spacing: 0px; */
                     font-weight: 600;
                     border: none;
                 }
@@ -102,11 +110,16 @@
                     transition: background 0.2s, box-shadow 0.2s;
                 }
 
+                .table td {
+                    /* letter-spacing: 1px; */
+                    font-weight: 400;
+                }
+
                 /* Cell padding and font */
                 .table th,
                 .table td {
                     padding: 0.85rem 0.75rem;
-                    font-size: 15px;
+                    font-size: 0.875rem;
                     /* font-size: 1rem; */
                     vertical-align: middle !important;
                 }

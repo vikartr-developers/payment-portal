@@ -256,11 +256,10 @@ ti-eye"></i>'
         $user = User::find($userId);
         if (!$user)
           return '-';
-        if (!empty($user->name))
-          return $user->name;
+
         $first = $user->first_name ?? '';
         $last = $user->last_name ?? '';
-        return trim($first . ' ' . $last) ?: '-';
+        return trim($first) ?: '-';
       })
       ->addColumn('image', function ($req) {
         if (!$req->image)
@@ -272,9 +271,10 @@ ti-eye"></i>'
       })
       ->editColumn('status', function ($req) {
         return match ($req->status) {
-          'pending' => '<span class="badge bg-label-warning">Pending</span>',
-          'accepted' => '<span class="badge bg-label-success">Approved</span>',
-          'rejected' => '<span class="badge bg-label-danger">Rejected</span>',
+          'pending' => '<span class="badge bg-label-warning" style="font-weight:100">Pending</span>',
+          'progress' => '<span class="badge bg-label-warning" style="font-weight:100">Progress</span>',
+          'accepted' => '<span class="badge bg-label-success" style="font-weight:100">Approved</span>',
+          'rejected' => '<span class="badge bg-label-danger" style="font-weight:100">Rejected</span>',
           default => e($req->status ?? '-')
         };
       })

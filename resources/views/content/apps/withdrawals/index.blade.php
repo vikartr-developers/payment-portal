@@ -91,7 +91,7 @@
         }
 
         .summary-label {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 500;
             color: #6c757d;
             margin: 0;
@@ -123,7 +123,7 @@
                             <i class="ti ti-currency-rupee"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="summary-label">Total Payout</p>
+                            <p class="summary-label h3">Total Payout</p>
                             <h3 class="summary-value text-success" id="total_payout">₹0.00</h3>
                         </div>
                     </div>
@@ -136,16 +136,28 @@
                             <i class="ti ti-wallet"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="summary-label">Total Approver Earning</p>
+                            <p class="summary-label h3">Total Approver Earning</p>
                             <h3 class="summary-value text-primary" id="total_approver_earning">₹0.00</h3>
                         </div>
                     </div>
                 </div>
             </div>
+            <div class="col-md-3 mb-3">
+
+                <div class="d-flex align-items-center gap-2">
+                    <input type="text" class="form-control d-none" id="payoutLinkInput" readonly
+                        value="{{ route('payout.request.user', ['user_id' => auth()->id()]) }}"
+                        style="min-width: 0px; font-family: monospace; font-size: 0.85rem;">
+                    <button type="button" class="btn btn-dark" onclick="copyPayoutLink()" id="copyLinkBtn">
+                        <i class="ti ti-copy me-1" id="copyLinkIcon"></i>
+                        <span id="copyLinkText">Copy</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Copy Payout Link Section -->
-        <div class="card mb-4">
+        {{-- <div class="card mb-4">
             <div class="card-body">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="flex-grow-1 me-3">
@@ -166,7 +178,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <div class="card">
             <div class="d-flex justify-content-between align-items-center ps-5 pt-5 pe-5">
@@ -241,7 +253,7 @@
         <!-- Screenshot Modal -->
         <div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel"
             aria-hidden="true">
-            <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-dialog modal-md modal-dialog-centered">
                 <div class="modal-content bg-transparent">
                     <div class="modal-body text-center p-0">
                         <img id="screenshot_modal_img" src="" alt="Screenshot" class=""
@@ -253,11 +265,11 @@
 
         <!-- Edit Withdrawal Modal -->
         <div class="modal fade" id="editWithdrawalModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-md">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">
-                            <i class="ti ti-edit me-2"></i>Edit Withdrawal Request
+                            <i class="ti ti-edit me-2"></i>Edit Payout Request
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
@@ -267,17 +279,17 @@
                         <!-- Request Info -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Transaction ID</label>
+                                <label class="form-label fw-bold">Request ID</label>
                                 <input type="text" class="form-control" id="edit_trans_id" readonly>
                             </div>
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label class="form-label fw-bold">Created Date</label>
                                 <input type="text" class="form-control" id="edit_created_at" readonly>
-                            </div>
-                        </div>
+                            </div> --}}
+                            {{-- </div> --}}
 
-                        <!-- Account Details -->
-                        <div class="row mb-3">
+                            <!-- Account Details -->
+                            {{-- <div class="row mb-3"> --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Account Holder Name</label>
                                 <input type="text" class="form-control" id="edit_account_holder_name" readonly>
@@ -286,84 +298,86 @@
                                 <label class="form-label fw-bold">Account Number</label>
                                 <input type="text" class="form-control" id="edit_account_number" readonly>
                             </div>
-                        </div>
+                            {{-- </div> --}}
 
-                        <div class="row mb-3">
+                            {{-- <div class="row mb-3"> --}}
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Branch Name</label>
+                                <label class="form-label fw-bold">Bank Name</label>
                                 <input type="text" class="form-control" id="edit_branch_name" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">IFSC Code</label>
                                 <input type="text" class="form-control" id="edit_ifsc_code" readonly>
                             </div>
-                        </div>
+                            {{-- </div> --}}
 
-                        <div class="row mb-3">
+                            {{-- <div class="row mb-3"> --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Amount</label>
                                 <input type="text" class="form-control" id="edit_amount" readonly>
                             </div>
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label class="form-label fw-bold">Account Status</label>
                                 <select class="form-select" id="edit_status">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
+                            </div> --}}
+                            {{-- </div> --}}
+
+                            <!-- Transaction ID -->
+                            <div class="mb-3">
+                                <label for="edit_transaction_id" class="form-label fw-bold">Transaction ID</label>
+                                <input type="text" class="form-control" id="edit_transaction_id"
+                                    placeholder="Enter transaction ID">
+                                <small class="form-text text-muted">Enter the transaction reference ID</small>
                             </div>
-                        </div>
 
-                        <!-- Transaction ID -->
-                        <div class="mb-3">
-                            <label for="edit_transaction_id" class="form-label fw-bold">Transaction ID</label>
-                            <input type="text" class="form-control" id="edit_transaction_id"
-                                placeholder="Enter transaction ID">
-                            <small class="form-text text-muted">Enter the transaction reference ID</small>
-                        </div>
-
-                        <!-- Screenshot Section -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Payment Screenshot</label>
-                            <div id="current_screenshot_section" style="display: none;">
-                                <div class="border rounded p-3 mb-2 text-center">
-                                    <img id="current_screenshot_img" src="" alt="Current Screenshot"
-                                        style="max-width: 100%; max-height: 300px; border-radius: 8px;">
-                                    <div class="mt-2">
-                                        <a id="current_screenshot_link" href="" target="_blank"
-                                            class="btn btn-sm btn-info me-2">
-                                            <i class="ti ti-eye me-1"></i>View Full Size
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-warning" id="change_screenshot_btn">
-                                            <i class="ti ti-refresh me-1"></i>Change Screenshot
-                                        </button>
+                            <!-- Screenshot Section -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Payment Screenshot</label>
+                                <div id="current_screenshot_section" style="display: none;">
+                                    <div class="border rounded p-3 mb-2 text-center">
+                                        <img id="current_screenshot_img" src="" alt="Current Screenshot"
+                                            style="max-width: 100%; max-height: 300px; border-radius: 8px;">
+                                        <div class="mt-2">
+                                            <a id="current_screenshot_link" href="" target="_blank"
+                                                class="btn btn-sm btn-info me-2">
+                                                <i class="ti ti-eye me-1"></i>View Full Size
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-warning"
+                                                id="change_screenshot_btn">
+                                                <i class="ti ti-refresh me-1"></i>Change Screenshot
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="upload_screenshot_section">
+                                    <input type="file" class="form-control" id="edit_screenshot_file"
+                                        accept="image/*">
+                                    <small class="text-muted">Max size: 2MB (JPG, PNG, JPEG)</small>
+                                    <div id="edit_screenshot_preview" class="text-center mt-2" style="display: none;">
+                                        <img src="" alt="Preview" id="edit_preview_img"
+                                            style="max-width: 100%; max-height: 250px; border-radius: 8px;">
                                     </div>
                                 </div>
                             </div>
-                            <div id="upload_screenshot_section">
-                                <input type="file" class="form-control" id="edit_screenshot_file" accept="image/*">
-                                <small class="text-muted">Max size: 2MB (JPG, PNG, JPEG)</small>
-                                <div id="edit_screenshot_preview" class="text-center mt-2" style="display: none;">
-                                    <img src="" alt="Preview" id="edit_preview_img"
-                                        style="max-width: 100%; max-height: 250px; border-radius: 8px;">
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 
-                        <button type="button" class="btn btn-danger" id="rejectBtn">
-                            <i class="ti ti-x me-1"></i>Reject
-                        </button>
-                        <button type="button" class="btn btn-warning" id="pendingBtn">
-                            <i class="ti ti-clock me-1"></i>Pending
-                        </button>
-                        <button type="button" class="btn btn-success" id="approveBtn">
-                            <i class="ti ti-check me-1"></i>Approve
-                        </button>
+                            {{-- <button type="button" class="btn btn-danger" id="rejectBtn">
+                                <i class="ti ti-x me-1"></i>Reject
+                            </button>
+                            <button type="button" class="btn btn-warning" id="pendingBtn">
+                                <i class="ti ti-clock me-1"></i>Pending
+                            </button> --}}
+                            <button type="button" class="btn btn-success" id="approveBtn">
+                                <i class="ti ti-check me-1"></i>Approve
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
     </section>
 @endsection

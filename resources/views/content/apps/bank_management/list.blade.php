@@ -71,28 +71,28 @@
         }
 
         /* .select2-container--bootstrap-5 .select2-selection {
-                                    border-radius: 8px;
-                                    border: 1px solid #d9dee3;
-                                    min-height: 45px;
-                                } */
+                                        border-radius: 8px;
+                                        border: 1px solid #d9dee3;
+                                        min-height: 45px;
+                                    } */
 
         /* .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-                                    background-color: #667eea;
-                                    border: none;
-                                    color: white;
-                                    padding: 5px 10px;
-                                    border-radius: 6px;
-                                    margin: 3px;
-                                } */
+                                        background-color: #667eea;
+                                        border: none;
+                                        color: white;
+                                        padding: 5px 10px;
+                                        border-radius: 6px;
+                                        margin: 3px;
+                                    } */
 
         /* .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
-                                    color: white;
-                                    margin-right: 5px;
-                                } */
+                                        color: white;
+                                        margin-right: 5px;
+                                    } */
 
         /* .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
-                                    color: #ffebee;
-                                } */
+                                        color: #ffebee;
+                                    } */
 
         .alert-info.bg-label-info {
             background-color: #e7f3ff !important;
@@ -345,7 +345,7 @@
                 var container = $('#subApproversContainer');
                 container.html(
                     '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>'
-                    );
+                );
 
                 $.ajax({
                     url: '{{ route('bank-management.get-sub-approvers-details', ':id') }}'.replace(':id',
@@ -389,7 +389,7 @@
                         } else {
                             container.html(
                                 '<div class="alert alert-danger">Failed to load sub approvers</div>'
-                                );
+                            );
                         }
                     },
                     error: function() {
@@ -461,7 +461,7 @@
         <div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content border-0 shadow-lg">
-                    <div class="modal-header bg-gradient-primary text-white border-0">
+                    <div class="modal-header  text-white border-0">
                         <div>
                             <h5 class="modal-title mb-1" id="assignModalLabel">
                                 <i class="ti ti-users-group me-2"></i>Manage Sub Approvers

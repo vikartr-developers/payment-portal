@@ -366,7 +366,7 @@ class PaymentGatewayController extends Controller
       ->where('process_status', 'completed')
       ->first();
     if ($existingRequest) {
-      return redirect()->route('payment.gateway')->with('error', 'This UTR number has already been used. Please check your transaction or contact support.');
+      return redirect()->back()->with('error', 'This UTR number has already been used. Please check your transaction or contact support.');
     }
 
     // requestRecord is already loaded above
@@ -395,49 +395,55 @@ class PaymentGatewayController extends Controller
     // Get selected account details and extract account_upi based on payment method
     $accountUpi = null;
     $assignTo = null;
-    $bankId = null;
-    $selectedAccountId = $request->input('selected_account_id');
+    // $bankId = null;
 
-    if ($selectedAccountId) {
-      $selectedAccount = BankManagement::find($selectedAccountId);
-      if ($selectedAccount) {
-        // Store bank_id
-        $bankId = $selectedAccount->id;
+    $selectedAccount = BankManagement::find($requestRecord->bank_id);
+    $accountUpi = $request->payment_method === 'upi'
+      ? $selectedAccount->upi_id
+      : $selectedAccount->account_number;
 
-        // Use payment_method to determine which identifier to use
-        $accountUpi = $request->payment_method === 'upi'
-          ? $selectedAccount->upi_id
-          : $selectedAccount->account_number;
+    // $selectedAccountId = $request->input('selected_account_id');
 
-        // Try to assign to a SubApprover associated with this bank account
-        $subApprovers = $selectedAccount->subApprovers()->get();
+    // if ($selectedAccountId) {
+    //   $selectedAccount = BankManagement::find($selectedAccountId);
+    //   if ($selectedAccount) {
+    //     // Store bank_id
+    //     $bankId = $selectedAccount->id;
 
-        if ($subApprovers->isNotEmpty()) {
-          // Randomly assign to one of the associated SubApprovers
-          $randomIndex = random_int(0, $subApprovers->count() - 1);
-          $assignTo = $subApprovers[$randomIndex]->id;
-        } else {
-          // If no SubApprovers assigned, assign to the Approver who created this account
-          $assignTo = $selectedAccount->created_by;
-        }
-      }
-    }
+    //     // Use payment_method to determine which identifier to use
+    //     $accountUpi = $request->payment_method === 'upi'
+    //       ? $selectedAccount->upi_id
+    //       : $selectedAccount->account_number;
 
-    // If no account selected or no owner found, assign to a random SubApprover (if any)
-    if (!$assignTo) {
-      try {
-        $approverCount = User::role('SubApprover')->count();
-        if ($approverCount > 0) {
-          $offset = random_int(0, max(0, $approverCount - 1));
-          $approver = User::role('SubApprover')->skip($offset)->first();
-          if ($approver)
-            $assignTo = $approver->id;
-        }
-      } catch (\Exception $e) {
-        // If role query fails, silently continue without assign
-        $assignTo = null;
-      }
-    }
+    //     // Try to assign to a SubApprover associated with this bank account
+    //     $subApprovers = $selectedAccount->subApprovers()->get();
+
+    //     if ($subApprovers->isNotEmpty()) {
+    //       // Randomly assign to one of the associated SubApprovers
+    //       $randomIndex = random_int(0, $subApprovers->count() - 1);
+    //       $assignTo = $subApprovers[$randomIndex]->id;
+    //     } else {
+    //       // If no SubApprovers assigned, assign to the Approver who created this account
+    //       $assignTo = $selectedAccount->created_by;
+    //     }
+    //   }
+    // }
+
+    // // If no account selected or no owner found, assign to a random SubApprover (if any)
+    // if (!$assignTo) {
+    //   try {
+    //     $approverCount = User::role('SubApprover')->count();
+    //     if ($approverCount > 0) {
+    //       $offset = random_int(0, max(0, $approverCount - 1));
+    //       $approver = User::role('SubApprover')->skip($offset)->first();
+    //       if ($approver)
+    //         $assignTo = $approver->id;
+    //     }
+    //   } catch (\Exception $e) {
+    //     // If role query fails, silently continue without assign
+    //     $assignTo = null;
+    //   }
+    // }
 
     // Update existing request
     $requestRecord->update([
@@ -447,8 +453,8 @@ class PaymentGatewayController extends Controller
       'image' => $screenshotPath,
       'status' => 'pending',
       'process_status' => 'completed',
-      'assign_to' => $assignTo,
-      'bank_id' => $bankId,
+      // 'assign_to' => $assignTo,
+      // 'bank_id' => $bankId,
     ]);
 
     // Clear session data
