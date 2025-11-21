@@ -51,6 +51,7 @@
                         <div class="alert alert-info">
                             <strong>Amount to Pay: ₹{{ number_format($amount, 2) }}</strong>
                         </div>
+                        <p class="text-muted small">Transaction ID: <strong>{{ $display_transaction_id }}</strong></p>
                     </div>
 
                     <div class="crypto-details">
@@ -78,6 +79,7 @@
                         class="mt-4">
                         @csrf
                         <input type="hidden" name="payment_method" value="crypto">
+                        <input type="hidden" name="transaction_id" value="{{ $transaction_id }}">
 
                         <h5 class="mb-3">Upload Payment Proof</h5>
 
@@ -105,9 +107,11 @@
                         </div>
 
                         <div class="d-flex gap-3 mt-4">
-                            <a href="{{ route('payment.gateway') }}" class="btn btn-outline-secondary btn-lg flex-fill">
-                                <i class="ti ti-arrow-left me-2"></i>Cancel
-                            </a>
+                            <button type="button"
+                                onclick="window.location.href='{{ route('payment.select-method-view', ['transaction_id' => $transaction_id]) }}'"
+                                class="btn btn-outline-secondary btn-lg flex-fill">
+                                <i class="ti ti-arrow-left me-2"></i>Back
+                            </button>
                             <button type="submit" class="btn btn-primary btn-lg flex-fill">
                                 Submit Payment<i class="ti ti-check ms-2"></i>
                             </button>

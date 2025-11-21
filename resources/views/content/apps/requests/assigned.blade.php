@@ -7,6 +7,7 @@
 
 @section('vendor-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -243,7 +244,20 @@
                             orderable: false,
                             searchable: false,
                             render: function(data, type, full) {
-                                return data || '<span class="text-muted">-</span>';
+                                if (!data || data === '<span class="text-muted">-</span>') {
+                                    return '<span class="text-muted">-</span>';
+                                }
+                                // Extract image URL from the button HTML
+                                var imageUrl = '';
+                                var match = data.match(/data-image="([^"]+)"/);
+                                if (match && match[1]) {
+                                    imageUrl = match[1];
+                                    return '<img src="' + imageUrl +
+                                        '" alt="Screenshot" class="screenshot-thumbnail view-screenshot-btn" data-image="' +
+                                        imageUrl +
+                                        '" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.2s;" onmouseover="this.style.transform=\'scale(1.1)\'; this.style.borderColor=\'#007bff\';" onmouseout="this.style.transform=\'scale(1)\'; this.style.borderColor=\'#e0e0e0\';">';
+                                }
+                                return data;
                             }
                         },
                         {
@@ -370,7 +384,17 @@
             // Accept assigned request
             $(document).on('click', '.assigned-accept-request', function() {
                 const requestId = $(this).data('id');
-                if (confirm('Are you sure you want to accept this payment request?')) {
+                Swal.fire({
+                    title: 'Accept Payment?',
+                    text: 'Do you want to accept this payment request?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, accept it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
                     $.ajax({
                         url: '/app/payment/requests/accept-payment/' + requestId,
                         type: 'POST',
@@ -379,20 +403,31 @@
                         },
                         success: function(response) {
                             dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message || 'Deposit request accepted');
+                            Swal.fire('Accepted!', response.message ||
+                                'Deposit request accepted', 'success');
                         },
                         error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error accepting payment request');
+                            Swal.fire('Error!', xhr.responseJSON?.message ||
+                                'Error accepting payment request', 'error');
                         }
                     });
-                }
+                });
             });
 
             // Reject assigned request
             $(document).on('click', '.assigned-reject-request', function() {
                 const requestId = $(this).data('id');
-                if (confirm('Are you sure you want to reject this payment request?')) {
+                Swal.fire({
+                    title: 'Reject Payment?',
+                    text: 'Do you want to reject this payment request?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, reject it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
                     $.ajax({
                         url: '/app/payment/requests/reject/' + requestId,
                         type: 'POST',
@@ -401,14 +436,15 @@
                         },
                         success: function(response) {
                             dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message || 'Deposit request rejected');
+                            Swal.fire('Rejected!', response.message ||
+                                'Deposit request rejected', 'success');
                         },
                         error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error rejecting payment request');
+                            Swal.fire('Error!', xhr.responseJSON?.message ||
+                                'Error rejecting payment request', 'error');
                         }
                     });
-                }
+                });
             });
 
             // Edit/Update Transaction - Open Modal
@@ -452,7 +488,8 @@
                         $('#updateTransactionModal').modal('show');
                     },
                     error: function(xhr) {
-                        toastr.error(xhr.responseJSON?.message || 'Error loading request data');
+                        Swal.fire('Error!', xhr.responseJSON?.message ||
+                            'Error loading request data', 'error');
                     }
                 });
             });
@@ -464,19 +501,30 @@
                 const paymentAmount = $('#update_payment_amount').val();
 
                 if (!utr) {
-                    toastr.error('Please enter UTR number');
+                    Swal.fire('Required!', 'Please enter UTR number', 'warning');
                     return;
                 }
 
                 if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
-                    toastr.error('Please enter valid payment amount');
+                    Swal.fire('Invalid!', 'Please enter valid payment amount', 'warning');
                     return;
                 }
 
-                if (confirm('Are you sure you want to approve this transaction?')) {
-                    const btn = $(this);
+                Swal.fire({
+                    title: 'Approve Transaction?',
+                    text: 'Do you want to approve this transaction?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, approve it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    const btn = $('#approveTransactionBtn');
                     btn.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-1"></span>Approving...');
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Approving...'
+                        );
 
                     $.ajax({
                         url: '/app/payment/requests/' + requestId + '/update-and-approve',
@@ -489,29 +537,40 @@
                         success: function(response) {
                             $('#updateTransactionModal').modal('hide');
                             dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message ||
-                                'Transaction approved successfully');
+                            Swal.fire('Approved!', response.message ||
+                                'Transaction approved successfully', 'success');
                         },
                         error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error approving transaction');
+                            Swal.fire('Error!', xhr.responseJSON?.message ||
+                                'Error approving transaction', 'error');
                         },
                         complete: function() {
                             btn.prop('disabled', false).html(
                                 '<i class="ti ti-check me-1"></i>Approve');
                         }
                     });
-                }
+                });
             });
 
             // Cancel Transaction
             $('#cancelTransactionBtn').on('click', function() {
                 const requestId = $('#update_request_id').val();
 
-                if (confirm('Are you sure you want to cancel this transaction?')) {
-                    const btn = $(this);
+                Swal.fire({
+                    title: 'Cancel Transaction?',
+                    text: 'Do you want to reject this transaction?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, reject it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    const btn = $('#cancelTransactionBtn');
                     btn.prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm me-1"></span>Cancelling...');
+                        '<span class="spinner-border spinner-border-sm me-1"></span>Cancelling...'
+                        );
 
                     $.ajax({
                         url: '/app/payment/requests/reject/' + requestId,
@@ -522,19 +581,19 @@
                         success: function(response) {
                             $('#updateTransactionModal').modal('hide');
                             dt_assigned_requests.ajax.reload();
-                            toastr.success(response.message ||
-                                'Transaction cancelled successfully');
+                            Swal.fire('Rejected!', response.message ||
+                                'Transaction cancelled successfully', 'success');
                         },
                         error: function(xhr) {
-                            toastr.error(xhr.responseJSON?.message ||
-                                'Error cancelling transaction');
+                            Swal.fire('Error!', xhr.responseJSON?.message ||
+                                'Error cancelling transaction', 'error');
                         },
                         complete: function() {
                             btn.prop('disabled', false).html(
                                 '<i class="ti ti-x me-1"></i>Cancel Transaction');
                         }
                     });
-                }
+                });
             });
 
             // View Screenshot in Modal Handler
@@ -560,14 +619,14 @@
                 if (file) {
                     // Validate file size (2MB)
                     if (file.size > 2 * 1024 * 1024) {
-                        alert('File size must be less than 2MB');
+                        Swal.fire('File Too Large!', 'File size must be less than 2MB', 'error');
                         $(this).val('');
                         return;
                     }
 
                     // Validate file type
                     if (!file.type.match('image.*')) {
-                        alert('Please upload an image file (JPG, PNG, JPEG)');
+                        Swal.fire('Invalid File!', 'Please upload an image file (JPG, PNG, JPEG)', 'error');
                         $(this).val('');
                         return;
                     }
@@ -594,6 +653,10 @@
             display: none;
         }
 
+        .badge {
+            font-size: 15px !important;
+        }
+
         /* Rounded corners and card effect for the table */
         .table {
             border-radius: 16px !important;
@@ -607,19 +670,19 @@
         .table th {
             /* background: linear-gradient(90deg, #f3e9fa 0%, #e8f9e9 100%); */
             color: #352e5a;
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 600;
             border: none;
         }
 
         /* Zebra striping for rows */
         /* .table-striped>tbody>tr:nth-of-type(odd) {
-                                                                                                                                    background-color: #f8fafc;
-                                                                                                                                }
+                                                                                                                                                                                                        background-color: #f8fafc;
+                                                                                                                                                                                                    }
 
-                                                                                                                                .table-striped>tbody>tr:nth-of-type(even) {
-                                                                                                                                    background-color: #f3f4f8;
-                                                                                                                                } */
+                                                                                                                                                                                                    .table-striped>tbody>tr:nth-of-type(even) {
+                                                                                                                                                                                                        background-color: #f3f4f8;
+                                                                                                                                                                                                    } */
 
         /* Hover effect on rows */
         .table tbody tr:hover {
@@ -631,7 +694,7 @@
         /* Cell padding and font */
         .table th,
         .table td {
-            font-size: 12px;
+            font-size: 15px;
             padding: 0.5rem 0.5rem;
             /* font-size: 0.875rem; */
             vertical-align: middle !important;
@@ -651,7 +714,7 @@
         .table td .text-danger,
         .table td .text-warning {
             font-weight: 600;
-            /* font-size: 1.06em; */
+            font-size: 14px;
         }
 
         .table td small {
@@ -789,30 +852,37 @@
             </div>
         </div>
 
-        <!-- Image Preview Modal -->
+
         <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="ti ti-photo me-2"></i>Payment Screenshot
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                <div class="modal-content bg-transparent">
                     <div class="modal-body text-center p-0">
-                        <img id="previewImage" src="" alt="Payment Screenshot" class="img-fluid"
-                            style="max-height: 50vh; width: auto;">
-                    </div>
-                    <div class="modal-footer">
-                        <a id="downloadImageBtn" href="" download class="btn btn-primary">
-                            <i class="ti ti-download me-1"></i>Download
-                        </a>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <img id="previewImage" src="" alt="Screenshot" class=""
+                            style="max-height: auto; width: 300px;">
                     </div>
                 </div>
             </div>
         </div>
+
+
+        <!-- Image Preview Modal -->
+        {{-- <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content"
+                    style="background: rgba(255, 255, 255, 0.98); border-radius: 16px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); overflow: hidden;">
+                    <div class="modal-body text-center p-0" style="position: relative;">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            style="position: absolute; top: 15px; right: 15px; z-index: 10; background: rgba(255, 255, 255, 0.9); border-radius: 50%; padding: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); opacity: 0.8; transition: all 0.2s;"
+                            onmouseover="this.style.opacity='1'; this.style.transform='scale(1.1)';"
+                            onmouseout="this.style.opacity='0.8'; this.style.transform='scale(1)';"></button>
+                        <img id="previewImage" src="" alt="Payment Screenshot"
+                            style="width: 100%; max-width: 500px; height: auto; display: block; border-radius: 16px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+                    </div>
+                </div>
+            </div>
+        </div> --}}
 
         <!-- Update Transaction Modal -->
         <div class="modal fade" id="updateTransactionModal" tabindex="-1">

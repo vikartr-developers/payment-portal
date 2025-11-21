@@ -213,12 +213,21 @@ Route::get('/front-pages/help-center-article', [HelpCenterArticle::class, 'index
 Route::get('/payment-gateway', [PaymentGatewayController::class, 'index'])->name('payment.gateway');
 Route::get('/payment-gateway/approver/{approver}/{account}', [PaymentGatewayController::class, 'approverPaymentLink'])->name('payment.gateway.approver');
 Route::post('/payment-gateway/select-method', [PaymentGatewayController::class, 'selectMethod'])->name('payment.select-method');
-Route::post('/payment-gateway/show-details', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
+Route::get('/payment-gateway/step2/{transaction_id}', [PaymentGatewayController::class, 'showSelectMethod'])->name('payment.select-method-view');
+Route::post('/payment-gateway/select-payment-type', [PaymentGatewayController::class, 'selectPaymentType'])->name('payment.select-payment-type');
+Route::get('/payment-gateway/step3/{transaction_id}/{payment_type}', [PaymentGatewayController::class, 'showPaymentDetails'])->name('payment.show-details');
 Route::post('/payment-gateway/process', [PaymentGatewayController::class, 'processPayment'])->name('payment.process');
+Route::get('/payment-status/{transaction_id}', [PaymentGatewayController::class, 'checkStatus'])->name('payment.status');
+Route::post('/payment-status/{transaction_id}/upload', [PaymentGatewayController::class, 'uploadProof'])->name('payment.upload');
+Route::get('/payment-status/{transaction_id}/check', [PaymentGatewayController::class, 'getStatus'])->name('payment.check-status');
 
 // Payout Request (Frontend - No Auth Required)
 Route::get('/payout-request', [\App\Http\Controllers\WithdrawalRequestController::class, 'createFrontend'])->name('payout.request');
 Route::post('/payout-request', [\App\Http\Controllers\WithdrawalRequestController::class, 'storeFrontend'])->name('payout.request.store');
+
+// Payout Request with User ID (Frontend - User Specific)
+Route::get('/payout-request/{user_id}', [\App\Http\Controllers\WithdrawalRequestController::class, 'createFrontendWithUser'])->name('payout.request.user');
+Route::post('/payout-request/{user_id}', [\App\Http\Controllers\WithdrawalRequestController::class, 'storeFrontendWithUser'])->name('payout.request.user.store');
 
 // apps
 Route::get('/app/email', [Email::class, 'index'])->name('app-email');

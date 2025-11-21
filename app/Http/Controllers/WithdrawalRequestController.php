@@ -16,7 +16,7 @@ class WithdrawalRequestController extends Controller
 {
   public function __construct()
   {
-    $this->middleware('auth')->except(['createFrontend', 'storeFrontend']);
+    $this->middleware('auth')->except(['createFrontend', 'createFrontendWithUser', 'storeFrontendWithUser', 'storeFrontend']);
     $permissions = [
       'withdrawal-list',
       'withdrawal-create',
@@ -107,9 +107,7 @@ class WithdrawalRequestController extends Controller
       ->addColumn('screenshot', function ($row) {
         if ($row->screenshot) {
           $imageUrl = asset($row->screenshot);
-          return '<button class="btn btn-sm btn-info view-screenshot-btn" data-image="' . $imageUrl . '" data-id="' . $row->id . '">
-                    <i class="ti ti-photo me-1"></i>View
-                  </button>';
+          return '<img src="' . $imageUrl . '" alt="Screenshot" class="screenshot-thumbnail view-screenshot-btn" data-image="' . $imageUrl . '" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid #e0e0e0; transition: all 0.2s;" onmouseover="this.style.transform=\'scale(1.1)\'; this.style.borderColor=\'#007bff\';" onmouseout="this.style.transform=\'scale(1)\'; this.style.borderColor=\'#e0e0e0\';">';
         }
         return '<button class="btn btn-sm btn-outline-primary upload-screenshot-btn" data-id="' . $row->id . '">
                   <i class="ti ti-upload me-1"></i>Upload
@@ -125,18 +123,19 @@ class WithdrawalRequestController extends Controller
           $pendingClass = $row->approver_status === 'pending' ? 'btn-warning' : 'btn-outline-warning';
           $rejectedClass = $row->approver_status === 'rejected' ? 'btn-danger' : 'btn-outline-danger';
 
-          $actions .= '<button class="btn btn-sm ' . $approvedClass . ' me-1 change-status-btn" data-id="' . $row->id . '" data-field="approver_status" data-value="approved" title="Approve">
-                        <i class="ti ti-check"></i>
-                      </button>';
-          $actions .= '<button class="btn btn-sm ' . $pendingClass . ' me-1 change-status-btn" data-id="' . $row->id . '" data-field="approver_status" data-value="pending" title="Pending">
-                        <i class="ti ti-clock"></i>
+          // $actions .= '<button class="btn btn-sm ' . $approvedClass . ' me-1 change-status-btn" data-id="' . $row->id . '" data-field="approver_status" data-value="approved" title="Approve">
+          //               <i class="ti ti-check"></i>
+          //             </button>';
+          // $actions .= '<button class="btn btn-sm ' . $pendingClass . ' me-1 change-status-btn" data-id="' . $row->id . '" data-field="approver_status" data-value="pending" title="Pending">
+          //               <i class="ti ti-clock"></i>
+          //             </button>';
+          $actions .= '<button class="btn btn-sm btn-primary edit-withdrawal-btn" data-id="' . $row->id . '" title="Edit">
+                        <i class="ti ti-edit"></i>
                       </button>';
           $actions .= '<button class="btn btn-sm ' . $rejectedClass . ' me-1 change-status-btn" data-id="' . $row->id . '" data-field="approver_status" data-value="rejected" title="Reject">
                         <i class="ti ti-x"></i>
                       </button>';
-          $actions .= '<button class="btn btn-sm btn-primary edit-withdrawal-btn" data-id="' . $row->id . '" title="Edit">
-                        <i class="ti ti-edit"></i>
-                      </button>';
+
         }
         return $actions;
       })
@@ -340,6 +339,91 @@ class WithdrawalRequestController extends Controller
   }
 
   /**
+   * Frontend payout request form with user ID (user-specific access)
+   */
+  public function createFrontendWithUser($user_id)
+  {
+    // Verify user exists
+    $user = User::find($user_id);
+    if (!$user) {
+      abort(404, 'User not found');
+    }
+
+    $pageConfigs = ['myLayout' => 'front'];
+
+    return view('frontend.payout-request', [
+      'pageConfigs' => $pageConfigs,
+      'user_id' => $user_id,
+      'user' => $user
+    ]);
+  }
+
+  /**
+   * Store frontend payout request with user ID (user-specific)
+   */
+  public function storeFrontendWithUser(Request $request, $user_id)
+  {
+    // Verify user exists
+    $user = User::find($user_id);
+    if (!$user) {
+      return back()->withErrors(['error' => 'Invalid user'])->withInput();
+    }
+
+    $validated = $request->validate([
+      'account_holder_name' => 'required|string|max:255',
+      'account_number' => 'required|string|max:64',
+      'confirm_account_number' => 'required|string|max:64|same:account_number',
+      'branch_name' => 'nullable|string|max:255',
+      'ifsc_code' => 'nullable|string|max:11',
+      'amount' => 'required|numeric|min:1',
+      'screenshot' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+    ]);
+
+    $transId = 'WD' . time() . rand(100, 999);
+
+    $data = [
+      'trans_id' => $transId,
+      'account_holder_name' => $validated['account_holder_name'],
+      'account_number' => $validated['account_number'],
+      'confirm_account_number' => $validated['confirm_account_number'],
+      'branch_name' => $validated['branch_name'] ?? null,
+      'ifsc_code' => $validated['ifsc_code'] ?? null,
+      'amount' => $validated['amount'],
+      'status' => 'active',
+      'approver_status' => 'pending',
+      'created_by' => $user_id, // Set the specific user ID
+      'screenshot' => null,
+    ];
+
+    // Handle screenshot upload
+    if ($request->hasFile('screenshot')) {
+      try {
+        $file = $request->file('screenshot');
+        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+        if (!file_exists(public_path('payout_screenshots'))) {
+          mkdir(public_path('payout_screenshots'), 0755, true);
+        }
+
+        $file->move(public_path('payout_screenshots'), $filename);
+        $data['screenshot'] = 'payout_screenshots/' . $filename;
+      } catch (\Exception $e) {
+        \Log::error('Screenshot upload failed: ' . $e->getMessage());
+        return back()->withErrors(['screenshot' => 'Failed to upload screenshot: ' . $e->getMessage()])->withInput();
+      }
+    }
+
+    try {
+      WithdrawalRequest::create($data);
+      return redirect()->route('payout.request.user', ['user_id' => $user_id])
+        ->with('success', 'Payout request submitted successfully! Your request ID is: ' . $transId);
+    } catch (\Exception $e) {
+      \Log::error('Withdrawal request creation failed: ' . $e->getMessage());
+      return back()->withErrors(['error' => 'Failed to create payout request: ' . $e->getMessage()])->withInput();
+    }
+  }
+
+  /**
    * Store frontend payout request (no auth required)
    */
   public function storeFrontend(Request $request)
@@ -471,6 +555,7 @@ class WithdrawalRequestController extends Controller
       'data' => [
         'id' => $item->id,
         'trans_id' => $item->trans_id,
+        'transaction_id' => $item->transaction_id,
         'account_holder_name' => $item->account_holder_name,
         'account_number' => $item->account_number,
         'confirm_account_number' => $item->confirm_account_number,
@@ -495,6 +580,7 @@ class WithdrawalRequestController extends Controller
     $validated = $request->validate([
       'field' => 'required|in:status,approver_status',
       'value' => 'required|string',
+      'transaction_id' => 'nullable|string|max:255',
     ]);
 
     // Validate the value based on field
@@ -508,6 +594,12 @@ class WithdrawalRequestController extends Controller
 
     try {
       $item->{$validated['field']} = $validated['value'];
+
+      // Update transaction_id if provided
+      if ($request->filled('transaction_id')) {
+        $item->transaction_id = $validated['transaction_id'];
+      }
+
       $item->updated_by = Auth::check() ? Auth::id() : null;
       $item->save();
 

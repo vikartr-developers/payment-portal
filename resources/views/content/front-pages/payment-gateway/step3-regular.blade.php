@@ -85,6 +85,103 @@
             transform: translateY(-3px);
             box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
         }
+
+        /* Timer Progress Bar */
+        .timer-progress {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .timer-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #71dd37 0%, #ffc107 50%, #ff3e1d 100%);
+            transition: width 1s linear;
+            border-radius: 10px;
+        }
+
+        .timer-progress-bar.warning {
+            background: linear-gradient(90deg, #ffc107 0%, #ff3e1d 100%);
+        }
+
+        .timer-progress-bar.danger {
+            background: #ff3e1d;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        /* Loading Animation */
+        .ocr-loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .ocr-loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #000000;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+
+            0%,
+            20% {
+                content: '';
+            }
+
+            40% {
+                content: '.';
+            }
+
+            60% {
+                content: '..';
+            }
+
+            80%,
+            100% {
+                content: '...';
+            }
+        }
     </style>
 @endsection
 
@@ -98,11 +195,33 @@
                         <div class="alert alert-info">
                             <strong>Amount to Pay: ₹{{ number_format($amount, 2) }}</strong>
                         </div>
+                        <p class="text-muted small">Transaction ID: <strong>{{ $display_transaction_id }}</strong></p>
+
+                        @if (isset($requestRecord) && $requestRecord->expires_at)
+                            @php
+                                $expiresAt = $requestRecord->expires_at;
+                            @endphp
+                            <div class="alert alert-warning mb-3" id="timerAlert">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div>
+                                        <i class="ti ti-clock me-2"></i>
+                                        <strong>Time Remaining:</strong> <span id="timer" class="fw-bold">7:00</span>
+                                    </div>
+                                    <small class="text-muted" id="timerPercentage">100%</small>
+                                </div>
+                                <div class="timer-progress">
+                                    <div class="timer-progress-bar" id="timerProgressBar" style="width: 100%"></div>
+                                </div>
+                                <input type="hidden" id="expiresAt"
+                                    value="{{ is_string($expiresAt) ? $expiresAt : $expiresAt->toIso8601String() }}">
+                            </div>
+                        @endif
                     </div>
 
                     <form action="{{ route('payment.process') }}" method="POST" enctype="multipart/form-data"
                         id="paymentForm">
                         @csrf
+                        <input type="hidden" name="transaction_id" value="{{ $transaction_id }}">
 
                         <h5 class="mb-3">Select Payment Method</h5>
 
@@ -182,10 +301,12 @@
                                             alt="PhonePe" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
                                         <img class="upi-app-logo"
                                             src="https://img.icons8.com/?size=100&id=68067&format=png&color=000000"
-                                            alt="Paytm" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
+                                            alt="Paytm" title="Copy UPI ID to clipboard"
+                                            data-upi="{{ $upiId }}">
                                         <img class="upi-app-logo"
                                             src="https://img.icons8.com/?size=100&id=5RcHTSNy4fbL&format=png&color=000000"
-                                            alt="BHIM" title="Copy UPI ID to clipboard" data-upi="{{ $upiId }}">
+                                            alt="BHIM" title="Copy UPI ID to clipboard"
+                                            data-upi="{{ $upiId }}">
                                     </div>
                                     <div class="upi-details mt-3">
                                         @if ($selectedAccount->name)
@@ -445,6 +566,14 @@
                                     class="form-control @error('screenshot') is-invalid @enderror" accept="image/*"
                                     required>
                                 <small class="text-muted">Upload screenshot of successful payment (auto-detect UTR)</small>
+
+                                <!-- Loading Animation -->
+                                <div class="ocr-loading" id="ocrLoading">
+                                    <div class="spinner"></div>
+                                    <h6 class="mb-2">Processing Screenshot<span class="loading-dots"></span></h6>
+                                    <p class="text-muted mb-0 small">Detecting UTR from image, please wait</p>
+                                </div>
+
                                 <div id="screenshotFeedback" class="form-text text-muted mt-1"></div>
                                 @error('screenshot')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -465,9 +594,11 @@
                         </div>
 
                         <div class="d-flex gap-3 mt-4">
-                            <a href="{{ route('payment.gateway') }}" class="btn btn-outline-secondary btn-lg flex-fill">
-                                <i class="ti ti-arrow-left me-2"></i>Cancel
-                            </a>
+                            <button type="button"
+                                onclick="window.location.href='{{ route('payment.select-method-view', ['transaction_id' => $transaction_id]) }}'"
+                                class="btn btn-outline-secondary btn-lg flex-fill">
+                                <i class="ti ti-arrow-left me-2"></i>Back
+                            </button>
                             <button type="submit" class="btn btn-primary btn-lg flex-fill" id="submitBtn" disabled>
                                 Submit Payment<i class="ti ti-check ms-2"></i>
                             </button>
@@ -488,6 +619,50 @@
 @section('page-script')
     <script>
         $(function() {
+            // Timer countdown with progress bar
+            const expiresAtEl = $('#expiresAt');
+            if (expiresAtEl.length > 0) {
+                const expiresAt = new Date(expiresAtEl.val());
+                const totalTime = 7 * 60 * 1000; // 7 minutes in milliseconds
+
+                function updateTimer() {
+                    const now = new Date();
+                    const diff = expiresAt - now;
+
+                    if (diff <= 0) {
+                        $('#timer').text('EXPIRED').addClass('text-danger');
+                        $('#timerAlert').removeClass('alert-warning').addClass('alert-danger');
+                        $('#timerProgressBar').css('width', '0%').addClass('danger');
+                        $('#timerPercentage').text('0%');
+                        $('#submitBtn').prop('disabled', true);
+                        alert('Your session has expired. Please start again.');
+                        window.location.href = '{{ route('payment.gateway') }}';
+                        return;
+                    }
+
+                    const minutes = Math.floor(diff / 60000);
+                    const seconds = Math.floor((diff % 60000) / 1000);
+                    $('#timer').text(minutes + ':' + (seconds < 10 ? '0' : '') + seconds);
+
+                    // Update progress bar
+                    const percentage = (diff / totalTime) * 100;
+                    $('#timerProgressBar').css('width', percentage + '%');
+                    $('#timerPercentage').text(Math.round(percentage) + '%');
+
+                    // Warning when less than 2 minutes
+                    if (diff < 120000) {
+                        $('#timerAlert').removeClass('alert-warning').addClass('alert-danger');
+                        $('#timer').addClass('text-danger');
+                        $('#timerProgressBar').addClass('danger');
+                    } else if (diff < 240000) { // Less than 4 minutes
+                        $('#timerProgressBar').addClass('warning');
+                    }
+                }
+
+                updateTimer();
+                const timerInterval = setInterval(updateTimer, 1000);
+            }
+
             // Check if we have a pre-selected account
             var isPreSelectedAccount = $('input[name="selected_account_id"][type="hidden"]').length > 0;
 
@@ -724,35 +899,73 @@
 
                 // Run OCR to extract UTR (12-digit number)
                 feedback.text('Running OCR to detect UTR — this may take a few seconds...');
-                const text = await ocrImage(file);
-                // Look for 12-digit UTR pattern
-                const match = String(text).match(/\b(\d{12})\b/);
-                if (match) {
-                    const utr = match[1];
-                    $('#utr').val(utr);
-                    feedback.removeClass('text-muted').addClass('text-success').text(
-                        'UTR detected and filled automatically. Please verify and submit.');
-                    $('#submitBtn').prop('disabled', false);
-                } else {
-                    feedback.removeClass('text-muted').addClass('text-danger').text(
-                        'No UTR found automatically — please enter it manually in the UTR field.');
-                    // Allow manual entry: enable submit only once UTR input has 12 digits
-                    $('#utr').focus();
-                    // Enable submit only when UTR is valid
-                    $('#utr').off('input.utrCheck').on('input.utrCheck', function() {
-                        const val = $(this).val().replace(/[^0-9]/g, '');
-                        $(this).val(val);
-                        if (/^\d{12}$/.test(val)) {
-                            $('#submitBtn').prop('disabled', false);
-                            feedback.removeClass('text-danger').addClass('text-success').text(
-                                'UTR looks valid. You may submit.');
-                        } else {
-                            $('#submitBtn').prop('disabled', true);
-                            feedback.removeClass('text-success').addClass('text-danger').text(
-                                'Please enter a 12-digit UTR to enable submission.');
+                $('#ocrLoading').addClass('active');
+
+                try {
+                    const {
+                        data: {
+                            text
                         }
+                    } = await Tesseract.recognize(file, 'eng', {
+                        logger: m => console.log('Tesseract', m),
+                        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz '
                     });
+
+                    $('#ocrLoading').removeClass('active');
+
+                    // Look for 12-digit UTR pattern (more flexible matching)
+                    const patterns = [
+                        /\b(\d{12})\b/, // Exact 12 digits
+                        /UTR[:\s]*(\d{12})/i, // UTR: 123456789012
+                        /Transaction[:\s]*(\d{12})/i, // Transaction: 123456789012
+                        /Reference[:\s]*(\d{12})/i, // Reference: 123456789012
+                        /ID[:\s]*(\d{12})/i // ID: 123456789012
+                    ];
+
+                    let utr = null;
+                    for (const pattern of patterns) {
+                        const match = String(text).match(pattern);
+                        if (match) {
+                            utr = match[1];
+                            break;
+                        }
+                    }
+
+                    if (utr) {
+                        $('#utr').val(utr);
+                        feedback.removeClass('text-muted text-danger').addClass('text-success').text(
+                            'UTR detected: ' + utr + '. Please verify and submit.');
+                        $('#submitBtn').prop('disabled', false);
+                    } else {
+                        feedback.removeClass('text-muted').addClass('text-warning').text(
+                            'Could not detect UTR automatically — please enter it manually below.');
+                        $('#utr').focus();
+                    }
+                } catch (e) {
+                    console.error('OCR failed', e);
+                    $('#ocrLoading').removeClass('active');
+                    feedback.removeClass('text-muted').addClass('text-warning').text(
+                        'OCR failed — please enter UTR manually below.');
+                    $('#utr').focus();
                 }
+
+                // Always enable manual entry regardless of OCR result
+                $('#utr').off('input.utrCheck').on('input.utrCheck', function() {
+                    const val = $(this).val().replace(/[^0-9]/g, '');
+                    $(this).val(val);
+                    if (/^\d{12}$/.test(val)) {
+                        $('#submitBtn').prop('disabled', false);
+                        feedback.removeClass('text-danger text-warning').addClass(
+                            'text-success').text(
+                            'UTR looks valid. You may submit.');
+                    } else {
+                        $('#submitBtn').prop('disabled', true);
+                        if (val.length > 0) {
+                            feedback.removeClass('text-success').addClass('text-warning').text(
+                                'UTR must be exactly 12 digits (' + val.length + '/12)');
+                        }
+                    }
+                });
             });
         });
     </script>

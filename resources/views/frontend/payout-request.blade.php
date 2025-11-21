@@ -5,18 +5,18 @@
 @section('page-style')
     <style>
         /* :root {
-                                                                            --primary-color: #000000;
-                                                                            --primary-dark: #5f61e6;
-                                                                            --secondary-color: #8592a3;
-                                                                            --success-color: #71dd37;
-                                                                            --danger-color: #ff3e1d;
-                                                                            --light-bg: #f5f5f9;
-                                                                        } */
+                                                                                            --primary-color: #000000;
+                                                                                            --primary-dark: #5f61e6;
+                                                                                            --secondary-color: #8592a3;
+                                                                                            --success-color: #71dd37;
+                                                                                            --danger-color: #ff3e1d;
+                                                                                            --light-bg: #f5f5f9;
+                                                                                        } */
 
         body {
             /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                                                        min-height: 100vh;
-                                                                        padding: 2rem 0; */
+                                                                                        min-height: 100vh;
+                                                                                        padding: 2rem 0; */
         }
     </style>
 @endsection
@@ -251,9 +251,13 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('payout.request.store') }}" method="POST" enctype="multipart/form-data"
-                        id="payoutForm">
+                    <form
+                        action="{{ isset($user_id) ? route('payout.request.user.store', ['user_id' => $user_id]) : route('payout.request.store') }}"
+                        method="POST" enctype="multipart/form-data" id="payoutForm">
                         @csrf
+                        @if (isset($user_id))
+                            <input type="hidden" name="user_id" value="{{ $user_id }}">
+                        @endif
 
                         <!-- Bank Details Section -->
                         <div class="section-title">

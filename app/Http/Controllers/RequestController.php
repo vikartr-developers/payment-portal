@@ -214,7 +214,7 @@ ti-eye"></i>'
     } else {
       $requestsQuery = Request::where('assign_to', $current->id);
     }
-
+    // dd($requestsQuery->get());
     // Filters
     if ($request->filled('mode') && $request->mode !== 'all') {
       $requestsQuery->where('mode', $request->mode);

@@ -9,6 +9,7 @@
 
 @section('vendor-script')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://unpkg.com/feather-icons"></script>
@@ -103,6 +104,11 @@
         .bg-gradient-primary {
             background: linear-gradient(135deg, #e9f0fa 0%, #a1c6ef 100%);
         }
+
+        #copyLinkBtn.copied {
+            background-color: #71dd37 !important;
+            border-color: #71dd37 !important;
+        }
     </style>
 @endsection
 
@@ -133,6 +139,30 @@
                             <p class="summary-label">Total Approver Earning</p>
                             <h3 class="summary-value text-primary" id="total_approver_earning">₹0.00</h3>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Copy Payout Link Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="flex-grow-1 me-3">
+                        <h5 class="mb-1">
+                            <i class="ti ti-link me-2"></i>Your Personal Payout Link
+                        </h5>
+                        <small class="text-muted">Share this link to allow users to submit payout requests under your
+                            account</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="flex: 0 0 auto;">
+                        <input type="text" class="form-control" id="payoutLinkInput" readonly
+                            value="{{ route('payout.request.user', ['user_id' => auth()->id()]) }}"
+                            style="min-width: 400px; font-family: monospace; font-size: 0.85rem;">
+                        <button type="button" class="btn btn-dark" onclick="copyPayoutLink()" id="copyLinkBtn">
+                            <i class="ti ti-copy me-1" id="copyLinkIcon"></i>
+                            <span id="copyLinkText">Copy</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -184,7 +214,7 @@
                     <div class="alert alert-success">{{ session('success') }}</div>
                 @endif
                 <div class="table-responsive">
-                    <table class="table datatables-withdrawals table-striped">
+                    <table class="table datatables-withdrawals ">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -197,7 +227,7 @@
                                 <th>Amount</th>
                                 <th>Screenshot</th>
                                 <th>Status</th>
-                                <th>Approver Status</th>
+                                <th> Status</th>
                                 <th>Created By</th>
                                 <th>Actions</th>
                             </tr>
@@ -212,22 +242,10 @@
         <div class="modal fade" id="screenshotModal" tabindex="-1" aria-labelledby="screenshotModalLabel"
             aria-hidden="true">
             <div class="modal-dialog modal-sm modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="screenshotModalLabel">
-                            <i class="ti ti-photo me-2"></i>Payment Screenshot
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <img id="screenshot_modal_img" src="" alt="Screenshot" class="img-fluid"
-                            style="max-height: 50vh; border-radius: 8px;">
-                    </div>
-                    <div class="modal-footer">
-                        <a id="screenshot_download_link" href="" download class="btn btn-primary">
-                            <i class="ti ti-download me-1"></i>Download
-                        </a>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <div class="modal-content bg-transparent">
+                    <div class="modal-body text-center p-0">
+                        <img id="screenshot_modal_img" src="" alt="Screenshot" class=""
+                            style="max-height: auto; width: 300px;">
                     </div>
                 </div>
             </div>
@@ -295,30 +313,12 @@
                             </div>
                         </div>
 
-                        <!-- Approver Status -->
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Approver Status</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="edit_approver_status"
-                                        id="status_approved" value="approved">
-                                    <label class="btn btn-outline-success" for="status_approved">
-                                        <i class="ti ti-check me-1"></i>Approved
-                                    </label>
-
-                                    <input type="radio" class="btn-check" name="edit_approver_status"
-                                        id="status_pending" value="pending">
-                                    <label class="btn btn-outline-warning" for="status_pending">
-                                        <i class="ti ti-clock me-1"></i>Pending
-                                    </label>
-
-                                    <input type="radio" class="btn-check" name="edit_approver_status"
-                                        id="status_rejected" value="rejected">
-                                    <label class="btn btn-outline-danger" for="status_rejected">
-                                        <i class="ti ti-x me-1"></i>Rejected
-                                    </label>
-                                </div>
-                            </div>
+                        <!-- Transaction ID -->
+                        <div class="mb-3">
+                            <label for="edit_transaction_id" class="form-label fw-bold">Transaction ID</label>
+                            <input type="text" class="form-control" id="edit_transaction_id"
+                                placeholder="Enter transaction ID">
+                            <small class="form-text text-muted">Enter the transaction reference ID</small>
                         </div>
 
                         <!-- Screenshot Section -->
@@ -351,8 +351,15 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="saveChangesBtn">
-                            <i class="ti ti-device-floppy me-1"></i>Save Changes
+
+                        <button type="button" class="btn btn-danger" id="rejectBtn">
+                            <i class="ti ti-x me-1"></i>Reject
+                        </button>
+                        <button type="button" class="btn btn-warning" id="pendingBtn">
+                            <i class="ti ti-clock me-1"></i>Pending
+                        </button>
+                        <button type="button" class="btn btn-success" id="approveBtn">
+                            <i class="ti ti-check me-1"></i>Approve
                         </button>
                     </div>
                 </div>

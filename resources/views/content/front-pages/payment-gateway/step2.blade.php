@@ -48,12 +48,22 @@
                 <div class="card-body">
                     <div class="text-center mb-4">
                         <h3 class="mb-2">Select Payment Method</h3>
-                        <p class="text-muted">Amount: <strong>₹{{ number_format(session('payment_amount'), 2) }}</strong></p>
-                        <p class="text-muted">User: <strong>{{ session('payment_username') }}</strong></p>
+                        <p class="text-muted">Amount: <strong>₹{{ number_format($requestRecord->amount, 2) }}</strong></p>
+                        <p class="text-muted">User: <strong>{{ $requestRecord->name }}</strong></p>
+                        <p class="text-muted small">Transaction ID: <strong>{{ $display_transaction_id }}</strong></p>
+
+                        <div class="alert alert-info mt-3">
+                            <i class="ti ti-link me-2"></i>
+                            <small>You can share this page link to continue payment from another device</small>
+                            <button type="button" class="btn btn-sm btn-outline-primary ms-2" id="copyLinkBtn">
+                                <i class="ti ti-copy me-1"></i>Copy Link
+                            </button>
+                        </div>
                     </div>
 
-                    <form action="{{ route('payment.show-details') }}" method="POST" id="paymentMethodForm">
+                    <form action="{{ route('payment.select-payment-type') }}" method="POST" id="paymentMethodForm">
                         @csrf
+                        <input type="hidden" name="transaction_id" value="{{ $transaction_id }}">
 
                         <label class="payment-option" for="regular">
                             <input type="radio" name="payment_type" id="regular" value="regular" required>
@@ -78,9 +88,10 @@
                         </label>
 
                         <div class="d-flex gap-3 mt-4">
-                            <a href="{{ route('payment.gateway') }}" class="btn btn-outline-secondary btn-lg flex-fill">
+                            <button type="button" onclick="history.back()"
+                                class="btn btn-outline-secondary btn-lg flex-fill">
                                 <i class="ti ti-arrow-left me-2"></i>Back
-                            </a>
+                            </button>
                             <button type="submit" class="btn btn-primary btn-lg flex-fill">
                                 Continue<i class="ti ti-arrow-right ms-2"></i>
                             </button>
@@ -100,6 +111,29 @@
                 $('.payment-option').removeClass('selected');
                 $(this).addClass('selected');
                 $(this).find('input[type="radio"]').prop('checked', true);
+            });
+
+            // Copy link functionality
+            $('#copyLinkBtn').on('click', function() {
+                const currentUrl = window.location.href;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentUrl).then(function() {
+                        // Show success message
+                        const btn = $('#copyLinkBtn');
+                        const originalHtml = btn.html();
+                        btn.html('<i class="ti ti-check me-1"></i>Copied!');
+                        btn.removeClass('btn-outline-primary').addClass('btn-success');
+
+                        setTimeout(function() {
+                            btn.html(originalHtml);
+                            btn.removeClass('btn-success').addClass('btn-outline-primary');
+                        }, 2000);
+                    }).catch(function() {
+                        prompt('Copy this link:', currentUrl);
+                    });
+                } else {
+                    prompt('Copy this link:', currentUrl);
+                }
             });
         });
     </script>
